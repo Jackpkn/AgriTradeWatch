@@ -16,6 +16,7 @@ import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../components/GlobalApi";
 import { GlobalContext } from "../../context/GlobalProvider";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
@@ -35,7 +36,7 @@ const LoginScreen = () => {
           setMainUser(res.data);
           setIsLogged(true);
           router.push("/home");
-          console.log(res.data);
+          console.log("On Back Press from login: ", res.data);
         } catch (err) {
           console.error("Error:", err.response.data);
         }
@@ -62,7 +63,7 @@ const LoginScreen = () => {
           setMainUser(res.data);
           setIsLogged(true);
           router.push("/home");
-          console.log(res.data);
+          console.log("login use effect: ", res.data);
         } catch (err) {
           console.error("Error:", err.response.data);
         }
@@ -101,6 +102,9 @@ const LoginScreen = () => {
       setMainUser(user);
       setIsLogged(true);
 
+
+      await AsyncStorage.setItem('jwt', jwt);
+
       router.push("/home");
 
       alert("Login successful");
@@ -117,7 +121,8 @@ const LoginScreen = () => {
           width: "100%",
           display: "flex",
           justifyContent: "flex-end",
-          backgroundColor: "#aaf0c9",
+          backgroundColor: "white",
+          height: "100%",
         }}
       >
         <View style={styles.container}>
@@ -218,8 +223,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "white",
     justifyContent: "center",
+    height: "100vh",
   },
   logoContainer: {
     alignItems: "center",

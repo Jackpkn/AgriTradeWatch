@@ -15,17 +15,18 @@ import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../components/GlobalApi";
 import { GlobalContext } from "../../context/GlobalProvider";
+import { Picker } from "@react-native-picker/picker";
 
-const FormInput = ({ icon, placeholder, value, handleChangeText }) => {
+export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboardType = "default", style }) => {
   return (
-    <View style={styles.inputContainer}>
+    <View style={style ? style : styles.inputContainer }>
       <Icon name={icon} size={20} color="#000" style={styles.inputIcon} />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
         value={value}
         onChangeText={handleChangeText}
-        keyboardType="email-address"
+        keyboardType={ keyboardType }
       />
     </View>
   );
@@ -238,12 +239,19 @@ const SignUp = ({ navigation }) => {
             value={user.phoneNumber}
             handleChangeText={(text) => setUser({ ...user, phoneNumber: text })}
           />
-          <FormInput
-            icon="briefcase-outline"
-            placeholder="Job"
-            value={user.job}
-            handleChangeText={(text) => setUser({ ...user, job: text })}
-          />
+
+          <View style={styles.inputContainer}>
+            <Icon name="briefcase-outline" size={20} color="#000" style={styles.inputIcon} />
+            <Picker
+              selectedValue={user.job}
+              style={styles.input}
+              onValueChange={(itemValue) => setUser({ ...user, job: itemValue })}
+            >
+              <Picker.Item label="Select Job" value="" />
+              <Picker.Item label="Consumer" value="consumer" />
+              <Picker.Item label="Farmer" value="farmer" />
+            </Picker>
+          </View>
 
           <TouchableOpacity
             style={styles.loginButton}
@@ -263,7 +271,7 @@ const SignUp = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+          <TouchableOpacity >
             <Text style={styles.signUpText}>
               Already have an account?{" "}
               <Link href="/login" style={styles.signUpLink}>

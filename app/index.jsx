@@ -1,6 +1,7 @@
 import { Link, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
+  BackHandler,
   Image,
   ImageBackground,
   ScrollView,
@@ -15,34 +16,76 @@ import logo from "../assets/images/logo.png";
 import { GlobalContext } from "../context/GlobalProvider";
 import { useContext, useEffect } from "react";
 import api from "../components/GlobalApi";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
-  useContext(GlobalContext);
+    useContext(GlobalContext);
+
+    const onBackPress = () => {
+      if (jwt) {
+        const fetchUserData = async () => {
+          try {
+            const res = await api.get("/users/me", {
+              headers: {
+                Authorization: `bearer ${jwt}`,
+              },
+            });
+  
+            setMainUser(res.data);
+            setIsLogged(true);
+            router.push("/home");
+            console.log("On Back Press from index: ", res.data);
+          } catch (err) {
+            console.error("Error:", err.response.data);
+          }
+        };
+  
+        fetchUserData();
+      } else {
+        console.log("No JWT token found in local storage");
+      }
+    };
+  
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
   useEffect(() => {
-    if (jwt) {
-      const fetchUserData = async () => {
-        try {
-          const res = await api.get("/users/me", {
-            headers: {
-              Authorization: `bearer ${jwt}`,
-            },
-          });
+    const tokenFunc = async () => {
+      try {
+        const token = await AsyncStorage.getItem("jwt");
 
-          setMainUser(res.data);
-          setIsLogged(true);
-          router.push("/home");
-          console.log(res.data);
-        } catch (err) {
-          console.error("Error:", err.response.data);
+        console.log("Token: ", token);
+        
+
+        if (token) {
+          const fetchUserData = async () => {
+            try {
+              const res = await api.get("/users/me", {
+                headers: {
+                  Authorization: `bearer ${token}`,
+                },
+              });
+
+              setMainUser(res.data);
+              setIsLogged(true);
+              setJwt(token);
+              router.push("/home");
+              console.log("index: ", res.data);
+            } catch (err) {
+              console.error("Error:", err.response.data);
+            }
+          };
+
+          fetchUserData();
+        } else {
+          console.log("No JWT token found in local storage");
         }
-      };
+      } catch (e) {
+        console.error("Error:", e);
+      }
+    };
 
-      fetchUserData();
-    } else {
-      console.log("No JWT token found in local storage");
-    }
+    tokenFunc();
   }, []);
 
   return (
@@ -109,7 +152,6 @@ export default function Index() {
               }}
             >
               AgriTradeWatch
-            
             </Text>
 
             <Text
@@ -122,33 +164,39 @@ export default function Index() {
             >
               Sign In with
             </Text>
-            <View style={{
-              marginTop: 10,
-              marginBottom: 10,
-              margin: "auto",
-              width: "80%",
-            
-            }}>
-              <Link href={"/signup"} style={{
-                width: "100%",
-                backgroundColor: "rgba(255, 255, 255, 0.21)",
-                borderColor: "white",
-                borderWidth: 2,
-                padding: 10,
-                borderRadius: 30,
+            <View
+              style={{
+                marginTop: 10,
                 marginBottom: 10,
-                textAlign: "center",
-                fontSize: 20,
-                color: "white",
-              }}>
+                margin: "auto",
+                width: "80%",
+              }}
+            >
+              <Link
+                href={"/signup"}
+                style={{
+                  width: "100%",
+                  backgroundColor: "rgba(255, 255, 255, 0.21)",
+                  borderColor: "white",
+                  borderWidth: 2,
+                  padding: 10,
+                  borderRadius: 30,
+                  marginBottom: 10,
+                  textAlign: "center",
+                  fontSize: 20,
+                  color: "white",
+                }}
+              >
                 Continue with Email
               </Link>
             </View>
-            <View style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-            }}>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+              }}
+            >
               <Text
                 style={{
                   textAlign: "center",
@@ -170,7 +218,6 @@ export default function Index() {
               >
                 Login
               </Link>
-
             </View>
           </View>
         </ScrollView>

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'rea
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalContext } from '../../context/GlobalProvider';
-import {  router } from 'expo-router';
+import {  Link, router } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 
 // Main App Component
 const home = () => {
@@ -11,11 +12,11 @@ const home = () => {
   const { IsLogged, mainUser, jwt } =
   useContext(GlobalContext);
 
-console.log("Home: ",jwt, IsLogged, mainUser);
-
-
+  const navigation = useNavigation();
+  
   useEffect(() => {
-   
+    console.log("Home: ",jwt, IsLogged, mainUser);
+    
    if(!jwt || !mainUser) {
       router.push('/login');
     }
@@ -35,8 +36,8 @@ console.log("Home: ",jwt, IsLogged, mainUser);
       </View>
 
       {/* Add Crop Button */}
-      <TouchableOpacity style={styles.addCropButton}>
-        <Text style={styles.addCropText}>Add Crop</Text>
+       <TouchableOpacity onPress={()=> navigation.navigate("crops") } style={styles.addCropButton} >
+        <Text style={styles.addCropText}>  Add Crop  </Text>
         <Ionicons name="arrow-forward-circle" size={24} color="#ffffff" />
       </TouchableOpacity>
 
