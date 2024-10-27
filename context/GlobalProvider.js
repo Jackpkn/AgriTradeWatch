@@ -1,18 +1,16 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 
-const GlobalContext = createContext();
+export const GlobalContext = createContext();
+
 const { Provider } = GlobalContext;
-
-export const useGlobalContext = () => {
-  useContext(GlobalContext);
-};
 
 export const GlobalProvider = ({ children }) => {
 
     const [isLogged, setIsLogged] = useState(false);
-    const [user, setUser] = useState({});
+    const [mainUser, setMainUser] = useState({});
+    const [jwt, setJwt] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
 
-  return <Provider value={ {isLoading, setIsLoading, user, setUser, isLogged, setIsLogged} } >{children}</Provider>;
+  return <Provider value={ {isLoading, setIsLoading, mainUser, setMainUser, isLogged, setIsLogged, jwt, setJwt} } >{children}</Provider>;
 };

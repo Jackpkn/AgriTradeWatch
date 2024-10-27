@@ -2,6 +2,8 @@ import { View, Text, Image } from "react-native";
 import { Tabs, Redirect } from "expo-router";
 // import {home} from 'react-native-vector-icons/FontAwesome5';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useContext, useEffect } from "react";
+import { GlobalContext } from "../../context/GlobalProvider";
 
 
 const TabIcon = ({ icon, color, name, focused }) => {
@@ -14,6 +16,7 @@ const TabIcon = ({ icon, color, name, focused }) => {
 };
 
 const TabLayout = () => {
+
   return (
     <>
       <Tabs 

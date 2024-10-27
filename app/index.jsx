@@ -9,54 +9,169 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import axios from "axios";
 import { Button } from "react-native-paper";
-import { useEffect } from "react";
+import logo from "../assets/images/logo.png";
+import { GlobalContext } from "../context/GlobalProvider";
+import { useContext, useEffect } from "react";
+import api from "../components/GlobalApi";
 
 export default function Index() {
+  const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
+  useContext(GlobalContext);
+
+  useEffect(() => {
+    if (jwt) {
+      const fetchUserData = async () => {
+        try {
+          const res = await api.get("/users/me", {
+            headers: {
+              Authorization: `bearer ${jwt}`,
+            },
+          });
+
+          setMainUser(res.data);
+          setIsLogged(true);
+          router.push("/home");
+          console.log(res.data);
+        } catch (err) {
+          console.error("Error:", err.response.data);
+        }
+      };
+
+      fetchUserData();
+    } else {
+      console.log("No JWT token found in local storage");
+    }
+  }, []);
 
   return (
     <>
       <SafeAreaView>
         <ScrollView contentContainerStyle={{ height: "100%" }}>
-          <View className="w-full h-[100%] justify-center items-center ">
-            <ImageBackground
+          <View
+            className="w-full h-[100%] justify-center items-center "
+            style={{
+              backgroundColor: "#49A760",
+              height: "100%",
+            }}
+          >
+            <Link
+              href={"/home"}
               style={{
-                height: "100%",
-                width: "100%",
-                opacity: 0.85,
-                backgroundColor: "rgba(255,255,255,0.5)",
+                width: "20%",
+                position: "absolute",
+                top: 0,
+                right: 0,
+                margin: 10,
               }}
-              source={require("../assets/images/backgroundImg.png")}
             >
-               <Button
+              <Button
                 style={{
-                  width:"20%",
-                  position: "absolute", 
-                  top: 0,
-                  right: 0,
-                  margin: 10,
                   backgroundColor: "#49A760",
                 }}
                 textColor="white"
                 mode="contained"
-                onPress={() => router.push("/home")}
               >
                 Skip
               </Button>
-              <Text style={{
+            </Link>
+
+            <Image
+              source={logo}
+              style={{
+                resizeMode: "contain",
+                width: 200,
+                height: 200,
+                marginTop: "30%",
+                margin: "auto",
+                marginBottom: "-30%",
+              }}
+            />
+
+            <Text
+              style={{
                 textAlign: "center",
                 fontSize: 30,
                 fontWeight: "bold",
-                marginTop: "40%",
+                marginTop: "35%",
+                color: "white",
+              }}
+            >
+              Welcome to
+            </Text>
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 40,
+                fontWeight: "bold",
+                color: "white",
+              }}
+            >
+              AgriTradeWatch
+            
+            </Text>
+
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 20,
+                color: "white",
+                marginTop: "15%",
+              }}
+            >
+              Sign In with
+            </Text>
+            <View style={{
+              marginTop: 10,
+              marginBottom: 10,
+              margin: "auto",
+              width: "80%",
+            
+            }}>
+              <Link href={"/signup"} style={{
+                width: "100%",
+                backgroundColor: "rgba(255, 255, 255, 0.21)",
+                borderColor: "white",
+                borderWidth: 2,
+                padding: 10,
+                borderRadius: 30,
+                marginBottom: 10,
+                textAlign: "center",
+                fontSize: 20,
                 color: "white",
               }}>
-                Welcome to 
+                Continue with Email
+              </Link>
+            </View>
+            <View style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+            }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 15,
+                  color: "white",
+                }}
+              >
+                Already have an account?
               </Text>
-              <Text>
-                AgriTradeWatch
-              </Text>
-            </ImageBackground>
+              <Link
+                href={"/login"}
+                style={{
+                  textAlign: "center",
+                  fontSize: 15,
+                  color: "white",
+                  textDecorationLine: "underline",
+                  marginLeft: 5,
+                }}
+              >
+                Login
+              </Link>
+
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
