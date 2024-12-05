@@ -22,32 +22,32 @@ export default function Index() {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
     useContext(GlobalContext);
 
-    const onBackPress = () => {
-      if (jwt) {
-        const fetchUserData = async () => {
-          try {
-            const res = await api.get("/users/me", {
-              headers: {
-                Authorization: `bearer ${jwt}`,
-              },
-            });
+    // const onBackPress = () => {
+    //   if (jwt) {
+    //     const fetchUserData = async () => {
+    //       try {
+    //         const res = await api.get("/users/me", {
+    //           headers: {
+    //             Authorization: `bearer ${jwt}`,
+    //           },
+    //         });
   
-            setMainUser(res.data);
-            setIsLogged(true);
-            router.push("/home");
-            console.log("On Back Press from index: ", res.data);
-          } catch (err) {
-            console.error("Error:", err.response.data);
-          }
-        };
+    //         setMainUser(res.data);
+    //         setIsLogged(true);
+    //         router.replace("/home");
+    //         console.log("On Back Press from index: ", res.data);
+    //       } catch (err) {
+    //         console.error("Error:", err.response.data);
+    //       }
+    //     };
   
-        fetchUserData();
-      } else {
-        console.log("No JWT token found in local storage");
-      }
-    };
+    //     fetchUserData();
+    //   } else {
+    //     console.log("No JWT token found in local storage");
+    //   }
+    // };
   
-    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    // BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
   useEffect(() => {
     const tokenFunc = async () => {

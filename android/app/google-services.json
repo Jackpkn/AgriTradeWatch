@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "683729294414",
+    "project_id": "agritradewatch",
+    "storage_bucket": "agritradewatch.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683729294414:android:3c5ca4fea20bd7fbd75f1f",
+        "android_client_info": {
+          "package_name": "com.devsingal.Agritradewatch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRNeET2swuvWO4lgVqhMdOKIakxdbM-Rg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

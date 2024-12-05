@@ -35,11 +35,11 @@ const TabLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="notification"
+          name="stats"
           options={{
-            title: "Notifications",
+            title: "Statistics",
             headerShown: false,
-            tabBarIcon: ({color, focused})=>( <TabIcon icon="notifications" name="Home" color={color} focused={focused} /> ),
+            tabBarIcon: ({color, focused})=>( <TabIcon icon="stats-chart" name="Home" color={color} focused={focused} /> ),
           }}
         />
         <Tabs.Screen

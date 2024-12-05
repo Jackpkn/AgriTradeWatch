@@ -1,27 +1,48 @@
-import React, { useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity,PermissionsAndroid, Image, ScrollView  , Platform, Alert} from 'react-native';
+// import Geolocation from 'react-native-geolocation-service';
+import * as Location from 'expo-location';  
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalContext } from '../../context/GlobalProvider';
 import {  Link, router } from 'expo-router';
-import { useNavigation } from '@react-navigation/native';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 // Main App Component
 const home = () => {
 
-  const { IsLogged, mainUser, jwt } =
-  useContext(GlobalContext);
-
-  const navigation = useNavigation();
   
-  useEffect(() => {
-    console.log("Home: ",jwt, IsLogged, mainUser);
-    
-   if(!jwt || !mainUser) {
-      router.push('/login');
-    }
+  const { jwt, mainUser, setCurrentLocation, IsLogged } = useContext(GlobalContext);
 
-  }, []);
+  const [location, setLocation] = useState(null)
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try{
+        let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
+      setLocation(location);
+      setCurrentLocation(location);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+getLocation();
+    console.log( "location :" , location);
+
+       
+   if(!jwt || !mainUser) {
+    router.replace('/login');
+  }
+
+  }
+  , []);
 
   return (
     <SafeAreaView>
@@ -36,7 +57,7 @@ const home = () => {
       </View>
 
       {/* Add Crop Button */}
-       <TouchableOpacity onPress={()=> navigation.navigate("crops") } style={styles.addCropButton} >
+       <TouchableOpacity onPress={()=> router.push("crops") } style={styles.addCropButton} >
         <Text style={styles.addCropText}>  Add Crop  </Text>
         <Ionicons name="arrow-forward-circle" size={24} color="#ffffff" />
       </TouchableOpacity>
@@ -45,7 +66,7 @@ const home = () => {
       <Text style={styles.sectionTitle}>Main Features</Text>
       <View style={styles.featuresContainer}>
         {/* Diagnose Diseases Feature */}
-        <TouchableOpacity style={styles.featureBox}>
+        <TouchableOpacity style={styles.featureBox} >
           <Ionicons name="medical" size={40} color="#34c759" />
           <Text style={styles.featureTitle}>Diagnose your crop</Text>
           <Text style={styles.featureButton}>Diagnose Diseases</Text>

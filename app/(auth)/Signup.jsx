@@ -33,13 +33,14 @@ export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboard
 };
 
 const SignUp = ({ navigation }) => {
-  const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
+  const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
     useContext(GlobalContext);
 
     useEffect(() => {
       if (jwt) {
         const fetchUserData = async () => {
           try {
+            setIsLoading(true);
             const res = await api.get("/users/me", {
               headers: {
           Authorization: `bearer ${jwt}`,
@@ -54,6 +55,8 @@ const SignUp = ({ navigation }) => {
 
           } catch (err) {
             console.error("Error:", err.response.data);
+          }finally {
+            setIsLoading(false);
           }
         };
 
@@ -71,7 +74,7 @@ const SignUp = ({ navigation }) => {
     password: "",
     username: "",
     job: "",
-    phoneNumber: 0,
+    phoneNumber: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -109,6 +112,7 @@ const SignUp = ({ navigation }) => {
     }
 
     try {
+      setIsLoading(true);
       const response = await api.post(
         "auth/local/register",
         {
@@ -135,6 +139,8 @@ const SignUp = ({ navigation }) => {
     } catch (error) {
       console.error("Error:", error.response.data.error.message);
       alert(error.response.data.error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,11 +148,12 @@ const SignUp = ({ navigation }) => {
     console.log("User:", user);
 
     try {
+      setIsLoading(true);
       const response = await api.put(
         `users/${mainUser.id}`,
         {
           job: user.job,
-          phoneNumber: user.phoneNumber,
+          phoneNumber: Number(user.phoneNumber),
           name: user.name,
         },
         {
@@ -161,6 +168,8 @@ const SignUp = ({ navigation }) => {
     } catch (error) {
       console.error("Error:", error.response.data.error.message);
       alert(error.response.data.error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

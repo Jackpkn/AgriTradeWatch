@@ -18,8 +18,9 @@ import api from "../../components/GlobalApi";
 import { GlobalContext } from "../../context/GlobalProvider";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 const LoginScreen = () => {
-  const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
+  const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
     useContext(GlobalContext);
   console.log(jwt);
 
@@ -27,6 +28,7 @@ const LoginScreen = () => {
     if (jwt) {
       const fetchUserData = async () => {
         try {
+          setIsLoading(true);
           const res = await api.get("/users/me", {
             headers: {
               Authorization: `bearer ${jwt}`,
@@ -35,10 +37,13 @@ const LoginScreen = () => {
 
           setMainUser(res.data);
           setIsLogged(true);
-          router.push("/home");
+          router.replace("/home");
           console.log("On Back Press from login: ", res.data);
+          
         } catch (err) {
           console.error("Error:", err.response.data);
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -54,6 +59,7 @@ const LoginScreen = () => {
     if (jwt) {
       const fetchUserData = async () => {
         try {
+          setIsLoading(true);
           const res = await api.get("/users/me", {
             headers: {
               Authorization: `bearer ${jwt}`,
@@ -62,10 +68,12 @@ const LoginScreen = () => {
 
           setMainUser(res.data);
           setIsLogged(true);
-          router.push("/home");
+          router.replace("/home");
           console.log("login use effect: ", res.data);
         } catch (err) {
           console.error("Error:", err.response.data);
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -89,8 +97,13 @@ const LoginScreen = () => {
       return;
     }
 
+    console.log("Email:", email);
+    console.log("Password:", password);
+    
+
     try {
-      const response = await api.post("auth/local", {
+      setIsLoading(true);
+      const response = await api.post("/auth/local/", {
         identifier: email,
         password: password,
       });
@@ -105,12 +118,14 @@ const LoginScreen = () => {
 
       await AsyncStorage.setItem('jwt', jwt);
 
-      router.push("/home");
+      router.replace("/home");
 
       alert("Login successful");
     } catch (error) {
-      console.error("Login failed:", error.response.data.error.message);
-      alert(error.response.data.error.message);
+      console.error("Login failed:", error.response.data)
+      // alert(error.response.data.error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

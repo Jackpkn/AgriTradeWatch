@@ -8,36 +8,28 @@ import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 
 const profile = () => {
-
-  const navigation = useNavigation();
-  const {mainUser, setMainUser, setJwt, setIsLogged} = useContext(GlobalContext);
+  const {mainUser, setMainUser, setJwt, setIsLogged, setIsLoading} = useContext(GlobalContext);
 
   const handleLogout = async () => {
     
     try {
+      setIsLoading(true);
       // Remove the JWT from AsyncStorage
       await AsyncStorage.removeItem('jwt');
-      
-      // Optionally, you can also clear all data from AsyncStorage if needed
-      // await AsyncStorage.clear();
-      
-      // Navigate to the login screen or any other screen after logout
-      // Make sure to configure your navigation structure correctly
-
       setIsLogged(false);
       setMainUser({});
       setJwt('');
 
       router.dismissAll();
-
-      // navigation.reset({
-      //   index: 0,
-      //   routes: [{ name: 'login' }],  // replace 'LoginScreen' with your actual login screen name
-      // });
-  
+      router.replace('/login');
       console.log("User has been logged out successfully");
     } catch (error) {
       console.error("Error during logout: ", error);
+    } finally {
+      setTimeout(() => {
+        setJwt('');
+      }, 2000);
+      setIsLoading(false);
     }
   }
 
