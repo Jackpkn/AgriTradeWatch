@@ -1,3 +1,4 @@
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import React, { useContext, useState, useEffect } from "react";
 import { View, Text, ScrollView, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,14 +7,17 @@ import * as MediaLibrary from "expo-media-library";
 import { TextInput } from "react-native-paper";
 import img from "../assets/images/Group 2.png";
 import { GlobalContext } from "../context/GlobalProvider";
-import api from "../components/GlobalApi";
+// import api from "../components/GlobalApi";
 import { Picker } from "@react-native-picker/picker";
-import { TouchableOpacity } from "react-native";
+// import { TouchableOpacity } from "react-native";
 import { Button } from "react-native-paper";
+import { addCrop } from "../components/cropsController";
+import { auth } from "../firebase";
+import * as ImageManipulator from 'expo-image-manipulator';
 
 const crops = () => {
-
-  const { jwt, mainUser, currentLocation, setIsLoading } = useContext(GlobalContext);
+  const { jwt, mainUser, currentLocation, setIsLoading } =
+    useContext(GlobalContext);
 
   const [crop, setCrop] = useState({
     name: "",
@@ -80,80 +84,58 @@ const crops = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("files", {
-      uri: photo.uri,
-      name: "crop.jpg",
-      type: "image/jpeg",
-    });
-
-    try {
-      setIsLoading(true);
-      const uploadResponse = await api.post("/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${jwt}`,
-        },
-      });
-      console.log("Response: ", uploadResponse.data);
-      setImgID((imgID)=>{
-        const newID = imgID + uploadResponse.data[0].id;
-        return newID;
-
-      });
-      console.log("Image ID: ", uploadResponse.data[0].id);
-    } catch (error) {
-      console.error("Error: ", error.response?.data?.error?.message || error);
-      alert(error.response?.data?.error?.message || "Error uploading image");
-    } finally {
-      setIsLoading(false);
-    }
-
-    
-      
-
-    const data = {
-      data: {
-
-        
-        crop: crop.name,
-        quantity: crop.quantity,
-        price: crop.pricePerUnit,
-        location:currentLocation,
-        cropimage_id: imgID,
-      },
-    };
-
     const path =
       mainUser.job.toLowerCase() === "farmer" ? "/farmers" : "/consumers";
 
-    try {
-      setIsLoading(true);
-      const response = await api.post(path, data, {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      });
+    const uploadImageToFirebase = async (uri) => {
+      try{
+        const response = await fetch(uri);
+      const blob = await response.blob();
+      const storage = getStorage();
+      const storageRef = ref(storage, `images/${Date.now()}`);
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+      } catch (error) {
+        console.error("Error while uploading image: ",error);
+      }
+    };
 
-      if (response.data) {
-        alert("Crop added successfully");
+    if (photo) {
+      try {
+        setIsLoading(true);
+
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          photo.uri,
+          [{ resize: { width: 800 } }], // Resize the image to a width of 800 pixels
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Compress and save as JPEG
+        );
+
+        const imageUrl = await uploadImageToFirebase(manipulatedImage.uri);
+        const cropData = {
+          ...crop,
+          location: currentLocation,
+          imageUrl,
+        };
+
+        await addCrop(cropData, mainUser.job, auth.currentUser.uid, imageUrl);
+
+        setIsLoading(false);
+        Alert.alert("Crop submitted successfully");
         setCrop({
           name: "",
           location: {},
           pricePerUnit: "",
           quantity: "",
-        }); // Reset the selected crop
-      } else {
-        alert("Failed to add crop");
+        });
+        setPhoto(null);
+
+      } catch (error) {
+        setIsLoading(false);
+        Alert.alert("Error uploading image", error.message);
       }
-
-      console.log("Response: ", response.data);
-
-    } catch (error) {
-      console.error("Error:", error.response?.data?.error?.message || error);
-      alert(error.response?.data?.error?.message || "Error adding crop");
-    } finally {
-      setIsLoading(false);
+    } else {
+      Alert.alert("Please capture a photo of the crop");
     }
   };
 

@@ -1,70 +1,92 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { GlobalContext } from '../../context/GlobalProvider';
 import { Button } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
+import { auth } from '../../firebase';
+import { getUserData } from '../../components/crud';
 
 const profile = () => {
-  const {mainUser, setMainUser, setJwt, setIsLogged, setIsLoading} = useContext(GlobalContext);
+  const {setIsLoading} = useContext(GlobalContext);
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
+        const userData = await getUserData(auth.currentUser.uid);
+        setUser(userData);
+      } catch (error) {
+        console.error("Error fetching user data: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    
+    };
+    fetchUserData();
+  }, []);
 
   const handleLogout = async () => {
     
     try {
       setIsLoading(true);
-      // Remove the JWT from AsyncStorage
-      await AsyncStorage.removeItem('jwt');
-      setIsLogged(false);
-      setMainUser({});
-      setJwt('');
+      
+      await auth.signOut();
 
-      router.dismissAll();
-      router.replace('/login');
+      // router.dismissAll();
+      router.replace("/login");
       console.log("User has been logged out successfully");
     } catch (error) {
       console.error("Error during logout: ", error);
     } finally {
-      setTimeout(() => {
-        setJwt('');
-      }, 2000);
       setIsLoading(false);
     }
   }
 
   return (
-
-    <SafeAreaView>
-      <ScrollView contentContainerStyle={{ width: "100%" }} >
-
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Profile</Text>
+    user ? (
+        <SafeAreaView style={styles.container}>
+          <ScrollView>
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Profile</Text>
+            </View>
+            <View style={styles.profileSection}>
+              <Text style={styles.label}>Name:</Text>
+              <Text style={styles.value}>{user.name}</Text>
+            </View>
+            <View style={styles.profileSection}>
+              <Text style={styles.label}>Email:</Text>
+              <Text style={styles.value}>{user.email}</Text>
+            </View>
+            <View style={styles.profileSection}>
+              <Text style={styles.label}>Username:</Text>
+              <Text style={styles.value}>{user.username}</Text>
+            </View>
+            <View style={styles.profileSection}>
+              <Text style={styles.label}>Job:</Text>
+              <Text style={styles.value}>{user.job}</Text>
+            </View>
+            <View style={styles.profileSection}>
+              <Text style={styles.label}>Phone Number:</Text>
+              <Text style={styles.value}>{user.phoneNumber}</Text>
+            </View>
+            <Button
+              mode="contained"
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              Logout
+            </Button>
+          </ScrollView>
+        </SafeAreaView>
+      ) : (
+        <View style={styles.error} >
+          <Text style ={styles.errorText} >No Profile to show</Text>
+          <Text style ={styles.errorText} >Do login or sign up before coming here</Text>
         </View>
-        <View style={styles.profileSection}>
-          <Text style={styles.label}>Name:</Text>
-          <Text style={styles.value}>{mainUser.name}</Text>
-        </View>
-        <View style={styles.profileSection}>
-          <Text style={styles.label}>Email:</Text>
-          <Text style={styles.value}> {mainUser.email} </Text>
-        </View>
-        <View style={styles.profileSection}>
-          <Text style={styles.label}>Role:</Text>
-          <Text style={styles.value}>{mainUser.job}</Text>
-        </View>
-      </View>
-
-      <View style={styles.logoutButton}>
-        <Button mode='contained' style={{backgroundColor: "#1F4E3D"}} textColor="white" onPress={handleLogout} >
-          Logout
-        </Button>
-      </View>
-
-      </ScrollView>
-
-    </SafeAreaView>
+      )
     
   )
 }
@@ -104,5 +126,16 @@ const styles = StyleSheet.create({
     width: "50%",
     marginHorizontal: "auto",
     
+  },
+  error: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    fontSize: 25,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "red",
   },
 })

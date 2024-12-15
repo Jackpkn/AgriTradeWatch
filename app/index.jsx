@@ -10,13 +10,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import axios from "axios";
 import { Button } from "react-native-paper";
 import logo from "../assets/images/logo.png";
 import { GlobalContext } from "../context/GlobalProvider";
 import { useContext, useEffect } from "react";
-import api from "../components/GlobalApi";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import api from "../components/GlobalApi";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+import {auth} from "../firebase"
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Index() {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
@@ -49,43 +50,56 @@ export default function Index() {
   
     // BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-  useEffect(() => {
-    const tokenFunc = async () => {
-      try {
-        const token = await AsyncStorage.getItem("jwt");
+  // useEffect(() => {
+  //   const tokenFunc = async () => {
+  //     try {
+  //       const token = await AsyncStorage.getItem("jwt");
 
-        console.log("Token: ", token);
+  //       console.log("Token: ", token);
         
 
-        if (token) {
-          const fetchUserData = async () => {
-            try {
-              const res = await api.get("/users/me", {
-                headers: {
-                  Authorization: `bearer ${token}`,
-                },
-              });
+  //       if (token) {
+  //         const fetchUserData = async () => {
+  //           try {
+  //             const res = await api.get("/users/me", {
+  //               headers: {
+  //                 Authorization: `bearer ${token}`,
+  //               },
+  //             });
 
-              setMainUser(res.data);
-              setIsLogged(true);
-              setJwt(token);
-              router.push("/home");
-              console.log("index: ", res.data);
-            } catch (err) {
-              console.error("Error:", err.response.data);
-            }
-          };
+  //             setMainUser(res.data);
+  //             setIsLogged(true);
+  //             setJwt(token);
+  //             router.push("/home");
+  //             console.log("index: ", res.data);
+  //           } catch (err) {
+  //             console.error("Error:", err.response.data);
+  //           }
+  //         };
 
-          fetchUserData();
-        } else {
-          console.log("No JWT token found in local storage");
-        }
-      } catch (e) {
-        console.error("Error:", e);
-      }
-    };
+  //         fetchUserData();
+  //       } else {
+  //         console.log("No JWT token found in local storage");
+  //       }
+  //     } catch (e) {
+  //       console.error("Error:", e);
+  //     }
+  //   };
 
-    tokenFunc();
+  //   tokenFunc();
+  // }, []);
+
+  const onAuthStateChangedApp = (user) => {
+    if (user) {
+      router.replace("/home");
+    } else {
+      console.log("No user found");
+    }
+  };
+
+  useEffect(() => {
+    const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
+    return sub;
   }, []);
 
   return (

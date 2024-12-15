@@ -6,13 +6,14 @@ import { Ionicons } from '@expo/vector-icons'; // For icons
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalContext } from '../../context/GlobalProvider';
 import {  Link, router } from 'expo-router';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import {auth} from '../../firebase';
+import { getUserData } from '../../components/crud';
 
 // Main App Component
 const home = () => {
 
   
-  const { jwt, mainUser, setCurrentLocation, IsLogged } = useContext(GlobalContext);
+  const { setCurrentLocation, setMainUser  } = useContext(GlobalContext);
 
   const [location, setLocation] = useState(null)
 
@@ -27,6 +28,7 @@ const home = () => {
 
       let location = await Location.getCurrentPositionAsync({});
 
+      console.log( "location :" , location);
       setLocation(location);
       setCurrentLocation(location);
       } catch (error) {
@@ -34,12 +36,25 @@ const home = () => {
       }
     }
 getLocation();
-    console.log( "location :" , location);
 
-       
-   if(!jwt || !mainUser) {
-    router.replace('/login');
+const getUser = async () => {
+  try {
+    const user = auth.currentUser;
+    if (user) {
+      // console.log('User:', user);
+      const userData = await getUserData(user.uid);
+      console.log('User Data:', userData);
+      setMainUser(userData);
+    } else {
+      console.log('No user found');
+    }
+  } catch (error) {
+    console.error('Error getting user:', error);
+
   }
+}
+
+getUser();
 
   }
   , []);
@@ -49,12 +64,6 @@ getLocation();
       <ScrollView contentContainerStyle={{ width: "100%" }} >
       <View style={styles.container}>
       {/* Header with Weather Info */}
-      <View style={styles.weatherContainer}>
-        <Text style={styles.temperature}>29°</Text>
-        <Text style={styles.city}>Egypt, Mansora</Text>
-        <Text style={styles.weatherCondition}>Cloudy</Text>
-        <Ionicons name="cloud-outline" size={50} color="blue" style={styles.weatherIcon} />
-      </View>
 
       {/* Add Crop Button */}
        <TouchableOpacity onPress={()=> router.push("crops") } style={styles.addCropButton} >

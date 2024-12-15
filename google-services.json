@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "683729294414",
-    "project_id": "agritradewatch",
-    "storage_bucket": "agritradewatch.firebasestorage.app"
+    "project_number": "809126175103",
+    "project_id": "agritradewatch-ea2dc",
+    "storage_bucket": "agritradewatch-ea2dc.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:683729294414:android:3c5ca4fea20bd7fbd75f1f",
+        "mobilesdk_app_id": "1:809126175103:android:d50742b8da0df189713a4a",
         "android_client_info": {
           "package_name": "com.devsingal.Agritradewatch"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "809126175103-ifvdab0vg5jt9sok7dl6rg2oukbn24ob.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.devsingal.Agritradewatch",
+            "certificate_hash": "3ba15b645af79f9f6cf48b900ec61566911946ef"
+          }
+        },
+        {
+          "client_id": "809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCRNeET2swuvWO4lgVqhMdOKIakxdbM-Rg"
+          "current_key": "AIzaSyAKMDXrtdbTQxn2yhJVY9M9HTAuX1sWGe4"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "809126175103-lcol6r2khjht2fbfrfipp40tn7v6s2es.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.devsingal.Agritradewatch"
+              }
+            }
+          ]
         }
       }
     }

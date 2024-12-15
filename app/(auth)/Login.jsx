@@ -8,79 +8,36 @@ import {
   StyleSheet,
   ScrollView,
   BackHandler,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons"; // For icons
 import FontAwesome from "react-native-vector-icons/FontAwesome"; // For social media icons
 import illustration from "../../assets/images/workers-farm-activity-illustration 2.png";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../../components/GlobalApi";
+// import api from "../../components/GlobalApi";
 import { GlobalContext } from "../../context/GlobalProvider";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from "../../firebase";
+import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { getUserData } from "../../components/crud";
 
 
 const LoginScreen = () => {
-  const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
+  const { setIsLoading , setMainUser} =
     useContext(GlobalContext);
-  console.log(jwt);
 
-  const onBackPress = () => {
-    if (jwt) {
-      const fetchUserData = async () => {
-        try {
-          setIsLoading(true);
-          const res = await api.get("/users/me", {
-            headers: {
-              Authorization: `bearer ${jwt}`,
-            },
-          });
-
-          setMainUser(res.data);
-          setIsLogged(true);
-          router.replace("/home");
-          console.log("On Back Press from login: ", res.data);
-          
-        } catch (err) {
-          console.error("Error:", err.response.data);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchUserData();
+  const onAuthStateChangedApp = (user) => {
+    if (user) {
+      router.replace("/home");
     } else {
-      console.log("No JWT token found in local storage");
+      console.log("No user found");
     }
   };
 
-  BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
   useEffect(() => {
-    if (jwt) {
-      const fetchUserData = async () => {
-        try {
-          setIsLoading(true);
-          const res = await api.get("/users/me", {
-            headers: {
-              Authorization: `bearer ${jwt}`,
-            },
-          });
-
-          setMainUser(res.data);
-          setIsLogged(true);
-          router.replace("/home");
-          console.log("login use effect: ", res.data);
-        } catch (err) {
-          console.error("Error:", err.response.data);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchUserData();
-    } else {
-      console.log("No JWT token found in local storage");
-    }
+    const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
+    return sub;
   }, []);
 
   const [email, setEmail] = useState("");
@@ -96,34 +53,18 @@ const LoginScreen = () => {
       alert("Please enter your email and password");
       return;
     }
-
-    console.log("Email:", email);
-    console.log("Password:", password);
     
 
     try {
+     
       setIsLoading(true);
-      const response = await api.post("/auth/local/", {
-        identifier: email,
-        password: password,
-      });
-
-      console.log("Login successful:", response.data);
-      const { jwt, user } = response.data;
-
-      setJwt(jwt);
-      setMainUser(user);
-      setIsLogged(true);
-
-
-      await AsyncStorage.setItem('jwt', jwt);
-
+      const res = await signInWithEmailAndPassword(auth,email, password);
+      console.log("Login response:", res.user);
       router.replace("/home");
 
-      alert("Login successful");
     } catch (error) {
-      console.error("Login failed:", error.response.data)
-      // alert(error.response.data.error.message);
+      console.error("Login failed:", error)
+      Alert.alert(error.response.data.error.message);
     } finally {
       setIsLoading(false);
     }
@@ -163,7 +104,7 @@ const LoginScreen = () => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Email or Username"
+              placeholder="Email"
               value={email}
               onChangeText={(text) => setEmail(text)}
               keyboardType="email-address"

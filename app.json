@@ -45,7 +45,6 @@
           "recordAudioAndroid": true
         }
       ],
-      "expo-font",
       [
         "expo-build-properties",
         {
@@ -53,9 +52,7 @@
             "useFrameWork": "static"
           }
         }
-      ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

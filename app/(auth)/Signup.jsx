@@ -13,9 +13,12 @@ import FontAwesome from "react-native-vector-icons/FontAwesome"; // For social m
 import illustration from "../../assets/images/workers-farm-activity-illustration 2.png";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../../components/GlobalApi";
 import { GlobalContext } from "../../context/GlobalProvider";
 import { Picker } from "@react-native-picker/picker";
+import { auth } from "../../firebase";
+import {  onAuthStateChanged } from "firebase/auth";
+import { registerUser } from "../../components/crud";
+
 
 export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboardType = "default", style }) => {
   return (
@@ -32,41 +35,108 @@ export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboard
   );
 };
 
-const SignUp = ({ navigation }) => {
+const SignUp = () => {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
     useContext(GlobalContext);
 
+    // useEffect(() => {
+    //   if (jwt) {
+    //     const fetchUserData = async () => {
+    //       try {
+    //         setIsLoading(true);
+    //         const res = await api.get("/users/me", {
+    //           headers: {
+    //       Authorization: `bearer ${jwt}`,
+    //           },
+    //         });
+
+
+    //         setMainUser(res.data);
+    //         setIsLogged(true);
+    //         router.push("/home");
+    //         console.log(res.data);
+
+    //       } catch (err) {
+    //         console.error("Error:", err.response.data);
+    //       }finally {
+    //         setIsLoading(false);
+    //       }
+    //     };
+
+    //     fetchUserData();
+    //   }
+    //   else {
+    //     console.log("No JWT token found in local storage");
+    //   }
+    // }
+    // , []);
+
+    const onAuthStateChangedApp = (user) => {
+      if (user) {
+        router.replace("/home");
+      } else {
+        console.log("No user found");
+      }
+    };
+  
     useEffect(() => {
-      if (jwt) {
-        const fetchUserData = async () => {
-          try {
-            setIsLoading(true);
-            const res = await api.get("/users/me", {
-              headers: {
-          Authorization: `bearer ${jwt}`,
-              },
-            });
 
+      // GoogleSignin.configure({
+      //   webClientId: '809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com',
+      // });      
 
-            setMainUser(res.data);
-            setIsLogged(true);
-            router.push("/home");
-            console.log(res.data);
+      const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
+      return sub;
+    }, []);
 
-          } catch (err) {
-            console.error("Error:", err.response.data);
-          }finally {
-            setIsLoading(false);
-          }
-        };
+    // const onGoogleButtonPress = async () => {
+    //   try {
+    //     setIsLoading(true);
+    //     const { idToken } = await GoogleSignin.signIn();
 
-        fetchUserData();
-      }
-      else {
-        console.log("No JWT token found in local storage");
-      }
-    }
-    , []);
+    //     if (!idToken) {
+    //         // if you are using older versions of google-signin, try old style result
+    //         idToken = signInResult.idToken;
+    //       }
+    //       if (!idToken) {
+    //         throw new Error('No ID token found');
+    //       }
+
+    //     const googleCredential = GoogleAuthProvider.credential(idToken);
+    //     const user = await signInWithCredential(auth, googleCredential);
+    //     console.log("User:", user);
+
+    //   //   // Check if your device supports Google Play
+    //   // await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    //   // // Get the users ID token
+    //   // const signInResult = await GoogleSignin.signIn();
+    
+    //   // // Try the new style of google-sign in result, from v13+ of that module
+    //   // idToken = signInResult.data?.idToken;
+    //   // if (!idToken) {
+    //   //   // if you are using older versions of google-signin, try old style result
+    //   //   idToken = signInResult.idToken;
+    //   // }
+    //   // if (!idToken) {
+    //   //   throw new Error('No ID token found');
+    //   // }
+      
+    //   // console.log('Google ID token:', idToken);
+
+    //   // // Create a Google credential with the token
+    //   // const googleCredential = auth.GoogleAuthProvider.credential(signInResult.data.idToken);
+    //   // console.log('Google credential:', googleCredential);
+    //   // // Sign-in the user with the credential
+    //   // return signInWithCredential(  auth, googleCredential);
+
+    //   } catch (error) {
+    //     console.error("Error:", error.message);
+    //     alert(error.message);
+    //   } finally {
+    //     setIsLoading(false);
+    //   }
+    // }
+
 
   const [user, setUser] = useState({
     name: "",
@@ -81,7 +151,8 @@ const SignUp = ({ navigation }) => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
+  };   
+
 
   const handleFormSubmit = async () => {
     console.log(user);
@@ -111,77 +182,22 @@ const SignUp = ({ navigation }) => {
       return;
     }
 
-    try {
+    try{
       setIsLoading(true);
-      const response = await api.post(
-        "auth/local/register",
-        {
-          email: user.email,
-          password: user.password,
-          username: user.username,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+     
+      registerUser(user.email, user.password, user);
 
-      console.log("Response register :", response.data);
+      setMainUser(user);
+      router.replace("/home");
 
-      if (response.status === 200) {
-        setMainUser(response.data.user);
-        setIsLogged(true);
-        setJwt(response.data.jwt);
-        alert("Account created successfully");
-        router.push("/home");
-      } 
     } catch (error) {
-      console.error("Error:", error.response.data.error.message);
-      alert(error.response.data.error.message);
+      console.error("Error:", error.message );
+      alert(error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const updateMainUser = async () => {
-    console.log("User:", user);
-
-    try {
-      setIsLoading(true);
-      const response = await api.put(
-        `users/${mainUser.id}`,
-        {
-          job: user.job,
-          phoneNumber: Number(user.phoneNumber),
-          name: user.name,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Response update :", response.data);
-    } catch (error) {
-      console.error("Error:", error.response.data.error.message);
-      alert(error.response.data.error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  console.log("main User:", mainUser);
-  console.log("JWT:", jwt);
-
-  setTimeout(() => {
-    if (jwt && mainUser.id) {
-      updateMainUser();
-    }
-  }, 5000);
-
+  
   return (
     <SafeAreaView>
       <ScrollView contentContainerStyle={{ width: "100%" }}>
@@ -275,7 +291,7 @@ const SignUp = ({ navigation }) => {
             <TouchableOpacity style={styles.socialButton}>
               <FontAwesome name="facebook" size={30} color="#3b5998" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} >
               <FontAwesome name="google" size={30} color="#DB4437" />
             </TouchableOpacity>
           </View>
@@ -294,6 +310,9 @@ const SignUp = ({ navigation }) => {
     </SafeAreaView>
   );
 };
+
+
+export default SignUp;
 
 const styles = StyleSheet.create({
   container: {
@@ -381,4 +400,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignUp;
