@@ -7,7 +7,7 @@ buildscript {
         compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
         kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.24'
-        googlePlayServicesAuthVersion = "19.2.0" 
+
         ndkVersion = "26.1.10909125"
     }
     repositories {
@@ -15,10 +15,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // classpath('com.google.firebase:firebase-bom:31.2.3')
-        // classpath 'com.google.gms:google-services:4.4.1'
-        // classpath('com.android.tools.build:gradle')
-        classpath('com.facebook.react:react-native-gradle-plugin:0.75.1')
+        classpath 'com.google.gms:google-services:4.4.1'
+        classpath('com.android.tools.build:gradle')
+        classpath('com.facebook.react:react-native-gradle-plugin')
         classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
     }
 }
@@ -39,11 +38,5 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
-    }
-}
-
-configurations.all {
-    resolutionStrategy {
-        force 'androidx.versionedparcelable:versionedparcelable:1.1.1'
     }
 }

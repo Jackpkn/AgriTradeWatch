@@ -18,8 +18,11 @@ import { useContext, useEffect } from "react";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 import {auth} from "../firebase"
 import { onAuthStateChanged } from "firebase/auth";
+import { enableScreens } from 'react-native-screens';
+
 
 export default function Index() {
+  enableScreens();
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
     useContext(GlobalContext);
 
