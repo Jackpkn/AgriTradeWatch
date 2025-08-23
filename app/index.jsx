@@ -26,72 +26,6 @@ export default function Index() {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
     useContext(GlobalContext);
 
-    // const onBackPress = () => {
-    //   if (jwt) {
-    //     const fetchUserData = async () => {
-    //       try {
-    //         const res = await api.get("/users/me", {
-    //           headers: {
-    //             Authorization: `bearer ${jwt}`,
-    //           },
-    //         });
-  
-    //         setMainUser(res.data);
-    //         setIsLogged(true);
-    //         router.replace("/home");
-    //         console.log("On Back Press from index: ", res.data);
-    //       } catch (err) {
-    //         console.error("Error:", err.response.data);
-    //       }
-    //     };
-  
-    //     fetchUserData();
-    //   } else {
-    //     console.log("No JWT token found in local storage");
-    //   }
-    // };
-  
-    // BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-  // useEffect(() => {
-  //   const tokenFunc = async () => {
-  //     try {
-  //       const token = await AsyncStorage.getItem("jwt");
-
-  //       console.log("Token: ", token);
-        
-
-  //       if (token) {
-  //         const fetchUserData = async () => {
-  //           try {
-  //             const res = await api.get("/users/me", {
-  //               headers: {
-  //                 Authorization: `bearer ${token}`,
-  //               },
-  //             });
-
-  //             setMainUser(res.data);
-  //             setIsLogged(true);
-  //             setJwt(token);
-  //             router.push("/home");
-  //             console.log("index: ", res.data);
-  //           } catch (err) {
-  //             console.error("Error:", err.response.data);
-  //           }
-  //         };
-
-  //         fetchUserData();
-  //       } else {
-  //         console.log("No JWT token found in local storage");
-  //       }
-  //     } catch (e) {
-  //       console.error("Error:", e);
-  //     }
-  //   };
-
-  //   tokenFunc();
-  // }, []);
-
   const onAuthStateChangedApp = (user) => {
     if (user) {
       router.replace("/home");
@@ -116,26 +50,6 @@ export default function Index() {
               height: "100%",
             }}
           >
-            <Link
-              href={"/home"}
-              style={{
-                width: "20%",
-                position: "absolute",
-                top: 0,
-                right: 0,
-                margin: 10,
-              }}
-            >
-              <Button
-                style={{
-                  backgroundColor: "#49A760",
-                }}
-                textColor="white"
-                mode="contained"
-              >
-                Skip
-              </Button>
-            </Link>
 
             <Image
               source={logo}

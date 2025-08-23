@@ -38,39 +38,6 @@ export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboard
 const SignUp = () => {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
     useContext(GlobalContext);
-
-    // useEffect(() => {
-    //   if (jwt) {
-    //     const fetchUserData = async () => {
-    //       try {
-    //         setIsLoading(true);
-    //         const res = await api.get("/users/me", {
-    //           headers: {
-    //       Authorization: `bearer ${jwt}`,
-    //           },
-    //         });
-
-
-    //         setMainUser(res.data);
-    //         setIsLogged(true);
-    //         router.push("/home");
-    //         console.log(res.data);
-
-    //       } catch (err) {
-    //         console.error("Error:", err.response.data);
-    //       }finally {
-    //         setIsLoading(false);
-    //       }
-    //     };
-
-    //     fetchUserData();
-    //   }
-    //   else {
-    //     console.log("No JWT token found in local storage");
-    //   }
-    // }
-    // , []);
-
     const onAuthStateChangedApp = (user) => {
       if (user) {
         router.replace("/home");
@@ -88,54 +55,6 @@ const SignUp = () => {
       const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
       return sub;
     }, []);
-
-    // const onGoogleButtonPress = async () => {
-    //   try {
-    //     setIsLoading(true);
-    //     const { idToken } = await GoogleSignin.signIn();
-
-    //     if (!idToken) {
-    //         // if you are using older versions of google-signin, try old style result
-    //         idToken = signInResult.idToken;
-    //       }
-    //       if (!idToken) {
-    //         throw new Error('No ID token found');
-    //       }
-
-    //     const googleCredential = GoogleAuthProvider.credential(idToken);
-    //     const user = await signInWithCredential(auth, googleCredential);
-    //     console.log("User:", user);
-
-    //   //   // Check if your device supports Google Play
-    //   // await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    //   // // Get the users ID token
-    //   // const signInResult = await GoogleSignin.signIn();
-    
-    //   // // Try the new style of google-sign in result, from v13+ of that module
-    //   // idToken = signInResult.data?.idToken;
-    //   // if (!idToken) {
-    //   //   // if you are using older versions of google-signin, try old style result
-    //   //   idToken = signInResult.idToken;
-    //   // }
-    //   // if (!idToken) {
-    //   //   throw new Error('No ID token found');
-    //   // }
-      
-    //   // console.log('Google ID token:', idToken);
-
-    //   // // Create a Google credential with the token
-    //   // const googleCredential = auth.GoogleAuthProvider.credential(signInResult.data.idToken);
-    //   // console.log('Google credential:', googleCredential);
-    //   // // Sign-in the user with the credential
-    //   // return signInWithCredential(  auth, googleCredential);
-
-    //   } catch (error) {
-    //     console.error("Error:", error.message);
-    //     alert(error.message);
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // }
 
 
   const [user, setUser] = useState({
@@ -285,7 +204,7 @@ const SignUp = () => {
             <Text style={styles.loginButtonText}>Sign Up</Text>
           </TouchableOpacity>
 
-          <Text style={styles.orText}>or sign in with</Text>
+          {/* <Text style={styles.orText}>or sign in with</Text>
 
           <View style={styles.socialLoginContainer}>
             <TouchableOpacity style={styles.socialButton}>
@@ -294,7 +213,7 @@ const SignUp = () => {
             <TouchableOpacity style={styles.socialButton} >
               <FontAwesome name="google" size={30} color="#DB4437" />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <TouchableOpacity >
             <Text style={styles.signUpText}>
@@ -371,7 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     marginBottom: 20,
-    marginTop: 10,
+    marginTop: 30,
   },
   loginButtonText: {
     color: "#fff",

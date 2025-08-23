@@ -13,7 +13,7 @@ import { Picker } from "@react-native-picker/picker";
 import { Button } from "react-native-paper";
 import { addCrop } from "../components/cropsController";
 import { auth } from "../firebase";
-import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImageManipulator from "expo-image-manipulator";
 
 const crops = () => {
   const { jwt, mainUser, currentLocation, setIsLoading } =
@@ -28,13 +28,16 @@ const crops = () => {
 
   const [items, setItems] = useState([
     { label: "Wheat", value: "wheat" },
-    { label: "Rice", value: "rice" },
-    { label: "Corn", value: "corn" },
-    { label: "Soybeans", value: "soybeans" },
+    { label: "Onion", value: "onion" },
+    { label: "Coriander", value: "coriander" },
+    { label: "Lemon", value: "lemon" },
+    { label: "Grapes", value: "grape" },
+    { label: "Coriander", value: "coriander" },
+    { label: "Tomato", value: "tomato" },
+    { label: "Drumstick", value: "drumstick" },
+    { label: "Garlic", value: "garlic" },
     // Add more crops as needed
   ]);
-
-  const [imgID, setImgID] = useState("0");
 
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [hasMediaLibraryPermission, setHasMediaLibraryPermission] =
@@ -88,54 +91,68 @@ const crops = () => {
       mainUser.job.toLowerCase() === "farmer" ? "/farmers" : "/consumers";
 
     const uploadImageToFirebase = async (uri) => {
-      try{
+      try {
         const response = await fetch(uri);
-      const blob = await response.blob();
-      const storage = getStorage();
-      const storageRef = ref(storage, `images/${Date.now()}`);
-      await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
+        const blob = await response.blob();
+        const storage = getStorage();
+        const storageRef = ref(storage, `images/${Date.now()}`);
+        await uploadBytes(storageRef, blob);
+        const downloadURL = await getDownloadURL(storageRef);
+        return downloadURL;
       } catch (error) {
-        console.error("Error while uploading image: ",error);
+        console.error("Error while uploading image: ", error);
       }
     };
 
-    if (photo) {
-      try {
-        setIsLoading(true);
+    const compressImage = async (uri) => {
 
+      if (!uri) {
+        return " ";
+      }
+
+      try {
         const manipulatedImage = await ImageManipulator.manipulateAsync(
-          photo.uri,
+          uri,
           [{ resize: { width: 800 } }], // Resize the image to a width of 800 pixels
           { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Compress and save as JPEG
         );
 
-        const imageUrl = await uploadImageToFirebase(manipulatedImage.uri);
-        const cropData = {
-          ...crop,
-          location: currentLocation,
-          imageUrl,
-        };
 
-        await addCrop(cropData, mainUser.job, auth.currentUser.uid, imageUrl);
+        const imageUrl =  await uploadImageToFirebase(manipulatedImage.uri) 
 
-        setIsLoading(false);
-        Alert.alert("Crop submitted successfully");
-        setCrop({
-          name: "",
-          location: {},
-          pricePerUnit: "",
-          quantity: "",
-        });
-        setPhoto(null);
-
+        return imageUrl;
       } catch (error) {
-        setIsLoading(false);
-        Alert.alert("Error uploading image", error.message);
+        console.error("Error while compressing image: ", error);
       }
-    } else {
-      Alert.alert("Please capture a photo of the crop");
+    };
+
+    try {
+      setIsLoading(true);      
+      let imageUrl = "";
+      if (photo) {
+        // console.log("photo", photo);
+        imageUrl = await compressImage(photo.uri);
+      }
+      const cropData = {
+        ...crop,
+        location: currentLocation,
+        imageUrl,
+      };
+
+      await addCrop(cropData, mainUser.job, auth.currentUser.uid, imageUrl);
+
+      setIsLoading(false);
+      Alert.alert("Crop submitted successfully");
+      setCrop({
+        name: "",
+        location: {},
+        pricePerUnit: "",
+        quantity: "",
+      });
+      setPhoto(null);
+    } catch (error) {
+      setIsLoading(false);
+      Alert.alert("Error uploading image", error.message);
     }
   };
 

@@ -2,8 +2,6 @@ import { View, Text, Image } from "react-native";
 import { Tabs, Redirect } from "expo-router";
 // import {home} from 'react-native-vector-icons/FontAwesome5';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useContext, useEffect } from "react";
-import { GlobalContext } from "../../context/GlobalProvider";
 
 
 const TabIcon = ({ icon, color, name, focused }) => {
@@ -39,7 +37,7 @@ const TabLayout = () => {
           options={{
             title: "Statistics",
             headerShown: false,
-            tabBarIcon: ({color, focused})=>( <TabIcon icon="stats-chart" name="Home" color={color} focused={focused} /> ),
+            tabBarIcon: ({color, focused})=>( <TabIcon icon="stats-chart" name="Statistics" color={color} focused={focused} /> ),
           }}
         />
         <Tabs.Screen
@@ -47,7 +45,7 @@ const TabLayout = () => {
           options={{
             title: "Profile",
             headerShown: false,
-            tabBarIcon: ({color, focused})=>( <TabIcon icon="person" name="Home" color={color} focused={focused} /> ),
+            tabBarIcon: ({color, focused})=>( <TabIcon icon="person" name="Profile" color={color} focused={focused} /> ),
           }}
         />
       </Tabs>

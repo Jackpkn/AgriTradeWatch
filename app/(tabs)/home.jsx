@@ -65,28 +65,16 @@ getUser();
       <View style={styles.container}>
       {/* Header with Weather Info */}
 
-      {/* Add Crop Button */}
-       <TouchableOpacity onPress={()=> router.push("crops") } style={styles.addCropButton} >
-        <Text style={styles.addCropText}>  Add Crop  </Text>
-        <Ionicons name="arrow-forward-circle" size={24} color="#ffffff" />
-      </TouchableOpacity>
+      
 
       {/* Main Features Section */}
       <Text style={styles.sectionTitle}>Main Features</Text>
       <View style={styles.featuresContainer}>
-        {/* Diagnose Diseases Feature */}
-        <TouchableOpacity style={styles.featureBox} >
-          <Ionicons name="medical" size={40} color="#34c759" />
-          <Text style={styles.featureTitle}>Diagnose your crop</Text>
-          <Text style={styles.featureButton}>Diagnose Diseases</Text>
-        </TouchableOpacity>
-
-        {/* Soil Status Feature */}
-        <TouchableOpacity style={styles.featureBox}>
-          <Ionicons name="leaf" size={40} color="#34c759" />
-          <Text style={styles.featureTitle}>Follow your soil status</Text>
-          <Text style={styles.featureButton}>Soil Status</Text>
-        </TouchableOpacity>
+        {/* Add Crop Button */}
+       <TouchableOpacity onPress={()=> router.push("crops") } style={styles.addCropButton} >
+        <Text style={styles.addCropText}>  Add Crop  </Text>
+        <Ionicons name="arrow-forward-circle" size={24} color="#ffffff" />
+      </TouchableOpacity>
       </View>
 
       
@@ -132,6 +120,7 @@ const styles = StyleSheet.create({
   },
   addCropButton: {
     backgroundColor: '#34c759',
+    width: '100%',
     padding: 15,
     borderRadius: 10,
     flexDirection: 'row',

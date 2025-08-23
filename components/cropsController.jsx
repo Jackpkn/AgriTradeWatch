@@ -2,7 +2,7 @@ import { auth, db } from '../firebase';
 import { v4 } from 'uuid';
 import { addDoc, collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
 
- export const addCrop = async (crop ,job = "farmers", userID, imageUri ) => {
+ export const addCrop = async (crop ,job = "farmers", userID, imageUri = "" ) => {
   try {
     const path = job === 'consumer' ? 'consumers' :'farmers'
 

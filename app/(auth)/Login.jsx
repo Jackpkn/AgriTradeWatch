@@ -137,18 +137,14 @@ const LoginScreen = () => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            onPress={() => {
-              /* Handle forgot password logic */
-            }}
-          >
+          {/* <TouchableOpacity          >
             <Text style={styles.forgotPasswordText}>Forgot Password</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>Log in</Text>
           </TouchableOpacity>
-
+{/* 
           <Text style={styles.orText}>or sign in with</Text>
 
           <View style={styles.socialLoginContainer}>
@@ -158,7 +154,7 @@ const LoginScreen = () => {
             <TouchableOpacity style={styles.socialButton}>
               <FontAwesome name="google" size={30} color="#DB4437" />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <TouchableOpacity>
             <Text style={styles.signUpText}>
@@ -230,6 +226,7 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: "green",
     paddingVertical: 15,
+    marginTop: 30,
     borderRadius: 5,
     alignItems: "center",
     marginBottom: 20,

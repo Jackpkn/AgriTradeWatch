@@ -1,3 +1,4 @@
+import { LineChart } from "react-native-gifted-charts";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,36 +18,95 @@ const stats = () => {
   const [consumerCropName, setConsumerCropName] = useState("");
   const [farmerCropName, setFarmerCropName] = useState("");
 
-  
   const [items, setItems] = useState([
-    {label:"select Crop", value:""},
+    { label:"Select Crop", value: " " },
     { label: "Wheat", value: "wheat" },
-    { label: "Rice", value: "rice" },
-    { label: "Corn", value: "corn" },
-    { label: "Soybeans", value: "soybeans" },
+    { label: "Onion", value: "onion" },
+    { label: "Coriander", value: "coriander" },
+    { label: "Lemon", value: "lemon" },
+    { label: "Grapes", value: "grape" },
+    { label: "Coriander", value: "coriander" },
+    { label: "Tomato", value: "tomato" },
+    { label: "Drumstick", value: "drumstick" },
+    { label: "Garlic", value: "garlic" },
     // Add more crops as needed
   ]);
 
-  const calculateCropMean = (cropsArray, cropName) => {
-    // Filter the array to get only the crops matching the given name
+
+  const CropGraph = (cropsArray, cropName) => {
     const filteredCrops = cropsArray.filter((crop) => crop.name === cropName);
 
-    // If no matching crops are found, return 0
     if (filteredCrops.length === 0) {
       console.log(`No crops found with the name: ${cropName}`);
-      return 0;
+      return "No data found";
     }
 
-    // Calculate the sum of pricePerUnit
-    const totalPrice = filteredCrops.reduce((sum, crop) => {
-      return sum + parseFloat(crop.pricePerUnit); // Convert pricePerUnit to a number
-    }, 0);
+    filteredCrops.sort(
+      (a, b) => new Date(a.location.timestamp) - new Date(b.location.timestamp)
+    );
 
-    // Calculate the mean
-    const meanPrice = totalPrice / filteredCrops.length;
+    const data = filteredCrops.map((crop) => {
+      const date = new Date(crop.location.timestamp);
+      const formattedDate = date
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+        })
+        .replace(/ /g, " ");
+      return {
+        value: Number(crop.pricePerUnit),
+        label: formattedDate,
+      };
+    });
 
-    console.log(`Mean price for ${cropName}:`, meanPrice);
-    return meanPrice;
+    // console.log("Data:", data);
+
+    const averagedData = data
+      .reduce((acc, curr) => {
+        const existing = acc.find((item) => item.label === curr.label);
+        if (existing) {
+          existing.value =
+            (existing.value * existing.count + curr.value) /
+            (existing.count + 1);
+          existing.count += 1;
+        } else {
+          acc.push({ ...curr, count: 1 });
+        }
+        return acc;
+      }, [])
+      .map(({ count, ...rest }) => rest);
+
+    const averagedDataWithText = averagedData.map((item) => ({
+      ...item,
+      value: Math.trunc(item.value),
+      dataPointText: Math.trunc(item.value).toString(),
+    }));
+
+
+    return (
+      <LineChart
+        data={averagedDataWithText}
+        width={300}
+        height={200}
+        yAxisLabel={"Price(in rupee)"}
+        xAxisLabelTextStyle={{ color: "black" }}
+        yAxisLabelTextStyle={{ color: "black" }}
+        rotateLabel
+        showVerticalLines
+        textColor="green"
+        textShiftY={-2}
+        textShiftX={-5}
+        textFontSize={13}
+        startFillColor={"rgb(84,219,234)"}
+        endFillColor={"rgb(84,219,234)"}
+        startOpacity={0.4}
+        endOpacity={0.1}
+        areaChart
+        color="#07BAD1"
+        xAxisThickness={0}
+        yAxisThickness={0}
+      />
+    );
   };
 
   // useEffect(() => {
@@ -69,20 +129,16 @@ const stats = () => {
 
   useEffect(() => {
     fetchData();
-  }
-  , []);
+  }, []);
 
   return (
     <SafeAreaView>
       <ScrollView contentContainerStyle={{ width: "100%" }}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.headerText}>Stats</Text>
+            <Text style={styles.headerText}>Statistical Analysis</Text>
           </View>
-          <View style={styles.profileSection}>
-            <Text style={styles.label}>Total crops added by consumers:</Text>
-            <Text style={styles.value}>{consumerCrops.length}</Text>
-          </View>
+          <Text style={styles.ContainerHeadingText}>Consumer Crops</Text>
           <View style={styles.profileSection}>
             <Text style={styles.label}>Select Crop:</Text>
             <Picker
@@ -91,21 +147,28 @@ const stats = () => {
               onValueChange={(itemValue) => setConsumerCropName(itemValue)}
             >
               {items.map((item) => (
-                <Picker.Item key={item.value} label={item.label} value={item.value} />
+                <Picker.Item
+                  key={item.value}
+                  label={item.label}
+                  value={item.value}
+                />
               ))}
             </Picker>
           </View>
-          <View style={styles.profileSection}>
-            <Text style={styles.label}>Average Price for {consumerCropName}:</Text>
-            <Text style={styles.value}>
-              {consumerCropName ? calculateCropMean(consumerCrops, consumerCropName) : "Select a crop"}
+            <Text style={{ textAlign: "center", marginTop: 10 }}>
+              X Axis: Dates
             </Text>
+            <Text style={{ textAlign: "center", marginTop: 10 }}>
+              Y Axis: Price (in Rupees)
+            </Text>
+          <View style={styles.profileSection}>
+            <Text> {CropGraph(consumerCrops, consumerCropName)}</Text>
           </View>
-          <View style={{marginTop:70, display:"block", width:"100%"}}></View>
-          <View style={styles.profileSection} >
-            <Text style={styles.label}>Total crops added by Farmers:</Text>
-            <Text style={styles.value}> {farmerCrops.length} </Text>
-          </View>
+          <View
+            style={{ marginTop: 20, display: "block", width: "100%" }}
+          ></View>
+
+          <Text style={styles.ContainerHeadingText}>Farmer Crops</Text>
           <View style={styles.profileSection}>
             <Text style={styles.label}>Select Crop:</Text>
             <Picker
@@ -114,42 +177,27 @@ const stats = () => {
               onValueChange={(itemValue) => setFarmerCropName(itemValue)}
             >
               {items.map((item) => (
-                <Picker.Item key={item.value} label={item.label} value={item.value} />
+                <Picker.Item
+                  key={item.value}
+                  label={item.label}
+                  value={item.value}
+                />
               ))}
             </Picker>
           </View>
-          <View style={styles.profileSection}>
-            <Text style={styles.label}>Average Price for {farmerCropName}:</Text>
-            <Text style={styles.value}>
-              {farmerCropName ? calculateCropMean(farmerCrops, farmerCropName) : "Select a crop"}
+            <Text style={{ textAlign: "center", marginTop: 10 }}>
+              X Axis: Dates
             </Text>
-          </View>
-          <View style={styles.profileSection}>
-            <Text style={styles.label}>Total Crops:</Text>
-            <Text style={styles.value}>
-              {consumerCrops.length + farmerCrops.length}
+            <Text style={{ textAlign: "center", marginTop: 10 }}>
+              Y Axis: Price (in Rupees)
             </Text>
+          <View style={styles.profileSection}>
+            <Text> {CropGraph(farmerCrops, farmerCropName)}</Text>
           </View>
+          <View
+            style={{ marginTop: 70, display: "block", width: "100%" }}
+          ></View>
         </View>
-
-        <View style={styles.buttonContainer}>
-          <Button
-            mode="contained"
-            style={{
-              position: "absolute",
-              bottom: 20,
-              alignSelf: "center",
-              backgroundColor: "#1F4E3D",
-            }}
-            textColor="white"
-            onPress={fetchData}
-          >
-            {" "}
-            Fetch Data
-          </Button>
-        </View>
-
-        {/* <Boxplot data={prices} width={300} height={100} margin={10} /> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -173,6 +221,14 @@ const styles = StyleSheet.create({
   headerText: {
     color: "white",
     fontSize: 20,
+  },
+  ContainerHeadingText: {
+    color: "#333",
+    fontSize: 30,
+    fontFamily: " Arial",
+    padding: 10,
+    // textDecorationLine: "underline",
+  fontWeight: 'bold'
   },
   profileSection: {
     flexDirection: "row",
