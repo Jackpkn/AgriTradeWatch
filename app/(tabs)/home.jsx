@@ -1,13 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity,PermissionsAndroid, Image, ScrollView  , Platform, Alert} from 'react-native';
 // import Geolocation from 'react-native-geolocation-service';
-import * as Location from 'expo-location';  
+import { getLocation } from '../../components/getLocation';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalContext } from '../../context/GlobalProvider';
 import {  Link, router } from 'expo-router';
 import {auth} from '../../firebase';
 import { getUserData } from '../../components/crud';
+import { Button } from "react-native-paper";
 
 // Main App Component
 const home = () => {
@@ -17,68 +18,65 @@ const home = () => {
 
   const [location, setLocation] = useState(null)
 
-  useEffect(() => {
-    const getLocation = async () => {
-      try{
-        let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-
-      console.log( "location :" , location);
-      setLocation(location);
-      setCurrentLocation(location);
-      } catch (error) {
+  const fetchLocation = React.useCallback(() => {
+    getLocation(
+      (location) => {
+        setLocation(location);
+        setCurrentLocation(location);
+      },
+      (error) => {
         console.error(error);
+      },
+      setCurrentLocation
+    );
+  }, [setCurrentLocation]);
+
+  const getUser = React.useCallback(async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userData = await getUserData(user.uid);
+        setMainUser(userData);
       }
+    } catch (error) {
+      console.error('Error getting user:', error);
     }
-getLocation();
+  }, [setMainUser]);
 
-const getUser = async () => {
-  try {
-    const user = auth.currentUser;
-    if (user) {
-      // console.log('User:', user);
-      const userData = await getUserData(user.uid);
-      console.log('User Data:', userData);
-      setMainUser(userData);
-    } else {
-      console.log('No user found');
-    }
-  } catch (error) {
-    console.error('Error getting user:', error);
-
-  }
-}
-
-getUser();
-
-  }
-  , []);
+  useEffect(() => {
+    fetchLocation();
+    getUser();
+  }, [fetchLocation, getUser]);
 
   return (
-    <SafeAreaView>
-      <ScrollView contentContainerStyle={{ width: "100%" }} >
-      <View style={styles.container}>
-      {/* Header with Weather Info */}
-
-      
-
-      {/* Main Features Section */}
-      <Text style={styles.sectionTitle}>Main Features</Text>
-      <View style={styles.featuresContainer}>
-        {/* Add Crop Button */}
-       <TouchableOpacity onPress={()=> router.push("crops") } style={styles.addCropButton} >
-        <Text style={styles.addCropText}>  Add Crop  </Text>
-        <Ionicons name="arrow-forward-circle" size={24} color="#ffffff" />
-      </TouchableOpacity>
-      </View>
-
-      
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#eafbe7' }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 32 }}>
+        <View style={{ width: '97%', backgroundColor: '#fff', borderRadius: 24, padding: 18, shadowColor: '#49A760', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 6, marginTop: 32, alignItems: 'center' }}>
+          <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#1F4E3D', marginBottom: 12, letterSpacing: 1, textAlign: 'center' }}>Welcome to MandiGo</Text>
+          <Text style={{ fontSize: 16, color: '#49A760', marginBottom: 18, textAlign: 'center' }}>Your one-stop platform for crop price tracking</Text>
+          <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#333333', marginBottom: 10, textAlign: 'center' }}>Main Features</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
+            <View style={{ backgroundColor: '#eafbe7', width: '48%', padding: 16, borderRadius: 16, alignItems: 'center', marginBottom: 16, elevation: 2 }}>
+              <Ionicons name="add-circle" size={32} color="#49A760" />
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F4E3D', marginTop: 8 }}>Add Crop</Text>
+              <Text style={{ fontSize: 13, color: '#49A760', textAlign: 'center', marginVertical: 4 }}>Submit new crop prices and details</Text>
+              <Button mode="contained" style={{ backgroundColor: '#49A760', marginTop: 8, borderRadius: 8 }} textColor="#fff" onPress={() => router.push("crops")}>Go</Button>
+            </View>
+            <View style={{ backgroundColor: '#eafbe7', width: '48%', padding: 16, borderRadius: 16, alignItems: 'center', marginBottom: 16, elevation: 2 }}>
+              <Ionicons name="stats-chart" size={32} color="#49A760" />
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F4E3D', marginTop: 8 }}>View Stats</Text>
+              <Text style={{ fontSize: 13, color: '#49A760', textAlign: 'center', marginVertical: 4 }}>Analyze crop price trends</Text>
+              <Button mode="contained" style={{ backgroundColor: '#49A760', marginTop: 8, borderRadius: 8 }} textColor="#fff" onPress={() => router.push("stats")}>Go</Button>
+            </View>
+            <View style={{ backgroundColor: '#eafbe7', width: '48%', padding: 16, borderRadius: 16, alignItems: 'center', marginBottom: 16, elevation: 2 }}>
+              <Ionicons name="person-circle" size={32} color="#49A760" />
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F4E3D', marginTop: 8 }}>Profile</Text>
+              <Text style={{ fontSize: 13, color: '#49A760', textAlign: 'center', marginVertical: 4 }}>View and edit your profile</Text>
+              <Button mode="contained" style={{ backgroundColor: '#49A760', marginTop: 8, borderRadius: 8 }} textColor="#fff" onPress={() => router.push("profile")}>Go</Button>
+            </View>
+            {/* Add more feature cards here as needed */}
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
