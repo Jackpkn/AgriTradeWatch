@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Agritradewatch",
+    "name": "MandiGo",
     "slug": "Agritradewatch",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.devsingal.Agritradewatch",
-      "googleServicesFile": "./GoogleService-Info.plist",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -40,8 +40,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Agritradewatch to access your camera",
-          "microphonePermission": "Allow Agritradewatch to access your microphone",
+          "cameraPermission": "Allow MandiGo to access your camera",
+          "microphonePermission": "Allow MandiGo to access your microphone",
           "recordAudioAndroid": true
         }
       ],
@@ -52,7 +52,8 @@
             "useFrameWork": "static"
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
