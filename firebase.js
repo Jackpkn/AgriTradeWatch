@@ -1,30 +1,23 @@
-// firebase.js
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
- import {getStorage} from 'firebase/storage';
+import { getStorage } from 'firebase/storage';
+import { getFirestore } from 'firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
-// Add additional services if needed
-import { getFirestore } from 'firebase/firestore';
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
+};
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAKMDXrtdbTQxn2yhJVY9M9HTAuX1sWGe4",
-    authDomain: "agritradewatch-ea2dc.firebaseapp.com",
-    projectId: "agritradewatch-ea2dc",
-    storageBucket: "agritradewatch-ea2dc.firebasestorage.app",
-    messagingSenderId: "809126175103",
-    appId: "1:809126175103:android:d50742b8da0df189713a4a",
-  };
-
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Export services as needed
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 
 export { auth, db, storage };
