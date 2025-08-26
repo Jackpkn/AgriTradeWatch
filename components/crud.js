@@ -1,6 +1,6 @@
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, onSnapshot, getDocs } from 'firebase/firestore';
 
 export const registerUser = async (email, password, user) => {
   try {
@@ -46,8 +46,33 @@ export const getUserData = async (userId) => {
       return userData;
     } else {
       console.log('No such user!');
+      return null;
     }
   } catch (error) {
     console.error('Error fetching user data:', error);
+    if (error.code === 'failed-precondition' || error.code === 'unavailable') {
+      console.log('App is offline, trying to get cached data...');
+      return null;
+    }
+    throw error;
+  }
+};
+
+// Function to fetch all crops
+export const fetchCrops = async (path) => {
+  console.log('Fetching crops from collection:', path);
+  try {
+    const cropsQuery = query(collection(db, path));
+    const snapshot = await getDocs(cropsQuery);
+    const crops = [];
+    snapshot.forEach((doc) => {
+      crops.push({ id: doc.id, ...doc.data() });
+    });
+    console.log(`Received ${crops.length} crops from ${path}`);
+    console.log(crops);
+    return crops;
+  } catch (error) {
+    console.error('Error fetching crops:', error);
+    throw error;
   }
 };

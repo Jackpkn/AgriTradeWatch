@@ -68,6 +68,7 @@ const home = () => {
               <Text style={{ fontSize: 13, color: '#49A760', textAlign: 'center', marginVertical: 4 }}>Analyze crop price trends</Text>
               <Button mode="contained" style={{ backgroundColor: '#49A760', marginTop: 8, borderRadius: 8 }} textColor="#fff" onPress={() => router.push("stats")}>Go</Button>
             </View>
+            
             <View style={{ backgroundColor: '#eafbe7', width: '48%', padding: 16, borderRadius: 16, alignItems: 'center', marginBottom: 16, elevation: 2 }}>
               <Ionicons name="person-circle" size={32} color="#49A760" />
               <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F4E3D', marginTop: 8 }}>Profile</Text>

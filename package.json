@@ -42,6 +42,7 @@
     "expo-system-ui": "~5.0.11",
     "expo-web-browser": "~14.2.0",
     "firebase": "^11.0.2",
+    "leaflet": "^1.9.4",
     "metro": "^0.82.5",
     "metro-config": "^0.82.5",
     "metro-resolver": "^0.82.5",
