@@ -8,28 +8,27 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons"; // For icons
-import FontAwesome from "react-native-vector-icons/FontAwesome"; // For social media icons
+import Icon from "react-native-vector-icons/Ionicons";
 import illustration from "../../assets/images/workers-farm-activity-illustration 2.png";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GlobalContext } from "../../context/GlobalProvider";
 import { Picker } from "@react-native-picker/picker";
 import { auth } from "../../firebase";
-import {  onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { registerUser } from "../../components/crud";
 
 
 export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboardType = "default", style }) => {
   return (
-    <View style={style ? style : styles.inputContainer }>
+    <View style={style ? style : styles.inputContainer}>
       <Icon name={icon} size={20} color="#000" style={styles.inputIcon} />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
         value={value}
         onChangeText={handleChangeText}
-        keyboardType={ keyboardType }
+        keyboardType={keyboardType}
       />
     </View>
   );
@@ -38,23 +37,23 @@ export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboard
 const SignUp = () => {
   const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
     useContext(GlobalContext);
-    const onAuthStateChangedApp = (user) => {
-      if (user) {
-        router.replace("/home");
-      } else {
-        console.log("No user found");
-      }
-    };
-  
-    useEffect(() => {
+  const onAuthStateChangedApp = (user) => {
+    if (user) {
+      router.replace("/home");
+    } else {
+      console.log("No user found");
+    }
+  };
 
-      // GoogleSignin.configure({
-      //   webClientId: '809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com',
-      // });      
+  useEffect(() => {
 
-      const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
-      return sub;
-    }, []);
+    // GoogleSignin.configure({
+    //   webClientId: '809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com',
+    // });      
+
+    const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
+    return sub;
+  }, []);
 
 
   const [user, setUser] = useState({
@@ -70,7 +69,7 @@ const SignUp = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };   
+  };
 
 
   const handleFormSubmit = async () => {
@@ -101,22 +100,22 @@ const SignUp = () => {
       return;
     }
 
-    try{
+    try {
       setIsLoading(true);
-     
+
       registerUser(user.email, user.password, user);
 
       setMainUser(user);
       router.replace("/home");
 
     } catch (error) {
-      console.error("Error:", error.message );
+      console.error("Error:", error.message);
       alert(error);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <SafeAreaView>
       <ScrollView contentContainerStyle={{ width: "100%" }}>

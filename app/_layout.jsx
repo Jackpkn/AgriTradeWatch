@@ -1,7 +1,6 @@
 import { Slot, Stack } from "expo-router";
 import Sentry from "../sentry";
 import { StatusBar } from "expo-status-bar";
-import { Text } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { GlobalProvider } from "../context/GlobalProvider";
 import GlobalLoader from "../components/Loader";

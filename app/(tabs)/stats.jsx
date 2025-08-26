@@ -19,7 +19,7 @@ const stats = () => {
   const [farmerCropName, setFarmerCropName] = useState("");
 
   const items = [
-    { label:"Select Crop", value: " " },
+    { label: "Select Crop", value: " " },
     { label: "Wheat", value: "wheat" },
     { label: "Onion", value: "onion" },
     { label: "Coriander", value: "coriander" },

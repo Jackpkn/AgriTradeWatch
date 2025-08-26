@@ -1,20 +1,20 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity,PermissionsAndroid, Image, ScrollView  , Platform, Alert} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, PermissionsAndroid, Image, ScrollView, Platform, Alert } from 'react-native';
 // import Geolocation from 'react-native-geolocation-service';
 import { getLocation } from '../../components/getLocation';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalContext } from '../../context/GlobalProvider';
-import {  Link, router } from 'expo-router';
-import {auth} from '../../firebase';
+import { Link, router } from 'expo-router';
+import { auth } from '../../firebase';
 import { getUserData } from '../../components/crud';
 import { Button } from "react-native-paper";
 
 // Main App Component
 const home = () => {
 
-  
-  const { setCurrentLocation, setMainUser  } = useContext(GlobalContext);
+
+  const { setCurrentLocation, setMainUser } = useContext(GlobalContext);
 
   const [location, setLocation] = useState(null)
 

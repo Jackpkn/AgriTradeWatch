@@ -64,7 +64,7 @@ const LoginScreen = () => {
 
     } catch (error) {
       console.error("Login failed:", error)
-      Alert.alert(error.response.data.error.message);
+      Alert.alert("Login Failed", error.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
     }

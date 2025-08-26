@@ -57,7 +57,7 @@ const crops = () => {
     fetchAndSetLocation();
     const handleAppStateChange = async (nextAppState) => {
       if (nextAppState === 'active' && locationRequestedRef.current) {
-  await fetchAndSetLocation();
+        await fetchAndSetLocation();
         locationRequestedRef.current = false;
       }
     };
@@ -178,7 +178,7 @@ const crops = () => {
       return;
     }
     // Listen for app focus to re-fetch location if user returned from settings
-  // (No need for duplicate AppState handler here, handled in top-level effect)
+    // (No need for duplicate AppState handler here, handled in top-level effect)
 
     if (isNaN(Number(crop.pricePerUnit))) {
       Alert.alert("Enter correct price");

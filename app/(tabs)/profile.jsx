@@ -8,7 +8,7 @@ import { auth } from '../../firebase';
 import { getUserData } from '../../components/crud';
 
 const profile = () => {
-  const {setIsLoading} = useContext(GlobalContext);
+  const { setIsLoading } = useContext(GlobalContext);
 
   const [user, setUser] = useState(null);
 
@@ -23,7 +23,7 @@ const profile = () => {
       } finally {
         setIsLoading(false);
       }
-    
+
     };
     fetchUserData();
   }, []);

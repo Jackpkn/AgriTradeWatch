@@ -1,16 +1,13 @@
 import { Link, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
-  BackHandler,
   Image,
   ImageBackground,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "react-native-paper";
 import logo from "../assets/images/logo.png";
 import { GlobalContext } from "../context/GlobalProvider";
 import { useContext, useEffect, useCallback } from "react";
