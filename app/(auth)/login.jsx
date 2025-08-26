@@ -24,7 +24,7 @@ import { getUserData } from "../../components/crud";
 
 
 const LoginScreen = () => {
-  const { setIsLoading , setMainUser} =
+  const { setIsLoading, setMainUser } =
     useContext(GlobalContext);
 
   const onAuthStateChangedApp = (user) => {
@@ -53,12 +53,12 @@ const LoginScreen = () => {
       alert("Please enter your email and password");
       return;
     }
-    
+
 
     try {
-     
+
       setIsLoading(true);
-      const res = await signInWithEmailAndPassword(auth,email, password);
+      const res = await signInWithEmailAndPassword(auth, email, password);
       console.log("Login response:", res.user);
       router.replace("/home");
 
@@ -144,7 +144,7 @@ const LoginScreen = () => {
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>Log in</Text>
           </TouchableOpacity>
-{/* 
+          {/* 
           <Text style={styles.orText}>or sign in with</Text>
 
           <View style={styles.socialLoginContainer}>

@@ -16,7 +16,7 @@ import { GlobalContext } from "../context/GlobalProvider";
 import { useContext, useEffect, useCallback } from "react";
 // import api from "../components/GlobalApi";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
-import {auth} from "../firebase"
+import { auth } from "../firebase"
 import { onAuthStateChanged } from "firebase/auth";
 import { enableScreens } from 'react-native-screens';
 
