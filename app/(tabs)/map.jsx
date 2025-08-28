@@ -201,16 +201,34 @@ const Map = () => {
     const latitude = markerPosition.latitude;
     const longitude = markerPosition.longitude;
 
-    const markers = filteredCrops
+    // Show SELECTED CROP TYPE with different markers for inside/outside radius
+    const selectedCropMarkers = allCrops
+      .filter(crop => crop.name?.toLowerCase() === selectedCrop.toLowerCase()) // Filter by selected crop type first
       .map((crop) => {
         const lat = crop.location?.coords?.latitude;
         const lon = crop.location?.coords?.longitude;
         if (!lat || !lon) return "";
 
+        // Calculate distance from center to determine if crop is inside radius
+        const distance = Math.sqrt(
+          Math.pow((lat - latitude) * 111319.9, 2) + // Convert degrees to meters (approximate)
+          Math.pow((lon - longitude) * 111319.9 * Math.cos(latitude * Math.PI / 180), 2)
+        );
+
+        const isInsideRadius = distance <= (radius * 1000); // radius is in km, convert to meters
+        const markerColor = isInsideRadius ? '#49A760' : '#FFA500'; // Green for inside, Orange for outside
+
         return `
-        L.marker([${lat}, ${lon}])
+        L.marker([${lat}, ${lon}], {
+          icon: L.divIcon({
+            className: 'custom-crop-marker',
+            html: '<div style="background-color: ${markerColor}; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); ${isInsideRadius ? 'box-shadow: 0 0 0 3px #49A760, 0 2px 6px rgba(0,0,0,0.4);' : ''}"></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          })
+        })
           .addTo(map)
-          .bindPopup('${crop.name}<br>Price: ₹${crop.pricePerUnit}<br>Quantity: ${crop.quantity}');
+          .bindPopup('<div style="font-family: Arial, sans-serif; max-width: 220px;"><strong>${cropOptions.find(c => c.value === selectedCrop)?.icon} ${crop.name}</strong><br>Price: ₹${crop.pricePerUnit}<br>Quantity: ${crop.quantity}<br><span style="color: ${markerColor}; font-weight: bold; font-size: 14px;">${isInsideRadius ? '✅ Inside Radius' : '📍 Outside Radius'}</span><br><small>Distance: ${Math.round(distance)}m from you</small></div>');
       `;
       })
       .join("");
@@ -236,6 +254,16 @@ const Map = () => {
           <style>
             body { margin: 0; }
             #map { height: 100vh; width: 100vw; }
+
+            .custom-crop-marker {
+              background: transparent !important;
+              border: none !important;
+            }
+
+            .custom-marker {
+              background: transparent !important;
+              border: none !important;
+            }
           </style>
         </head>
         <body>
@@ -275,8 +303,8 @@ const Map = () => {
               radius: ${radius * 1000}
             }).addTo(map);
 
-            // Add markers for crops
-            ${markers}
+            // Add markers for selected crop type
+            ${selectedCropMarkers}
 
             // Function to update circle when marker moves
             function updateCircle(lat, lng) {
@@ -310,7 +338,7 @@ const Map = () => {
         </body>
       </html>
     `;
-  }, [markerPosition, filteredCrops, radius, selectedMapType]);
+  }, [markerPosition, allCrops, radius, selectedMapType]);
 
   // Handle messages from WebView
   const handleWebViewMessage = useCallback((event) => {
@@ -594,6 +622,9 @@ const Map = () => {
               <Text style={styles.consumerInfoTitle}>
                 Consumer Reported Buying Price: {cropOptions.find(c => c.value === selectedCrop)?.icon} {cropOptions.find(c => c.value === selectedCrop)?.label}
               </Text>
+              <Text style={styles.consumerInfoSubtitle}>
+                Average calculated from {Math.round(radius * 1000)}m radius
+              </Text>
             </View>
             <View style={styles.consumerStatsContainer}>
               <View style={styles.consumerStat}>
@@ -632,6 +663,27 @@ const Map = () => {
             </TouchableOpacity>
           </View>
 
+          {/* Map Legend */}
+          <View style={styles.mapLegend}>
+            <Text style={styles.legendTitle}>
+              {cropOptions.find(c => c.value === selectedCrop)?.icon} {cropOptions.find(c => c.value === selectedCrop)?.label} Locations
+            </Text>
+            <View style={styles.legendItems}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendMarker, { backgroundColor: '#49A760' }]} />
+                <Text style={styles.legendText}>In {Math.round(radius * 1000)}m Radius</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendMarker, { backgroundColor: '#FFA500' }]} />
+                <Text style={styles.legendText}>Outside Radius</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={styles.legendMarkerCenter} />
+                <Text style={styles.legendText}>Your Location</Text>
+              </View>
+            </View>
+          </View>
+
           {/* Debug info */}
           <View style={styles.debugSection}>
             <Text style={styles.debugText}>
@@ -639,6 +691,9 @@ const Map = () => {
             </Text>
             <Text style={styles.debugText}>
               Selected: {selectedCrop} | Radius: {Math.round(radius * 1000)}m | Unit: {priceUnit}
+            </Text>
+            <Text style={styles.debugText}>
+              {cropOptions.find(c => c.value === selectedCrop)?.icon} {cropOptions.find(c => c.value === selectedCrop)?.label}: {filteredCrops.length} in radius | {allCrops.filter(crop => crop.name?.toLowerCase() === selectedCrop.toLowerCase()).length - filteredCrops.length} outside
             </Text>
           </View>
 
@@ -1015,7 +1070,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   mapContainer: {
-    height: 350, // Fixed height to prevent expansion
+    height: 450, // Fixed height to prevent expansion
     backgroundColor: "#fff",
     margin: 10,
     borderRadius: 12,
@@ -1238,6 +1293,70 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "monospace",
   },
+  // Map Legend Styles
+  mapLegend: {
+    backgroundColor: "#fff",
+    marginHorizontal: 10,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  legendTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1F4E3D",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  legendItems: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+  legendMarker: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+    marginRight: 6,
+  },
+  legendMarkerCenter: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#FF4444",
+    borderWidth: 2,
+    borderColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 12,
+    color: "#1F4E3D",
+    fontWeight: "500",
+    textAlign: "center",
+  },
   // Consumer Info Panel Styles
   consumerInfoPanel: {
     backgroundColor: "#fff",
@@ -1261,6 +1380,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  consumerInfoSubtitle: {
+    color: "#fff",
+    fontSize: 12,
+    opacity: 0.9,
+    textAlign: "center",
+    marginTop: 4,
+    fontStyle: "italic",
   },
   consumerStatsContainer: {
     padding: 16,
