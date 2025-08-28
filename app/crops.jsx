@@ -10,7 +10,7 @@ import * as ImagePicker from "expo-image-picker";
 import { TextInput } from "react-native-paper";
 import img from "../assets/images/Group 2.png";
 import { GlobalContext } from "../context/GlobalProvider";
-import { getLocation } from "../components/getLocation";
+import { getMandatoryLocation } from "../components/getLocation";
 // import api from "../components/GlobalApi";
 import { Picker } from "@react-native-picker/picker";
 // import { TouchableOpacity } from "react-native";
@@ -37,14 +37,14 @@ const crops = () => {
   useEffect(() => {
     const fetchAndSetLocation = async () => {
       try {
-        const loc = await getLocation(
+        const loc = await getMandatoryLocation(
           (location) => {
             setCurrentLocation(location);
             console.log('Location updated:', location);
           },
           (error) => {
             console.error('Error fetching location:', error);
-            // Alert.alert('Location Error', 'Could not fetch location.');
+            // The mandatory location function will handle alerts and app exit
           },
           setCurrentLocation
         );
@@ -180,7 +180,7 @@ const crops = () => {
     // Listen for app focus to re-fetch location if user returned from settings
     // (No need for duplicate AppState handler here, handled in top-level effect)
 
-    if (isNaN(Number(crop.pricePerUnit))) {
+    if (isNaN(Number(crop.pricePerUnit))) {t
       Alert.alert("Enter correct price");
       return;
     }

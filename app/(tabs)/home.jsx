@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, PermissionsAndroid, Image, ScrollView, Platform, Alert } from 'react-native';
 // import Geolocation from 'react-native-geolocation-service';
-import { getLocation } from '../../components/getLocation';
+
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalContext } from '../../context/GlobalProvider';
@@ -14,22 +14,10 @@ import { Button } from "react-native-paper";
 const home = () => {
 
 
-  const { setCurrentLocation, setMainUser } = useContext(GlobalContext);
+  const { currentLocation, setMainUser } = useContext(GlobalContext);
 
-  const [location, setLocation] = useState(null)
-
-  const fetchLocation = React.useCallback(() => {
-    getLocation(
-      (location) => {
-        setLocation(location);
-        setCurrentLocation(location);
-      },
-      (error) => {
-        console.error(error);
-      },
-      setCurrentLocation
-    );
-  }, [setCurrentLocation]);
+  // Location is now handled at app level in GlobalProvider
+  // This component receives location from context
 
   const getUser = React.useCallback(async () => {
     try {
@@ -44,9 +32,8 @@ const home = () => {
   }, [setMainUser]);
 
   useEffect(() => {
-    fetchLocation();
     getUser();
-  }, [fetchLocation, getUser]);
+  }, [getUser]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#eafbe7' }}>

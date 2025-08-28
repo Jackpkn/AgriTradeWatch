@@ -49,6 +49,9 @@ const Map = () => {
   const [radius, setRadius] = useState(0.5); // Default to 500m (0.5km)
   const [markerPosition, setMarkerPosition] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
+  const [allConsumerCrops, setAllConsumerCrops] = useState([]);
+  const [allFarmerCrops, setAllFarmerCrops] = useState([]);
+  const [priceUnit, setPriceUnit] = useState('perUnit'); // 'perUnit' or 'perKg'
   const webViewRef = useRef(null);
   const radiusTimeoutRef = useRef(null);
 
@@ -77,7 +80,7 @@ const Map = () => {
     }, 150); // 150ms debounce
   }, []);
 
-  // Fetch all crops
+  // Fetch all crops - separate consumer and farmer data
   useEffect(() => {
     const fetchAllCrops = async () => {
       try {
@@ -85,6 +88,9 @@ const Map = () => {
           fetchCrops("consumers"),
           fetchCrops("farmers"),
         ]);
+        setAllConsumerCrops(consumerCrops);
+        setAllFarmerCrops(farmerCrops);
+        // Combine for backward compatibility with map markers
         setAllCrops([...consumerCrops, ...farmerCrops]);
       } catch (error) {
         console.error("Error fetching crops:", error);
@@ -105,6 +111,7 @@ const Map = () => {
   // Set initial marker position
   useEffect(() => {
     if (currentLocation?.coords && !markerPosition) {
+      console.log('Setting initial marker position:', currentLocation.coords);
       setMarkerPosition({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
@@ -140,10 +147,57 @@ const Map = () => {
     return filtered;
   }, [markerPosition, selectedCrop, radius, allCrops, calculateDistance]);
 
+  // Filter consumers within radius
+  const consumersInRadius = useMemo(() => {
+    if (!markerPosition || !allConsumerCrops.length) return [];
+
+    return allConsumerCrops.filter((crop) => {
+      if (selectedCrop && crop.name?.toLowerCase() !== selectedCrop.toLowerCase()) {
+        return false;
+      }
+
+      const cropLat = crop.location?.coords?.latitude;
+      const cropLon = crop.location?.coords?.longitude;
+      if (!cropLat || !cropLon) return false;
+
+      const distance = calculateDistance(
+        markerPosition.latitude,
+        markerPosition.longitude,
+        cropLat,
+        cropLon
+      );
+
+      return distance <= radius;
+    });
+  }, [markerPosition, selectedCrop, radius, allConsumerCrops, calculateDistance]);
+
+  // Consumer statistics
+  const consumerStats = useMemo(() => {
+    if (!consumersInRadius.length) {
+      return { count: 0, averagePrice: 0, averagePricePerKg: 0 };
+    }
+
+    const prices = consumersInRadius.map(crop => Number(crop.pricePerUnit) || 0).filter(price => price > 0);
+    const averagePrice = prices.length > 0 ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0;
+
+    // Estimate price per kg (rough conversion - this would need real data)
+    const averagePricePerKg = averagePrice * 2; // Placeholder conversion
+
+    return {
+      count: consumersInRadius.length,
+      averagePrice: Math.round(averagePrice),
+      averagePricePerKg: Math.round(averagePricePerKg)
+    };
+  }, [consumersInRadius]);
+
   // Memoize the map HTML to prevent unnecessary re-renders
   const mapHtml = useMemo(() => {
-    if (!markerPosition) return "";
+    if (!markerPosition) {
+      console.log('No markerPosition, returning empty mapHtml');
+      return "";
+    }
 
+    console.log('Generating map HTML for position:', markerPosition);
     const latitude = markerPosition.latitude;
     const longitude = markerPosition.longitude;
 
@@ -273,28 +327,35 @@ const Map = () => {
     }
   }, []);
 
+  // Debug logging for map visibility
+  useEffect(() => {
+    console.log('Map visibility check:', {
+      hasCurrentLocation: !!currentLocation,
+      hasMarkerPosition: !!markerPosition,
+      hasMapHtml: !!mapHtml,
+      mapHtmlLength: mapHtml.length,
+      allCropsCount: allCrops.length
+    });
+  }, [currentLocation, markerPosition, mapHtml, allCrops]);
 
 
-  // Process data for chart with daily averages
-  const chartData = useMemo(() => {
-    if (!filteredCrops.length) {
-      console.log("No filtered crops for chart");
-      return [];
-    }
 
-    console.log("Processing chart data for", filteredCrops.length, "crops");
+  // Process consumer chart data (independent of radius)
+  const consumerChartData = useMemo(() => {
+    if (!allConsumerCrops.length) return [];
 
-    // Group crops by date
+    const cropData = allConsumerCrops.filter(crop =>
+      selectedCrop && crop.name?.toLowerCase() === selectedCrop.toLowerCase()
+    );
+
+    if (!cropData.length) return [];
+
+    // Group by date
     const pricesByDate = {};
 
-    filteredCrops.forEach((crop, index) => {
-      const timestamp =
-        crop.location?.timestamp || crop.createdAt?.seconds * 1000;
-
-      if (!timestamp) {
-        console.log(`Crop ${index} missing timestamp:`, crop);
-        return;
-      }
+    cropData.forEach((crop) => {
+      const timestamp = crop.location?.timestamp || crop.createdAt?.seconds * 1000;
+      if (!timestamp) return;
 
       const date = new Date(timestamp);
       const dateKey = date.toLocaleDateString("en-GB", {
@@ -305,79 +366,91 @@ const Map = () => {
 
       if (!pricesByDate[dateKey]) {
         pricesByDate[dateKey] = {
-          total: 0,
-          count: 0,
+          prices: [],
           timestamp: timestamp,
-          samples: [],
         };
       }
 
-      const price = Number(crop.pricePerUnit);
-      if (!isNaN(price) && price > 0) {
-        pricesByDate[dateKey].total += price;
-        pricesByDate[dateKey].count += 1;
-        pricesByDate[dateKey].samples.push(price);
+      const price = priceUnit === 'perKg'
+        ? (Number(crop.pricePerUnit) || 0) * 2 // Rough conversion
+        : Number(crop.pricePerUnit) || 0;
+
+      if (price > 0) {
+        pricesByDate[dateKey].prices.push(price);
       }
     });
 
-    // Get date range from the data
-    const dateEntries = Object.entries(pricesByDate).filter(([_, data]) => data.count > 0);
-    if (dateEntries.length === 0) return [];
+    // Convert to chart format
+    return Object.entries(pricesByDate)
+      .filter(([_, data]) => data.prices.length > 0)
+      .map(([date, data]) => {
+        const avgPrice = data.prices.reduce((sum, price) => sum + price, 0) / data.prices.length;
+        return {
+          label: date,
+          value: Math.round(avgPrice),
+          dataPointText: `₹${Math.round(avgPrice)}`,
+          timestamp: data.timestamp,
+          count: data.prices.length,
+        };
+      })
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }, [allConsumerCrops, selectedCrop, priceUnit]);
 
-    // Sort by timestamp to get the range
-    const sortedEntries = dateEntries.sort(([_, a], [__, b]) => a.timestamp - b.timestamp);
-    const startDate = new Date(sortedEntries[0][1].timestamp);
-    const endDate = new Date(sortedEntries[sortedEntries.length - 1][1].timestamp);
+  // Process farmer chart data (independent of radius)
+  const farmerChartData = useMemo(() => {
+    if (!allFarmerCrops.length) return [];
 
-    // Create a complete date range (fill in missing days)
-    const completeData = [];
-    const currentDate = new Date(startDate);
+    const cropData = allFarmerCrops.filter(crop =>
+      selectedCrop && crop.name?.toLowerCase() === selectedCrop.toLowerCase()
+    );
 
-    while (currentDate <= endDate) {
-      const dateKey = currentDate.toLocaleDateString("en-GB", {
+    if (!cropData.length) return [];
+
+    // Group by date
+    const pricesByDate = {};
+
+    cropData.forEach((crop) => {
+      const timestamp = crop.location?.timestamp || crop.createdAt?.seconds * 1000;
+      if (!timestamp) return;
+
+      const date = new Date(timestamp);
+      const dateKey = date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "2-digit",
       });
 
-      if (pricesByDate[dateKey] && pricesByDate[dateKey].count > 0) {
-        // We have data for this day
-        const { total, count, timestamp, samples } = pricesByDate[dateKey];
-        const average = Math.round(total / count);
-        const minPrice = Math.min(...samples);
-        const maxPrice = Math.max(...samples);
-
-        completeData.push({
-          label: dateKey,
-          value: average,
-          dataPointText: `₹${average}`,
+      if (!pricesByDate[dateKey]) {
+        pricesByDate[dateKey] = {
+          prices: [],
           timestamp: timestamp,
-          minPrice,
-          maxPrice,
-          count,
-          hasData: true,
-        });
-      } else {
-        // No data for this day - show as null/empty
-        completeData.push({
-          label: dateKey,
-          value: null, // No data point
-          dataPointText: "",
-          timestamp: currentDate.getTime(),
-          minPrice: null,
-          maxPrice: null,
-          count: 0,
-          hasData: false,
-        });
+        };
       }
 
-      // Move to next day
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+      const price = priceUnit === 'perKg'
+        ? (Number(crop.pricePerUnit) || 0) * 2 // Rough conversion
+        : Number(crop.pricePerUnit) || 0;
 
-    console.log("Complete chart data with daily averages:", completeData);
-    return completeData;
-  }, [filteredCrops]);
+      if (price > 0) {
+        pricesByDate[dateKey].prices.push(price);
+      }
+    });
+
+    // Convert to chart format
+    return Object.entries(pricesByDate)
+      .filter(([_, data]) => data.prices.length > 0)
+      .map(([date, data]) => {
+        const avgPrice = data.prices.reduce((sum, price) => sum + price, 0) / data.prices.length;
+        return {
+          label: date,
+          value: Math.round(avgPrice),
+          dataPointText: `₹${Math.round(avgPrice)}`,
+          timestamp: data.timestamp,
+          count: data.prices.length,
+        };
+      })
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }, [allFarmerCrops, selectedCrop, priceUnit]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -429,24 +502,32 @@ const Map = () => {
         <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
           {/* Full width map container */}
           <View style={styles.mapContainer}>
-                      <WebView
-            key={`${markerPosition?.latitude}-${markerPosition?.longitude}-${radius}`}
-            ref={webViewRef}
-            source={{ html: mapHtml }}
-            style={styles.map}
-            scrollEnabled={false}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            onMessage={handleWebViewMessage}
-            onError={(syntheticEvent) => {
-              const { nativeEvent } = syntheticEvent;
-              console.warn('WebView error: ', nativeEvent);
-            }}
-            onHttpError={(syntheticEvent) => {
-              const { nativeEvent } = syntheticEvent;
-              console.warn('WebView HTTP error: ', nativeEvent.statusCode);
-            }}
-          />
+            {markerPosition && mapHtml ? (
+              <WebView
+                key={`${markerPosition.latitude}-${markerPosition.longitude}-${radius}-${selectedMapType}`}
+                ref={webViewRef}
+                source={{ html: mapHtml }}
+                style={styles.map}
+                scrollEnabled={false}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                onMessage={handleWebViewMessage}
+                onError={(syntheticEvent) => {
+                  const { nativeEvent } = syntheticEvent;
+                  console.warn('WebView error: ', nativeEvent);
+                }}
+                onHttpError={(syntheticEvent) => {
+                  const { nativeEvent } = syntheticEvent;
+                  console.warn('WebView HTTP error: ', nativeEvent.statusCode);
+                }}
+              />
+            ) : (
+              <View style={styles.mapLoading}>
+                <Text style={styles.mapLoadingText}>
+                  {currentLocation ? 'Loading Map...' : 'Getting Location...'}
+                </Text>
+              </View>
+            )}
           </View>
 
                     {/* Distance slider below map */}
@@ -507,29 +588,73 @@ const Map = () => {
             </View>
           </View>
 
+          {/* Consumer Information Panel */}
+          <View style={styles.consumerInfoPanel}>
+            <View style={styles.consumerInfoHeader}>
+              <Text style={styles.consumerInfoTitle}>
+                Consumer Reported Buying Price: {cropOptions.find(c => c.value === selectedCrop)?.icon} {cropOptions.find(c => c.value === selectedCrop)?.label}
+              </Text>
+            </View>
+            <View style={styles.consumerStatsContainer}>
+              <View style={styles.consumerStat}>
+                <Text style={styles.consumerStatLabel}>Average Consumer Price</Text>
+                <Text style={styles.consumerStatValue}>
+                  ₹{priceUnit === 'perKg' ? consumerStats.averagePricePerKg : consumerStats.averagePrice}
+                  <Text style={styles.consumerStatUnit}>
+                    {priceUnit === 'perKg' ? '/kg' : '/unit'}
+                  </Text>
+                </Text>
+              </View>
+              <View style={styles.consumerStat}>
+                <Text style={styles.consumerStatLabel}>Consumers in Radius</Text>
+                <Text style={styles.consumerStatValue}>{consumerStats.count}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Price Unit Toggle */}
+          <View style={styles.priceUnitContainer}>
+            <TouchableOpacity
+              style={[styles.priceUnitButton, priceUnit === 'perUnit' && styles.priceUnitButtonActive]}
+              onPress={() => setPriceUnit('perUnit')}
+            >
+              <Text style={[styles.priceUnitText, priceUnit === 'perUnit' && styles.priceUnitTextActive]}>
+                Price per Unit
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.priceUnitButton, priceUnit === 'perKg' && styles.priceUnitButtonActive]}
+              onPress={() => setPriceUnit('perKg')}
+            >
+              <Text style={[styles.priceUnitText, priceUnit === 'perKg' && styles.priceUnitTextActive]}>
+                Price per Kg
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Debug info */}
           <View style={styles.debugSection}>
             <Text style={styles.debugText}>
-              Total crops: {allCrops.length} | Filtered: {filteredCrops.length} | Chart points: {chartData.length}
+              Total crops: {allCrops.length} | Consumer: {allConsumerCrops.length} | Farmer: {allFarmerCrops.length}
             </Text>
             <Text style={styles.debugText}>
-              Selected: {selectedCrop} | Radius: {Math.round(radius * 1000)}m
+              Selected: {selectedCrop} | Radius: {Math.round(radius * 1000)}m | Unit: {priceUnit}
             </Text>
           </View>
 
-          {/* Chart section */}
-          {chartData.length > 0 ? (
+          {/* Consumer Chart Section */}
+          {consumerChartData.length > 0 ? (
             <View style={styles.chartSection}>
               <Text style={styles.chartTitle}>
-                Price Trends for {cropOptions.find(c => c.value === selectedCrop)?.label || selectedCrop}
+                Consumer Buying Price Trends: {cropOptions.find(c => c.value === selectedCrop)?.icon} {cropOptions.find(c => c.value === selectedCrop)?.label}
               </Text>
               <Text style={styles.chartSubtitle}>
-                Daily average prices from {filteredCrops.length} records within {Math.round(radius * 1000)}m radius
-                {chartData.filter(d => d.hasData).length > 1 && (
+                Daily {priceUnit === 'perKg' ? 'per kg' : 'per unit'} prices from all consumer reports
+                {consumerChartData.length > 1 && (
                   <>
                     {' • '}
-                    {chartData.filter(d => d.hasData)[0]?.label} to {chartData.filter(d => d.hasData)[chartData.filter(d => d.hasData).length - 1]?.label}
-                    {' • '}{chartData.filter(d => d.hasData).length} days with data
+                    {consumerChartData[0]?.label} to {consumerChartData[consumerChartData.length - 1]?.label}
+                    {' • '}{consumerChartData.length} days with data
                   </>
                 )}
               </Text>
@@ -541,8 +666,8 @@ const Map = () => {
               >
                 <View style={styles.chartWrapper}>
                   <LineChart
-                    data={chartData.filter(d => d.hasData)} // Only show days with data
-                    width={Math.max(width - 40, chartData.filter(d => d.hasData).length * 120)}
+                    data={consumerChartData}
+                    width={Math.max(width - 40, consumerChartData.length * 120)}
                     height={280}
                     yAxisLabel={"₹"}
                     xAxisLabelTextStyle={{
@@ -564,11 +689,11 @@ const Map = () => {
                     startOpacity={0.2}
                     endOpacity={0.05}
                     maxValue={
-                      Math.max(...chartData.filter(d => d.hasData).map((d) => d.value)) + 20
+                      Math.max(...consumerChartData.map((d) => d.value)) + 20
                     }
                     minValue={Math.max(
                       0,
-                      Math.min(...chartData.filter(d => d.hasData).map((d) => d.value)) - 20
+                      Math.min(...consumerChartData.map((d) => d.value)) - 20
                     )}
                     textShiftY={-25}
                     textShiftX={0}
@@ -576,7 +701,7 @@ const Map = () => {
                     curved
                     dataPointsColor="#1F4E3D"
                     dataPointsRadius={7}
-                    spacing={chartData.filter(d => d.hasData).length > 10 ? 50 : 80}
+                    spacing={consumerChartData.length > 10 ? 50 : 80}
                     initialSpacing={30}
                     endSpacing={30}
                     rulesColor="rgba(73, 167, 96, 0.2)"
@@ -588,57 +713,167 @@ const Map = () => {
                     focusEnabled
                     pressEnabled
                     showValuesAsDataPointsText={true}
-                                      pointerConfig={{
-                    pointerStripHeight: 180,
-                    pointerStripColor: "rgba(31, 78, 61, 0.1)",
-                    pointerStripWidth: 2,
-                    pointerColor: "#1F4E3D",
-                    radius: 6,
-                    pointerLabelComponent: (item) => {
-                      const dataPoint = chartData.find(d => d.label === item.label && d.hasData);
-                      return (
-                        <View
-                          style={{
-                            backgroundColor: "#1F4E3D",
-                            padding: 10,
-                            borderRadius: 10,
-                            minWidth: 140,
-                          }}
-                        >
-                          <Text
-                            style={{ color: "#fff", fontWeight: "600", fontSize: 12, textAlign: "center", marginBottom: 4 }}
+                    pointerConfig={{
+                      pointerStripHeight: 180,
+                      pointerStripColor: "rgba(31, 78, 61, 0.1)",
+                      pointerStripWidth: 2,
+                      pointerColor: "#1F4E3D",
+                      radius: 6,
+                      pointerLabelComponent: (item) => {
+                        const dataPoint = consumerChartData.find(d => d.label === item.label);
+                        return (
+                          <View
+                            style={{
+                              backgroundColor: "#1F4E3D",
+                              padding: 10,
+                              borderRadius: 10,
+                              minWidth: 140,
+                            }}
                           >
-                            {item.label}
-                          </Text>
-                          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center", marginBottom: 4 }}>
-                            ₹{item.value} avg
-                          </Text>
-                          {dataPoint && (
-                            <>
+                            <Text
+                              style={{ color: "#fff", fontWeight: "600", fontSize: 12, textAlign: "center", marginBottom: 4 }}
+                            >
+                              {item.label}
+                            </Text>
+                            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center", marginBottom: 4 }}>
+                              ₹{item.value} {priceUnit === 'perKg' ? '/kg' : '/unit'}
+                            </Text>
+                            {dataPoint && (
                               <Text style={{ color: "#ddd", fontSize: 11, textAlign: "center" }}>
-                                {dataPoint.count} samples
+                                {dataPoint.count} consumer reports
                               </Text>
-                              <Text style={{ color: "#ddd", fontSize: 10, textAlign: "center", marginTop: 2 }}>
-                                ₹{dataPoint.minPrice} - ₹{dataPoint.maxPrice}
-                              </Text>
-                            </>
-                          )}
-                        </View>
-                      );
-                    },
-                  }}
+                            )}
+                          </View>
+                        );
+                      },
+                    }}
                   />
                 </View>
               </ScrollView>
             </View>
           ) : (
             <View style={styles.noDataSection}>
-              <Text style={styles.noDataTitle}>No Data Available</Text>
+              <Text style={styles.noDataTitle}>No Consumer Data</Text>
               <Text style={styles.noDataText}>
-                No {cropOptions.find(c => c.value === selectedCrop)?.label || selectedCrop} records found within {Math.round(radius * 1000)}m radius.
+                No consumer reports found for {cropOptions.find(c => c.value === selectedCrop)?.label || selectedCrop}.
               </Text>
-              <Text style={styles.noDataHint}>
-                Try adjusting the radius or selecting a different crop.
+            </View>
+          )}
+
+          {/* Farmer Chart Section */}
+          {farmerChartData.length > 0 ? (
+            <View style={styles.chartSection}>
+              <Text style={styles.chartTitle}>
+                Farmer Selling Price Trends: {cropOptions.find(c => c.value === selectedCrop)?.icon} {cropOptions.find(c => c.value === selectedCrop)?.label}
+              </Text>
+              <Text style={styles.chartSubtitle}>
+                Daily {priceUnit === 'perKg' ? 'per kg' : 'per unit'} prices from all farmer reports
+                {farmerChartData.length > 1 && (
+                  <>
+                    {' • '}
+                    {farmerChartData[0]?.label} to {farmerChartData[farmerChartData.length - 1]?.label}
+                    {' • '}{farmerChartData.length} days with data
+                  </>
+                )}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={true}
+                style={styles.chartScroll}
+                contentContainerStyle={styles.chartScrollContent}
+              >
+                <View style={styles.chartWrapper}>
+                  <LineChart
+                    data={farmerChartData}
+                    width={Math.max(width - 40, farmerChartData.length * 120)}
+                    height={280}
+                    yAxisLabel={"₹"}
+                    xAxisLabelTextStyle={{
+                      color: "#8B4513",
+                      fontSize: 11,
+                      rotation: 45,
+                    }}
+                    yAxisLabelTextStyle={{
+                      color: "#8B4513",
+                      fontSize: 12,
+                    }}
+                    showVerticalLines
+                    verticalLinesColor="rgba(139, 69, 19, 0.1)"
+                    textColor="#8B4513"
+                    color="#FFA500"
+                    areaChart
+                    startFillColor={"#FFA500"}
+                    endFillColor={"#FFA500"}
+                    startOpacity={0.2}
+                    endOpacity={0.05}
+                    maxValue={
+                      Math.max(...farmerChartData.map((d) => d.value)) + 20
+                    }
+                    minValue={Math.max(
+                      0,
+                      Math.min(...farmerChartData.map((d) => d.value)) - 20
+                    )}
+                    textShiftY={-25}
+                    textShiftX={0}
+                    showDataPoints
+                    curved
+                    dataPointsColor="#8B4513"
+                    dataPointsRadius={7}
+                    spacing={farmerChartData.length > 10 ? 50 : 80}
+                    initialSpacing={30}
+                    endSpacing={30}
+                    rulesColor="rgba(139, 69, 19, 0.2)"
+                    rulesType="solid"
+                    xAxisColor="#8B4513"
+                    yAxisColor="#8B4513"
+                    hideRules={false}
+                    hideDataPoints={false}
+                    focusEnabled
+                    pressEnabled
+                    showValuesAsDataPointsText={true}
+                    pointerConfig={{
+                      pointerStripHeight: 180,
+                      pointerStripColor: "rgba(139, 69, 19, 0.1)",
+                      pointerStripWidth: 2,
+                      pointerColor: "#8B4513",
+                      radius: 6,
+                      pointerLabelComponent: (item) => {
+                        const dataPoint = farmerChartData.find(d => d.label === item.label);
+                        return (
+                          <View
+                            style={{
+                              backgroundColor: "#8B4513",
+                              padding: 10,
+                              borderRadius: 10,
+                              minWidth: 140,
+                            }}
+                          >
+                            <Text
+                              style={{ color: "#fff", fontWeight: "600", fontSize: 12, textAlign: "center", marginBottom: 4 }}
+                            >
+                              {item.label}
+                            </Text>
+                            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", textAlign: "center", marginBottom: 4 }}>
+                              ₹{item.value} {priceUnit === 'perKg' ? '/kg' : '/unit'}
+                            </Text>
+                            {dataPoint && (
+                              <Text style={{ color: "#ddd", fontSize: 11, textAlign: "center" }}>
+                                {dataPoint.count} farmer reports
+                              </Text>
+                            )}
+                          </View>
+                        );
+                      },
+                    }}
+                  />
+                </View>
+              </ScrollView>
+            </View>
+          ) : (
+            <View style={styles.noDataSection}>
+              <Text style={styles.noDataTitle}>No Farmer Data</Text>
+              <Text style={styles.noDataText}>
+                No farmer reports found for {cropOptions.find(c => c.value === selectedCrop)?.label || selectedCrop}.
               </Text>
             </View>
           )}
@@ -1003,6 +1238,95 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "monospace",
   },
+  // Consumer Info Panel Styles
+  consumerInfoPanel: {
+    backgroundColor: "#fff",
+    marginHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  consumerInfoHeader: {
+    backgroundColor: "#1F4E3D",
+    padding: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  consumerInfoTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  consumerStatsContainer: {
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  consumerStat: {
+    alignItems: "center",
+    flex: 1,
+  },
+  consumerStatLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  consumerStatValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#49A760",
+    textAlign: "center",
+  },
+  consumerStatUnit: {
+    fontSize: 14,
+    color: "#666",
+  },
+  // Price Unit Toggle Styles
+  priceUnitContainer: {
+    flexDirection: "row",
+    marginHorizontal: 10,
+    marginBottom: 10,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 4,
+  },
+  priceUnitButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  priceUnitButtonActive: {
+    backgroundColor: "#49A760",
+  },
+  priceUnitText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  priceUnitTextActive: {
+    color: "#fff",
+  },
+  // Map Loading Styles
+  mapLoading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+  },
+  mapLoadingText: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
+  },
   // Modal Styles
   modalOverlay: {
     flex: 1,
@@ -1071,3 +1395,4 @@ const styles = StyleSheet.create({
 });
 
 export default Map;
+ 
