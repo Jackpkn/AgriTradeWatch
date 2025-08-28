@@ -50,6 +50,9 @@
         {
           "ios": {
             "useFrameWork": "static"
+          },
+          "android": {
+            "kotlinVersion": "1.7.0"
           }
         }
       ],
