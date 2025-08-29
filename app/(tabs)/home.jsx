@@ -161,7 +161,7 @@ const home = () => {
 
           {/* Main Features */}
           <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitle}>Main Features</Text>
+            <Text style={styles.sectionTitleMain}>Main Features</Text>
             <View style={styles.featuresGrid}>
               {features.map((feature) => (
                 <TouchableOpacity
@@ -293,6 +293,13 @@ const styles = StyleSheet.create({
     color: "#1F4E3D",
     marginBottom: 16,
     paddingHorizontal: 20,
+  },
+  sectionTitleMain: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginBottom: 16,
+    paddingHorizontal: 2,
   },
   quickActionsContainer: {
     flexDirection: "row",
