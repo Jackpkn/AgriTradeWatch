@@ -12,6 +12,8 @@ export { GlobalContext };
 
 export const GlobalProvider = ({ children }) => {
   const [isLogged, setIsLogged] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestRole, setGuestRole] = useState(null); // 'farmer' or 'consumer'
   const [mainUser, setMainUser] = useState({});
   const [currentLocation, setCurrentLocation] = useState(null); // Initialize as null to avoid iterator issues
   const [jwt, setJwt] = useState("");
@@ -77,24 +79,83 @@ export const GlobalProvider = ({ children }) => {
     }
   }, [locationRequested]);
 
+  // Guest mode utilities
+  const loginAsGuest = (role) => {
+    try {
+      if (!role || !['farmer', 'consumer'].includes(role)) {
+        throw new Error('Invalid guest role. Must be "farmer" or "consumer"');
+      }
+      setIsGuest(true);
+      setGuestRole(role);
+      setIsLogged(false);
+      setMainUser({ role, isGuest: true });
+      console.log('User logged in as guest with role:', role);
+    } catch (error) {
+      console.error('Error setting guest mode:', error);
+      throw error;
+    }
+  };
+
+  const logoutGuest = () => {
+    try {
+      setIsGuest(false);
+      setGuestRole(null);
+      setIsLogged(false);
+      setMainUser({});
+      setJwt("");
+      console.log('Guest mode ended');
+    } catch (error) {
+      console.error('Error ending guest mode:', error);
+      throw error;
+    }
+  };
+
+  const requireAuthentication = () => {
+    if (!isLogged && !isGuest) {
+      throw new Error('Authentication required. Please login or continue as guest.');
+    }
+    if (isGuest) {
+      throw new Error('This feature requires login. Please login to continue.');
+    }
+  };
+
   // Create context value with safe defaults
   const contextValue = {
+    // Loading and location states
     isLoading,
     setIsLoading,
-    mainUser: mainUser || {},
-    setMainUser,
-    isLogged,
-    setIsLogged,
-    jwt,
-    setJwt,
-    currentLocation: currentLocation || null, // Ensure it's never undefined
+    currentLocation: currentLocation || null,
     setCurrentLocation,
     locationRequested,
     setLocationRequested,
+
+    // Network states
     isOnline,
     setIsOnline,
     networkType,
     setNetworkType,
+
+    // Authentication states
+    isLogged,
+    setIsLogged,
+    isGuest,
+    setIsGuest,
+    guestRole,
+    setGuestRole,
+    mainUser: mainUser || {},
+    setMainUser,
+    jwt,
+    setJwt,
+
+    // Utility functions
+    loginAsGuest,
+    logoutGuest,
+    requireAuthentication,
+
+    // Computed states
+    isAuthenticated: isLogged || isGuest,
+    userRole: isLogged ? (mainUser?.job === 'farmer' ? 'farmer' : 'consumer') : guestRole,
+    canAddData: isLogged, // Only logged users can add data
   };
 
   return (

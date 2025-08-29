@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -57,13 +57,23 @@ const SignUp = () => {
     jwt = "",
     setIsLoading = () => {},
   } = contextValue || {};
-  const onAuthStateChangedApp = (user) => {
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+
+  const onAuthStateChangedApp = useCallback((user) => {
     if (user) {
-      router.replace("/home");
+      console.log("User authenticated in signup screen");
+      setShouldNavigate(true);
     } else {
-      console.log("No user found");
+      console.log("No user found in signup screen");
     }
-  };
+  }, []);
+
+  // Handle navigation in useEffect to avoid render-time navigation
+  useEffect(() => {
+    if (shouldNavigate) {
+      router.replace("/(tabs)/home");
+    }
+  }, [shouldNavigate]);
 
   useEffect(() => {
     // GoogleSignin.configure({
@@ -123,7 +133,7 @@ const SignUp = () => {
       registerUser(user.email, user.password, user);
 
       setMainUser(user);
-      router.replace("/home");
+      setShouldNavigate(true);
     } catch (error) {
       console.error("Error:", error.message);
       alert(error);

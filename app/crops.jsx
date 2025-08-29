@@ -18,6 +18,7 @@ import { Button } from "react-native-paper";
 import { addCrop } from "../components/cropsController";
 import { auth } from "../firebase";
 import * as ImageManipulator from "expo-image-manipulator";
+import { router } from "expo-router";
 
 const items = [
   { label: "Wheat", value: "wheat" },
@@ -66,8 +67,26 @@ const crops = () => {
       subscription.remove();
     };
   }, [setCurrentLocation]);
-  const { jwt, mainUser, currentLocation, setIsLoading, setCurrentLocation } =
-    useContext(GlobalContext);
+  // Safely get context with error handling
+  let contextValue;
+  try {
+    contextValue = useContext(GlobalContext);
+  } catch (error) {
+    console.error("Error accessing GlobalContext in crops:", error);
+    contextValue = {};
+  }
+
+  const {
+    jwt = "",
+    mainUser = {},
+    currentLocation = null,
+    setIsLoading = () => {},
+    setCurrentLocation = () => {},
+    canAddData = false,
+    requireAuthentication = () => {},
+    isAuthenticated = false,
+    isLogged = false
+  } = contextValue || {};
   const locationRequestedRef = useRef(false);
 
   const [crop, setCrop] = useState({
@@ -142,6 +161,28 @@ const crops = () => {
   }, [hasMediaLibraryPermission]);
 
   const handleCropSubmit = React.useCallback(async () => {
+    // Check authentication first
+    if (!canAddData) {
+      Alert.alert(
+        "Login Required",
+        "You need to be logged in to add crops. Please login to continue.",
+        [
+          {
+            text: "Login",
+            onPress: () => {
+              // Navigate to login screen
+              router.push("/(auth)/login");
+            }
+          },
+          {
+            text: "Cancel",
+            style: "cancel"
+          }
+        ]
+      );
+      return;
+    }
+
     if (!crop.name || !crop.pricePerUnit || !crop.quantity) {
       Alert.alert("Please fill in all the fields");
       return;
@@ -235,10 +276,34 @@ const crops = () => {
         imageUrl,
       };
 
-      await addCrop(cropData, mainUser.job, auth.currentUser.uid, imageUrl);
+      try {
+        await addCrop(cropData, mainUser.job, auth.currentUser.uid, imageUrl);
+        setIsLoading(false);
+        Alert.alert("Success", "Crop submitted successfully!");
 
-      setIsLoading(false);
-      Alert.alert("Crop submitted successfully");
+        // Reset form after successful submission
+        setCrop({
+          name: "",
+          location: {},
+          pricePerUnit: "",
+          quantity: "",
+        });
+        setPhoto(null);
+      } catch (error) {
+        console.error("Error submitting crop:", error);
+        setIsLoading(false);
+
+        let errorMessage = "Failed to submit crop. Please try again.";
+        if (error.code === 'permission-denied') {
+          errorMessage = "You don't have permission to add crops. Please login again.";
+        } else if (error.code === 'unavailable') {
+          errorMessage = "Service temporarily unavailable. Please try again later.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        Alert.alert("Error", errorMessage);
+      }
       setCrop((prev) => {
         if (
           prev.name === "" &&

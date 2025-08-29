@@ -66,7 +66,12 @@ export const fetchCrops = async (path) => {
     const snapshot = await getDocs(cropsQuery);
     const crops = [];
     snapshot.forEach((doc) => {
-      crops.push({ id: doc.id, ...doc.data() });
+      const cropData = { id: doc.id, ...doc.data() };
+      // Log raw price data for debugging
+      if (cropData.pricePerUnit) {
+        console.log(`Raw ${path} crop: ${cropData.name} - Price: ${cropData.pricePerUnit} (${typeof cropData.pricePerUnit})`);
+      }
+      crops.push(cropData);
     });
     console.log(`Received ${crops.length} crops from ${path}`);
     console.log(crops);

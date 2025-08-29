@@ -47,6 +47,7 @@ const ConsumerInfoPanel = ({
                 ? "/kg"
                 : "/unit"}
             </Text>
+            {/* Note: Both show same price due to 1:1 conversion */}
           </View>
         </View>
 
@@ -54,7 +55,7 @@ const ConsumerInfoPanel = ({
           <View style={mapStyles.statIconContainer}>
             <Text style={mapStyles.statIcon}>👥</Text>
           </View>
-          <Text style={mapStyles.consumerStatLabel}>Total Consumers</Text>
+          <Text style={mapStyles.consumerStatLabel}>Total Retailer</Text>
           <Text style={mapStyles.consumerStatValue}>{consumerStats.count}</Text>
           <Text style={mapStyles.consumerStatSubtext}>
             {consumerStats.count === 1 ? "consumer" : "consumers"} found

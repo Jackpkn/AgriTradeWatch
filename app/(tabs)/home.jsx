@@ -27,7 +27,14 @@ const home = () => {
     contextValue = {};
   }
 
-  const { setMainUser = () => {} } = contextValue || {};
+  const {
+    setMainUser = () => {},
+    isLogged = false,
+    isGuest = false,
+    guestRole = null,
+    userRole = null,
+    mainUser = {}
+  } = contextValue || {};
 
   const getUser = React.useCallback(async () => {
     try {
@@ -84,19 +91,51 @@ const home = () => {
     },
   ];
 
-  const quickActions = [
-    {
-      title: "Today's Prices",
-      icon: "today",
-      action: () => router.push("stats"),
-    },
-    {
-      title: "Nearby Markets",
-      icon: "location",
-      action: () => router.push("map"),
-    },
-    { title: "Price Alerts", icon: "notifications", action: () => {} },
-  ];
+  // Dynamic quick actions based on user status
+  const quickActions = React.useMemo(() => {
+    const baseActions = [
+      {
+        title: "Today's Prices",
+        icon: "today",
+        action: () => router.push("stats"),
+      },
+      {
+        title: "Nearby Markets",
+        icon: "location",
+        action: () => router.push("map"),
+      },
+    ];
+
+    if (isLogged) {
+      // Add actions only available to logged-in users
+      baseActions.push({
+        title: "Add Crop Data",
+        icon: "add-circle",
+        action: () => router.push("crops"),
+      });
+      baseActions.push({
+        title: "My Profile",
+        icon: "person",
+        action: () => router.push("profile"),
+      });
+    } else if (isGuest) {
+      // Add actions for guest users
+      baseActions.push({
+        title: "Login to Add Crops",
+        icon: "log-in",
+        action: () => router.push("/(auth)/login"),
+      });
+    } else {
+      // Not authenticated at all
+      baseActions.push({
+        title: "Get Started",
+        icon: "arrow-forward",
+        action: () => router.push("/(auth)/login"),
+      });
+    }
+
+    return baseActions;
+  }, [isLogged, isGuest]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -116,9 +155,21 @@ const home = () => {
                 colors={["#49A760", "#3d8b4f"]}
                 style={styles.headerGradient}
               >
-                <Text style={styles.welcomeTitle}>Welcome to MandiGo</Text>
+                <Text style={styles.welcomeTitle}>
+                  {isLogged
+                    ? `Welcome back, ${mainUser?.name || "User"}!`
+                    : isGuest
+                    ? `Welcome, Guest ${guestRole ? `(${guestRole})` : ""}!`
+                    : "Welcome to MandiGo"
+                  }
+                </Text>
                 <Text style={styles.welcomeSubtitle}>
-                  Your smart crop price tracking platform
+                  {isLogged
+                    ? "Continue managing your crops and tracking prices"
+                    : isGuest
+                    ? "Browse crop prices and explore market data"
+                    : "Your smart crop price tracking platform"
+                  }
                 </Text>
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>

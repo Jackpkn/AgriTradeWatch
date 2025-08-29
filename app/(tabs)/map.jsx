@@ -272,7 +272,7 @@ const Map = () => {
             {/* Debug info */}
             <View style={mapStyles.debugSection}>
               <Text style={mapStyles.debugText}>
-                Total crops: {allCrops.length} | Consumer:{" "}
+                Retailer:{" "}
                 {allConsumerCrops.length} | Farmer: {allFarmerCrops.length}
               </Text>
               <Text style={mapStyles.debugText}>
@@ -280,7 +280,7 @@ const Map = () => {
                 | Unit: {priceUnit}
               </Text>
               <Text style={mapStyles.debugText}>
-                In radius: {filteredCrops.length} | Outside:{" "}
+              Data Points In radius: {filteredCrops.length} | Outside:{" "}
                 {allCrops.filter(
                   (crop) =>
                     crop.name?.toLowerCase() === selectedCrop.toLowerCase()

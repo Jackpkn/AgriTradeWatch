@@ -38,13 +38,12 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
           };
         }
 
-        // Use crop-specific conversion rates
-        const conversionRate =
-          MAP_CONFIG.PRICE_CONVERSION.RATES[selectedCrop]?.perKgMultiplier || 2;
-        const price =
-          priceUnit === MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_KG
-            ? (Number(crop.pricePerUnit) || 0) * conversionRate
-            : Number(crop.pricePerUnit) || 0;
+        // Simplified conversion: 1 unit = 1 unit (no kg conversion needed)
+        // Both per-unit and per-kg show the same price for simplicity
+        const rawPrice = Number(crop.pricePerUnit) || 0;
+        const price = Math.round(rawPrice); // Round immediately to prevent decimals
+
+        console.log(`ChartDataProcessor: ${crop.name} - Raw Price: ${rawPrice}, Rounded Price: ${price}`);
 
         if (price > 0) {
           pricesByDate[dateKey].prices.push(price);
@@ -92,7 +91,7 @@ export const calculateConsumerStats = (
       }
 
       const prices = consumersInRadius
-        .map((crop) => Number(crop.pricePerUnit) || 0)
+        .map((crop) => Math.round(Number(crop.pricePerUnit) || 0))
         .filter((price) => price > 0);
 
       const averagePrice =
@@ -100,10 +99,10 @@ export const calculateConsumerStats = (
           ? prices.reduce((sum, price) => sum + price, 0) / prices.length
           : 0;
 
-      // Use crop-specific conversion rate
-      const conversionRate =
-        MAP_CONFIG.PRICE_CONVERSION.RATES[selectedCrop]?.perKgMultiplier || 2;
-      const averagePricePerKg = averagePrice * conversionRate;
+      // Simplified conversion: 1 unit = 1 unit (no kg conversion needed)
+      // Both per-unit and per-kg show the same price for simplicity
+      const conversionRate = 1.0; // Always 1:1 ratio
+      const averagePricePerKg = averagePrice * conversionRate; // Same as averagePrice
 
       return {
         count: consumersInRadius.length,

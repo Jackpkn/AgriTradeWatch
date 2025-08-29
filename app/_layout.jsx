@@ -5,6 +5,7 @@ import { PaperProvider } from "react-native-paper";
 import { GlobalProvider } from "../context/GlobalProvider";
 import GlobalLoader from "../components/Loader";
 import { LocationPermissionLoading } from "../components/getLocation";
+import ErrorBoundary from "../components/ErrorBoundary";
 import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useContext } from "react";
@@ -52,15 +53,17 @@ const AppLayout = () => {
 
 const RootLayout = () => {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <GlobalProvider>
-        <PaperProvider>
-          <AppLayout />
-          <GlobalLoader />
-        </PaperProvider>
-      </GlobalProvider>
-      <StatusBar style="dark-content" />
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <GlobalProvider>
+          <PaperProvider>
+            <AppLayout />
+            <GlobalLoader />
+          </PaperProvider>
+        </GlobalProvider>
+        <StatusBar style="dark-content" />
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 };
 

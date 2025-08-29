@@ -27,21 +27,25 @@ const PriceChart = ({
           item.value > 0 &&
           item.label
       )
-      .map((item) => ({
-        ...item,
-        value: Math.round(item.value),
-        dataPointText: item.dataPointText || `₹${Math.round(item.value)}`,
-        count: item.count || 1,
-      }));
-  }, [chartData]);
+      .map((item) => {
+        const roundedValue = Math.round(item.value);
+        console.log(`PriceChart: Processing ${selectedCrop} - Original: ${item.value}, Rounded: ${roundedValue}`);
+        return {
+          ...item,
+          value: roundedValue,
+          dataPointText: `₹${roundedValue}`,
+          count: item.count || 1,
+        };
+      });
+  }, [chartData, selectedCrop]);
 
   if (!validChartData.length) return null;
 
   const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
   const chartWidth = Math.max(width - 40, validChartData.length * 120);
 
-  const maxValue = Math.max(...validChartData.map((d) => d.value));
-  const minValue = Math.min(...validChartData.map((d) => d.value));
+  const maxValue = Math.max(...validChartData.map((d) => Math.round(d.value)));
+  const minValue = Math.min(...validChartData.map((d) => Math.round(d.value)));
   const priceRange = maxValue - minValue || 1;
 
   const getGradientColors = () => {
@@ -82,12 +86,12 @@ const PriceChart = ({
 
           <View style={modernStyles.statsRow}>
             <View style={modernStyles.statItem}>
-              <Text style={modernStyles.statValue}>₹{maxValue}</Text>
+              <Text style={modernStyles.statValue}>₹{Math.round(maxValue)}</Text>
               <Text style={modernStyles.statLabel}>Peak Price</Text>
             </View>
             <View style={modernStyles.statDivider} />
             <View style={modernStyles.statItem}>
-              <Text style={modernStyles.statValue}>₹{minValue}</Text>
+              <Text style={modernStyles.statValue}>₹{Math.round(minValue)}</Text>
               <Text style={modernStyles.statLabel}>Low Price</Text>
             </View>
             <View style={modernStyles.statDivider} />
@@ -178,7 +182,7 @@ const PriceChart = ({
                         style={modernStyles.tooltipGradient}
                       >
                         <Text style={modernStyles.tooltipPrice}>
-                          ₹{item[0]?.value}
+                          ₹{Math.round(item[0]?.value)}
                         </Text>
                         <Text style={modernStyles.tooltipDate}>
                           {item[0]?.label}

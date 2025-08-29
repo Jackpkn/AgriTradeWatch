@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -36,20 +36,32 @@ const LoginScreen = () => {
     setMainUser = () => {},
     setIsLogged = () => {},
     setIsLoading = () => {},
+    logoutGuest = () => {},
+    isGuest = false
   } = contextValue || {};
 
-  const onAuthStateChangedApp = (user) => {
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+
+  const onAuthStateChangedApp = useCallback((user) => {
     if (user) {
-      router.replace("/home");
+      console.log("User authenticated in login screen");
+      setShouldNavigate(true);
     } else {
-      console.log("No user found");
+      console.log("No user found in login screen");
     }
-  };
+  }, []);
+
+  // Handle navigation in useEffect to avoid render-time navigation
+  useEffect(() => {
+    if (shouldNavigate) {
+      router.replace("/(tabs)/home");
+    }
+  }, [shouldNavigate]);
 
   useEffect(() => {
     const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
-    return sub;
-  }, []);
+    return () => sub();
+  }, [onAuthStateChangedApp]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,20 +73,49 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert("Please enter your email and password");
+      Alert.alert("Error", "Please enter your email and password");
       return;
     }
 
     try {
       setIsLoading(true);
+
+      // If user was in guest mode, logout first
+      if (isGuest) {
+        await logoutGuest();
+      }
+
       const res = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login response:", res.user);
-      router.replace("/home");
+      console.log("Login successful:", res.user.email);
+
+      // Get user data from Firestore
+      const userData = await getUserData(res.user.uid);
+      if (userData) {
+        setMainUser(userData);
+        setJwt(res.user.uid);
+        setIsLogged(true);
+      }
+
+      setShouldNavigate(true);
     } catch (error) {
-      Alert.alert(
-        "Login Failed",
-        error.message || "An error occurred during login"
-      );
+      console.error("Login error:", error);
+
+      let errorMessage = "An error occurred during login";
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = "No account found with this email address";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "Incorrect password";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address";
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = "This account has been disabled";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Too many failed login attempts. Please try again later";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Login Failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
