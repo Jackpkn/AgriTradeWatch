@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getMandatoryLocation } from "../components/getLocation";
 import { networkManager, addNetworkListener } from "../utils/networkUtils";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 // Create context with a safer approach
 const GlobalContext = createContext();
@@ -21,6 +23,30 @@ export const GlobalProvider = ({ children }) => {
   const [locationRequested, setLocationRequested] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [networkType, setNetworkType] = useState("unknown");
+
+  // Authentication state monitoring
+  useEffect(() => {
+    console.log("GlobalProvider: Setting up authentication listener");
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("GlobalProvider: User authenticated:", user.email);
+        setIsLogged(true);
+        setIsGuest(false); // Ensure guest mode is disabled
+        setGuestRole(null);
+        // You can fetch additional user data here if needed
+      } else {
+        console.log("GlobalProvider: User not authenticated");
+        setIsLogged(false);
+        setIsGuest(false);
+        setGuestRole(null);
+        setMainUser({});
+        setJwt("");
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   // Network status monitoring
   useEffect(() => {

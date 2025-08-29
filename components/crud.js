@@ -50,9 +50,9 @@ export const getUserData = async (userId) => {
     }
   } catch (error) {
     console.error('Error fetching user data:', error);
-    if (error.code === 'failed-precondition' || error.code === 'unavailable') {
-      console.log('App is offline, trying to get cached data...');
-      return null;
+    if (error.code === 'failed-precondition' || error.code === 'unavailable' || error.message?.includes('offline')) {
+      console.log('App is offline, returning null for graceful degradation');
+      return null; // Return null instead of throwing error
     }
     throw error;
   }
@@ -78,6 +78,14 @@ export const fetchCrops = async (path) => {
     return crops;
   } catch (error) {
     console.error('Error fetching crops:', error);
+
+    // Handle offline/network errors gracefully
+    if (error.code === 'unavailable' || error.code === 'failed-precondition' || error.message?.includes('offline')) {
+      console.log('App is offline, returning empty array for graceful degradation');
+      return []; // Return empty array instead of throwing error
+    }
+
+    // For other errors, still throw them
     throw error;
   }
 };

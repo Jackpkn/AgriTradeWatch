@@ -8,17 +8,33 @@ import { useContext, useEffect, useCallback, useState } from "react";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { enableScreens } from "react-native-screens";
+import { networkManager } from "../utils/networkUtils";
 // import GuestRoleSelection from "../components/GuestRoleSelection"; // Commented out - guest features disabled
 
 export default function Index() {
   enableScreens();
   const [authError, setAuthError] = useState(null);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     console.log("Retrying authentication setup...");
     setAuthError(null);
-    // Force a re-render by updating state
-    window.location.reload?.() || router.replace("/");
+
+    try {
+      // Check network connectivity
+      if (networkManager) {
+        const status = await networkManager.getNetworkStatus();
+        if (!status.isConnected) {
+          console.log("Still offline, showing offline message");
+          return; // Stay on offline screen
+        }
+      }
+
+      // Force a re-render by updating state
+      window.location.reload?.() || router.replace("/");
+    } catch (error) {
+      console.error("Error during retry:", error);
+      setAuthError(error);
+    }
   };
 
   // Safely get context with error handling
@@ -35,7 +51,8 @@ export default function Index() {
     isAuthenticated = false,
     isLogged = false,
     isGuest = false,
-    isLoading = true
+    isLoading = true,
+    isOnline = true
   } = contextValue || {};
 
   const onAuthStateChangedApp = useCallback((user) => {
@@ -87,8 +104,44 @@ export default function Index() {
     return () => sub();
   }, [onAuthStateChangedApp]);
 
-  // Show error state if there's an authentication error
-  if (authError) {
+  // Safely get network status
+  const isOffline = !isOnline && !isLoading;
+
+  // Show offline state
+  if (isOffline) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff3cd", justifyContent: "center", alignItems: "center", padding: 20 }}>
+        <View style={{ alignItems: "center", maxWidth: 300 }}>
+          <Text style={{ fontSize: 24, color: "#856404", marginBottom: 8, fontWeight: "bold" }}>📶</Text>
+          <Text style={{ fontSize: 18, color: "#856404", marginBottom: 8, fontWeight: "bold" }}>No Internet Connection</Text>
+          <Text style={{ fontSize: 14, color: "#856404", textAlign: "center", marginBottom: 20, lineHeight: 20 }}>
+            Please turn on your internet connection to use MandiGo. The app needs internet to sync data and authenticate users.
+          </Text>
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#856404",
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 8,
+              marginBottom: 15,
+              flexDirection: "row",
+              alignItems: "center"
+            }}
+            onPress={handleRetry}
+          >
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", marginRight: 8 }}>Check Connection</Text>
+            <Text style={{ color: "#fff", fontSize: 16 }}>🔄</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 12, color: "#856404", textAlign: "center" }}>
+            Make sure you're connected to WiFi or mobile data
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if there's an authentication error (but not offline)
+  if (authError && !isOffline) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#ffe6e6", justifyContent: "center", alignItems: "center", padding: 20 }}>
         <View style={{ alignItems: "center", maxWidth: 300 }}>

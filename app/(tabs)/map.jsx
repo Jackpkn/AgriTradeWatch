@@ -25,6 +25,7 @@ import PriceUnitToggle from "../../components/map/PriceUnitToggle";
 import MapLegend from "../../components/map/MapLegend";
 import PriceChart from "../../components/map/PriceChart";
 import CropSelectionModal from "../../components/map/CropSelectionModal";
+import OfflineIndicator from "../../components/OfflineIndicator";
 
 // Utils and constants
 import {
@@ -249,6 +250,9 @@ const Map = () => {
                 onMarkerMove={handleMarkerMove}
               />
             </View>
+
+            {/* Offline Indicator */}
+            <OfflineIndicator />
 
             {/* Map Legend */}
             <MapLegend selectedCrop={selectedCrop} radius={radius} />

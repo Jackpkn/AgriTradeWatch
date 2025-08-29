@@ -14,6 +14,7 @@ import { GlobalContext } from "../../context/GlobalProvider";
 import { router } from "expo-router";
 import { auth } from "../../firebase";
 import { getUserData } from "../../components/crud";
+import OfflineIndicator from "../../components/OfflineIndicator";
 
 const { width } = Dimensions.get("window");
 
@@ -33,8 +34,17 @@ const home = () => {
     isGuest = false,
     guestRole = null,
     userRole = null,
-    mainUser = {}
+    mainUser = {},
+    isLoading = true
   } = contextValue || {};
+
+  // Redirect to login if not authenticated (mandatory login)
+  React.useEffect(() => {
+    if (!isLogged && !isLoading) {
+      console.log("Home: User not logged in, redirecting to login (mandatory login)");
+      router.replace("/(auth)/login");
+    }
+  }, [isLogged, isLoading]);
 
   const getUser = React.useCallback(async () => {
     try {
@@ -107,7 +117,7 @@ const home = () => {
     ];
 
     if (isLogged) {
-      // Add actions only available to logged-in users
+      // Add actions for logged-in users (login is now mandatory)
       baseActions.push({
         title: "Add Crop Data",
         icon: "add-circle",
@@ -118,24 +128,20 @@ const home = () => {
         icon: "person",
         action: () => router.push("profile"),
       });
-    } else if (isGuest) {
-      // Add actions for guest users
-      baseActions.push({
-        title: "Login to Add Crops",
-        icon: "log-in",
-        action: () => router.push("/(auth)/login"),
-      });
     } else {
-      // Not authenticated at all
+      // If somehow not logged in (shouldn't happen with mandatory login)
+      console.warn("Home screen: User not logged in but reached home - redirecting to login");
       baseActions.push({
-        title: "Get Started",
-        icon: "arrow-forward",
-        action: () => router.push("/(auth)/login"),
+        title: "Please Login",
+        icon: "log-in",
+        action: () => router.replace("/(auth)/login"),
       });
     }
 
+    // Note: Guest features are disabled - login is now mandatory
+
     return baseActions;
-  }, [isLogged, isGuest]);
+  }, [isLogged]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -158,17 +164,13 @@ const home = () => {
                 <Text style={styles.welcomeTitle}>
                   {isLogged
                     ? `Welcome back, ${mainUser?.name || "User"}!`
-                    : isGuest
-                    ? `Welcome, Guest ${guestRole ? `(${guestRole})` : ""}!`
                     : "Welcome to MandiGo"
                   }
                 </Text>
                 <Text style={styles.welcomeSubtitle}>
                   {isLogged
                     ? "Continue managing your crops and tracking prices"
-                    : isGuest
-                    ? "Browse crop prices and explore market data"
-                    : "Your smart crop price tracking platform"
+                    : "Please login to access your account"
                   }
                 </Text>
                 <View style={styles.statsRow}>
@@ -190,6 +192,9 @@ const home = () => {
               </LinearGradient>
             </View>
           </View>
+
+          {/* Offline Indicator */}
+          <OfflineIndicator />
 
           {/* Quick Actions */}
           <View style={styles.quickActionsSection}>
