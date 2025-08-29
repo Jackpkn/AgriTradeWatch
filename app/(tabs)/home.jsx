@@ -143,11 +143,7 @@ const home = () => {
           {/* Quick Actions */}
           <View style={styles.quickActionsSection}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.quickActionsContainer}
-            >
+            <View style={styles.quickActionsContainer}>
               {quickActions.map((action, index) => (
                 <TouchableOpacity
                   key={index}
@@ -160,7 +156,7 @@ const home = () => {
                   <Text style={styles.quickActionText}>{action.title}</Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
           </View>
 
           {/* Main Features */}
@@ -289,7 +285,7 @@ const styles = StyleSheet.create({
   },
   quickActionsSection: {
     paddingTop: 32,
-    paddingBottom: 16,
+    paddingBottom: 15,
   },
   sectionTitle: {
     fontSize: 22,
@@ -299,6 +295,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   quickActionsContainer: {
+    flexDirection: "row",
+    // flexWrap: "wrap",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     gap: 12,
   },
@@ -307,8 +306,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
-    marginRight: 12,
-    minWidth: 100,
+    width: (width - 56) / 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -351,6 +349,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     alignItems: "center",
+    minHeight: 200,
   },
   featureIconContainer: {
     width: 64,
@@ -373,6 +372,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
     marginBottom: 16,
+    flex: 1,
   },
   featureButton: {
     borderRadius: 12,
@@ -382,6 +382,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    width: "100%",
   },
   featureButtonGradient: {
     flexDirection: "row",
