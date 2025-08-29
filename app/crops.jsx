@@ -161,11 +161,11 @@ const crops = () => {
   }, [hasMediaLibraryPermission]);
 
   const handleCropSubmit = React.useCallback(async () => {
-    // Check authentication first
+    // Check authentication first - Login is now mandatory (guest features disabled)
     if (!canAddData) {
       Alert.alert(
-        "Login Required",
-        "You need to be logged in to add crops. Please login to continue.",
+        "Authentication Required",
+        "You must be logged in to add crops. Please login to continue.",
         [
           {
             text: "Login",

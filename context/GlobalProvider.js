@@ -79,7 +79,8 @@ export const GlobalProvider = ({ children }) => {
     }
   }, [locationRequested]);
 
-  // Guest mode utilities
+  // Guest mode utilities - DISABLED: Login is now mandatory
+  /*
   const loginAsGuest = (role) => {
     try {
       if (!role || !['farmer', 'consumer'].includes(role)) {
@@ -118,6 +119,7 @@ export const GlobalProvider = ({ children }) => {
       throw new Error('This feature requires login. Please login to continue.');
     }
   };
+  */
 
   // Create context value with safe defaults
   const contextValue = {
@@ -147,14 +149,14 @@ export const GlobalProvider = ({ children }) => {
     jwt,
     setJwt,
 
-    // Utility functions
-    loginAsGuest,
-    logoutGuest,
-    requireAuthentication,
+    // Utility functions - Guest functions disabled, login mandatory
+    // loginAsGuest,     // Disabled - guest features not available
+    // logoutGuest,      // Disabled - guest features not available
+    // requireAuthentication, // Disabled - not needed with mandatory login
 
-    // Computed states
-    isAuthenticated: isLogged || isGuest,
-    userRole: isLogged ? (mainUser?.job === 'farmer' ? 'farmer' : 'consumer') : guestRole,
+    // Computed states - Login is now mandatory
+    isAuthenticated: isLogged, // Only logged users are authenticated
+    userRole: mainUser?.job === 'farmer' ? 'farmer' : 'consumer',
     canAddData: isLogged, // Only logged users can add data
   };
 
