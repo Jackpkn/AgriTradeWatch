@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { CROP_OPTIONS, MAP_CONFIG } from "../../constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
@@ -8,6 +8,7 @@ const ConsumerInfoPanel = ({
   radius,
   consumerStats,
   priceUnit,
+  onRadiusIncrease,
 }) => {
   const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
 
@@ -62,6 +63,48 @@ const ConsumerInfoPanel = ({
           </Text>
         </View>
       </View>
+
+      {/* No Data Message */}
+      {consumerStats.averagePrice === 0 && consumerStats.count === 0 && (
+        <View style={mapStyles.noDataCard}>
+          <View style={mapStyles.noDataIconContainer}>
+            <Text style={mapStyles.noDataIcon}>📍</Text>
+          </View>
+          <View style={mapStyles.noDataContent}>
+            <Text style={mapStyles.noDataTitle}>No {selectedCropData?.label} retailers found</Text>
+            <Text style={mapStyles.noDataSubtitle}>
+              Try increasing the search radius to find more retailers in your area
+            </Text>
+            <TouchableOpacity
+              style={mapStyles.increaseRadiusButton}
+              onPress={() => {
+                if (onRadiusIncrease) {
+                  onRadiusIncrease();
+                } else {
+                  Alert.alert(
+                    "Increase Search Radius",
+                    `Current radius: ${Math.round(radius * 1000)}m\n\nWould you like to increase it to ${Math.round(radius * 1000) + 200}m?`,
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Increase",
+                        onPress: () => {
+                          // This would need to be handled by parent component
+                          console.log("Radius increase requested");
+                        }
+                      }
+                    ]
+                  );
+                }
+              }}
+            >
+              <Text style={mapStyles.increaseRadiusButtonText}>
+                Increase Radius (+200m)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };

@@ -504,4 +504,58 @@ export const mapStyles = StyleSheet.create({
   chartWrapper: {
     alignItems: "center",
   },
+  // No Data Message Styles
+  noDataCard: {
+    backgroundColor: "#fff3cd",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#ffeaa7",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  noDataIconContainer: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  noDataIcon: {
+    fontSize: 32,
+  },
+  noDataContent: {
+    alignItems: "center",
+  },
+  noDataTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#856404",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  noDataSubtitle: {
+    fontSize: 14,
+    color: "#856404",
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  increaseRadiusButton: {
+    backgroundColor: MAP_CONFIG.COLORS.PRIMARY,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  increaseRadiusButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
 });

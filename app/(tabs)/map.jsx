@@ -261,6 +261,10 @@ const Map = () => {
               radius={radius}
               consumerStats={consumerStats}
               priceUnit={priceUnit}
+              onRadiusIncrease={() => {
+                const newRadius = Math.min(radius + 0.2, MAP_CONFIG.RADIUS.MAX); // Increase by 200m, max 700m
+                debouncedSetRadius(newRadius);
+              }}
             />
 
             {/* Price Unit Toggle */}
