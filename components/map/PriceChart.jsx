@@ -48,6 +48,48 @@ const PriceChart = ({
   const minValue = Math.min(...validChartData.map((d) => Math.round(d.value)));
   const priceRange = maxValue - minValue || 1;
 
+  // Create consistent linear Y-axis intervals
+  const getLinearYAxisConfig = () => {
+    // Always start from 0 for consistency
+    const yMin = 0;
+
+    // Calculate a nice round interval (5, 10, 20, 25, 50, 100, etc.)
+    let interval = 5;
+    if (maxValue > 100) interval = 25;
+    else if (maxValue > 50) interval = 10;
+    else if (maxValue > 25) interval = 5;
+    else interval = 2; // For very small values
+
+    // Round max up to next interval
+    const yMax = Math.ceil(maxValue / interval) * interval;
+
+    // Generate Y-axis labels
+    const yAxisLabels = [];
+    for (let i = yMin; i <= yMax; i += interval) {
+      yAxisLabels.push(i.toString());
+    }
+
+    return {
+      min: yMin,
+      max: yMax,
+      interval: interval,
+      labels: yAxisLabels,
+      stepValue: interval,
+      stepHeight: 320 / ((yMax - yMin) / interval)
+    };
+  };
+
+  const yAxisConfig = getLinearYAxisConfig();
+
+  // console.log(`Y-Axis Config for ${selectedCrop}:`, {
+  //   dataMin: minValue,
+  //   dataMax: maxValue,
+  //   yAxisMin: yAxisConfig.min,
+  //   yAxisMax: yAxisConfig.max,
+  //   interval: yAxisConfig.interval,
+  //   labels: yAxisConfig.labels
+  // });
+
   const getGradientColors = () => {
     if (isConsumerChart) {
       return ["#FF6B6B", "#FF8E8E", "#FFB3B3"];
@@ -145,8 +187,11 @@ const PriceChart = ({
               endFillColor={getGradientColors()[2]}
               startOpacity={0.3}
               endOpacity={0.05}
-              maxValue={maxValue + priceRange * 0.1}
-              minValue={Math.max(0, minValue - priceRange * 0.1)}
+              maxValue={yAxisConfig.max}
+              minValue={yAxisConfig.min}
+              stepValue={yAxisConfig.stepValue}
+              stepHeight={yAxisConfig.stepHeight}
+              yAxisLabelTexts={yAxisConfig.labels}
               textShiftY={-30}
               textShiftX={0}
               showDataPoints
