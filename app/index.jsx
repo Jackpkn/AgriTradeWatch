@@ -1,26 +1,20 @@
 import { Link, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import {
-  Image,
-  ImageBackground,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Image, ImageBackground, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import logo from "../assets/images/logo.png";
 import { GlobalContext } from "../context/GlobalProvider";
 import { useContext, useEffect, useCallback } from "react";
 // import api from "../components/GlobalApi";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
-import { auth } from "../firebase"
+import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { enableScreens } from 'react-native-screens';
-
+import { enableScreens } from "react-native-screens";
 
 export default function Index() {
   enableScreens();
-  const { setJwt, setMainUser, setIsLogged, mainUser, jwt } = useContext(GlobalContext);
+  const { setJwt, setMainUser, setIsLogged, mainUser, jwt } =
+    useContext(GlobalContext);
 
   const onAuthStateChangedApp = useCallback((user) => {
     if (user) {
@@ -43,7 +37,9 @@ export default function Index() {
         style={{ flex: 1, resizeMode: "cover" }}
         imageStyle={{ opacity: 0.15 }}
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+        >
           <View style={{ alignItems: "center", marginTop: 40 }}>
             <View
               style={{
@@ -99,8 +95,7 @@ export default function Index() {
                 lineHeight: 24,
               }}
             >
-              Welcome! Connect, trade, and grow.
-              Sign in to get started.
+              Welcome! Connect, trade, and grow. Sign in to get started.
             </Text>
             <View style={{ width: "80%", marginTop: 10 }}>
               <Link
@@ -130,13 +125,24 @@ export default function Index() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: "#1F4E3D", fontWeight: "bold", fontSize: 20 }}>
+                <Text
+                  style={{ color: "#1F4E3D", fontWeight: "bold", fontSize: 20 }}
+                >
                   Sign up with Email
                 </Text>
               </Link>
             </View>
-            <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 8 }}>
-              <Text style={{ fontSize: 15, color: "#1F4E3D" }}>Already have an account?</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <Text style={{ fontSize: 15, color: "#1F4E3D" }}>
+                Already have an account?
+              </Text>
               <Link
                 href={"/login"}
                 style={{

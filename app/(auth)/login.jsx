@@ -22,10 +22,21 @@ import { auth } from "../../firebase";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { getUserData } from "../../components/crud";
 
-
 const LoginScreen = () => {
-  const { setIsLoading, setMainUser } =
-    useContext(GlobalContext);
+  // Safely get context with error handling
+  let contextValue;
+  try {
+    contextValue = useContext(GlobalContext);
+  } catch (error) {
+    contextValue = {};
+  }
+
+  const {
+    setJwt = () => {},
+    setMainUser = () => {},
+    setIsLogged = () => {},
+    setIsLoading = () => {},
+  } = contextValue || {};
 
   const onAuthStateChangedApp = (user) => {
     if (user) {
@@ -54,17 +65,16 @@ const LoginScreen = () => {
       return;
     }
 
-
     try {
-
       setIsLoading(true);
       const res = await signInWithEmailAndPassword(auth, email, password);
       console.log("Login response:", res.user);
       router.replace("/home");
-
     } catch (error) {
-      console.error("Login failed:", error)
-      Alert.alert("Login Failed", error.message || "An error occurred during login");
+      Alert.alert(
+        "Login Failed",
+        error.message || "An error occurred during login"
+      );
     } finally {
       setIsLoading(false);
     }

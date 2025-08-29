@@ -6,7 +6,7 @@ const { width } = Dimensions.get("window");
 export const mapStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#eafbe7",
+    backgroundColor: "#",
   },
   header: {
     backgroundColor: "#fff",

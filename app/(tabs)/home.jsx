@@ -18,7 +18,16 @@ import { getUserData } from "../../components/crud";
 const { width } = Dimensions.get("window");
 
 const home = () => {
-  const { setMainUser } = useContext(GlobalContext);
+  // Safely get context with error handling
+  let contextValue;
+  try {
+    contextValue = useContext(GlobalContext);
+  } catch (error) {
+    console.error("Error accessing GlobalContext in home:", error);
+    contextValue = {};
+  }
+
+  const { setMainUser = () => {} } = contextValue || {};
 
   const getUser = React.useCallback(async () => {
     try {

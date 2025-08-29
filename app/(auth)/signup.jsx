@@ -18,8 +18,14 @@ import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { registerUser } from "../../components/crud";
 
-
-export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboardType = "default", style }) => {
+export const FormInput = ({
+  icon,
+  placeholder,
+  value,
+  handleChangeText,
+  keyboardType = "default",
+  style,
+}) => {
   return (
     <View style={style ? style : styles.inputContainer}>
       <Icon name={icon} size={20} color="#000" style={styles.inputIcon} />
@@ -35,8 +41,22 @@ export const FormInput = ({ icon, placeholder, value, handleChangeText, keyboard
 };
 
 const SignUp = () => {
-  const { setJwt, setMainUser, setIsLogged, mainUser, jwt, setIsLoading } =
-    useContext(GlobalContext);
+  // Safely get context with error handling
+  let contextValue;
+  try {
+    contextValue = useContext(GlobalContext);
+  } catch (error) {
+    contextValue = {};
+  }
+
+  const {
+    setJwt = () => {},
+    setMainUser = () => {},
+    setIsLogged = () => {},
+    mainUser = {},
+    jwt = "",
+    setIsLoading = () => {},
+  } = contextValue || {};
   const onAuthStateChangedApp = (user) => {
     if (user) {
       router.replace("/home");
@@ -46,15 +66,13 @@ const SignUp = () => {
   };
 
   useEffect(() => {
-
     // GoogleSignin.configure({
     //   webClientId: '809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com',
-    // });      
+    // });
 
     const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
     return sub;
   }, []);
-
 
   const [user, setUser] = useState({
     name: "",
@@ -70,7 +88,6 @@ const SignUp = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
 
   const handleFormSubmit = async () => {
     console.log(user);
@@ -107,7 +124,6 @@ const SignUp = () => {
 
       setMainUser(user);
       router.replace("/home");
-
     } catch (error) {
       console.error("Error:", error.message);
       alert(error);
@@ -184,11 +200,18 @@ const SignUp = () => {
           />
 
           <View style={styles.inputContainer}>
-            <Icon name="briefcase-outline" size={20} color="#000" style={styles.inputIcon} />
+            <Icon
+              name="briefcase-outline"
+              size={20}
+              color="#000"
+              style={styles.inputIcon}
+            />
             <Picker
               selectedValue={user.job}
               style={styles.input}
-              onValueChange={(itemValue) => setUser({ ...user, job: itemValue })}
+              onValueChange={(itemValue) =>
+                setUser({ ...user, job: itemValue })
+              }
             >
               <Picker.Item label="Select Job" value="" />
               <Picker.Item label="Consumer" value="consumer" />
@@ -214,7 +237,7 @@ const SignUp = () => {
             </TouchableOpacity>
           </View> */}
 
-          <TouchableOpacity >
+          <TouchableOpacity>
             <Text style={styles.signUpText}>
               Already have an account?{" "}
               <Link href="/login" style={styles.signUpLink}>
@@ -228,7 +251,6 @@ const SignUp = () => {
     </SafeAreaView>
   );
 };
-
 
 export default SignUp;
 
@@ -317,4 +339,3 @@ const styles = StyleSheet.create({
     color: "green",
   },
 });
-

@@ -5,7 +5,16 @@ import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
 import { GlobalContext } from '../context/GlobalProvider';
 
 const GlobalLoader = () => {
-  const { isLoading } = useContext(GlobalContext);
+  // Safely get context with error handling
+  let contextValue;
+  try {
+    contextValue = useContext(GlobalContext);
+  } catch (error) {
+    console.error("Error accessing GlobalContext in Loader:", error);
+    contextValue = {};
+  }
+
+  const { isLoading = false } = contextValue || {};
   if (!isLoading) return null;
 
   return (

@@ -40,28 +40,28 @@ const crops = () => {
         const loc = await getMandatoryLocation(
           (location) => {
             setCurrentLocation(location);
-            console.log('Location updated:', location);
           },
           (error) => {
-            console.error('Error fetching location:', error);
             // The mandatory location function will handle alerts and app exit
           },
           setCurrentLocation
         );
         // loc is returned, but context is updated in callback
       } catch (e) {
-        console.error('Error fetching location:', e);
         // Alert.alert('Location Error', 'Could not fetch location.');
       }
     };
     fetchAndSetLocation();
     const handleAppStateChange = async (nextAppState) => {
-      if (nextAppState === 'active' && locationRequestedRef.current) {
+      if (nextAppState === "active" && locationRequestedRef.current) {
         await fetchAndSetLocation();
         locationRequestedRef.current = false;
       }
     };
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
     return () => {
       subscription.remove();
     };
@@ -120,7 +120,7 @@ const crops = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ["images"],
         allowsEditing: true,
         quality: 1,
       });
@@ -180,7 +180,8 @@ const crops = () => {
     // Listen for app focus to re-fetch location if user returned from settings
     // (No need for duplicate AppState handler here, handled in top-level effect)
 
-    if (isNaN(Number(crop.pricePerUnit))) {t
+    if (isNaN(Number(crop.pricePerUnit))) {
+      t;
       Alert.alert("Enter correct price");
       return;
     }
@@ -258,8 +259,6 @@ const crops = () => {
       Alert.alert("Error uploading image", error?.message || "Unknown error");
     }
   }, [crop, currentLocation, mainUser, photo, setIsLoading]);
-
-
   return (
     <SafeAreaView style={{ backgroundColor: "#eafbe7", flex: 1 }}>
       {isCameraOpen ? (

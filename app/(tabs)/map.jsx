@@ -238,6 +238,8 @@ const Map = () => {
               />
             </View>
 
+            {/* Map Legend */}
+            <MapLegend selectedCrop={selectedCrop} radius={radius} />
             {/* Distance slider below map */}
             <RadiusSlider radius={radius} onRadiusChange={debouncedSetRadius} />
 
@@ -254,9 +256,6 @@ const Map = () => {
               priceUnit={priceUnit}
               onPriceUnitChange={handlePriceUnitChange}
             />
-
-            {/* Map Legend */}
-            <MapLegend selectedCrop={selectedCrop} radius={radius} />
 
             {/* Debug info */}
             <View style={mapStyles.debugSection}>

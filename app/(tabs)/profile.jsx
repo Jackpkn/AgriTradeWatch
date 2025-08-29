@@ -14,7 +14,16 @@ import { auth } from "../../firebase";
 import { getUserData } from "../../components/crud";
 
 const profile = () => {
-  const { setIsLoading } = useContext(GlobalContext);
+  // Safely get context with error handling
+  let contextValue;
+  try {
+    contextValue = useContext(GlobalContext);
+  } catch (error) {
+    console.error("Error accessing GlobalContext in profile:", error);
+    contextValue = {};
+  }
+
+  const { setIsLoading = () => {} } = contextValue || {};
 
   const [user, setUser] = useState(null);
 
