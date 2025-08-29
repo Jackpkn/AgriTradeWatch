@@ -60,6 +60,7 @@ const Map = () => {
 
   // Refs
   const radiusTimeoutRef = useRef(null);
+  const webViewRef = useRef(null);
 
   // Debounced radius setter to prevent infinite loops
   const debouncedSetRadius = useCallback((value) => {
@@ -68,6 +69,16 @@ const Map = () => {
     }
     radiusTimeoutRef.current = setTimeout(() => {
       setRadius(value);
+      // Send radius update to WebView
+      if (webViewRef.current) {
+        const message = JSON.stringify({
+          type: 'updateRadius',
+          radius: value
+        });
+        webViewRef.current.injectJavaScript(`
+          window.postMessage('${message}', '*');
+        `);
+      }
     }, MAP_CONFIG.RADIUS.DEBOUNCE_MS);
   }, []);
 
@@ -229,6 +240,7 @@ const Map = () => {
             {/* Interactive Map */}
             <View style={mapStyles.mapContainer}>
               <InteractiveMap
+                ref={webViewRef}
                 markerPosition={markerPosition}
                 allCrops={allCrops}
                 radius={radius}

@@ -8,7 +8,7 @@ export const MAP_CONFIG = {
   RADIUS: {
     MIN: 0.01, // 10m in km
     MAX: 0.7, // 700m in km
-    DEFAULT: 0.5, // 500m in km
+    DEFAULT: 0.1, // 100m in km (changed from 500m)
     DEBOUNCE_MS: ENV_CONFIG.MAP.DEBOUNCE_MS,
   },
   PRICE_CONVERSION: {

@@ -364,7 +364,7 @@ export const mapStyles = StyleSheet.create({
   // Modern Legend Styles
   modernMapLegend: {
     backgroundColor: "#fff",
-    marginTop: 1,
+    marginTop: 10,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
