@@ -52,21 +52,28 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
       });
 
       // Convert to chart format
-      return Object.entries(pricesByDate)
+      const chartData = Object.entries(pricesByDate)
         .filter(([_, data]) => data.prices.length > 0)
         .map(([date, data]) => {
           const avgPrice =
             data.prices.reduce((sum, price) => sum + price, 0) /
             data.prices.length;
+          const roundedPrice = Math.round(avgPrice);
           return {
             label: date,
-            value: Math.round(avgPrice),
-            dataPointText: `₹${Math.round(avgPrice)}`,
+            value: roundedPrice,
+            dataPointText: `₹${roundedPrice}`,
             timestamp: data.timestamp,
             count: data.prices.length,
           };
         })
         .sort((a, b) => a.timestamp - b.timestamp);
+
+      // Ensure we always return valid data or empty array
+      return chartData.filter(
+        (item) =>
+          item.value > 0 && !isNaN(item.value) && typeof item.label === "string"
+      );
     }
   );
 };

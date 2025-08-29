@@ -14,14 +14,35 @@ const PriceChart = ({
   title,
   isConsumerChart = false,
 }) => {
-  if (!chartData.length) return null;
+  // Validate and sanitize chart data
+  const validChartData = React.useMemo(() => {
+    if (!Array.isArray(chartData) || chartData.length === 0) return [];
+
+    return chartData
+      .filter(
+        (item) =>
+          item &&
+          typeof item.value === "number" &&
+          !isNaN(item.value) &&
+          item.value > 0 &&
+          item.label
+      )
+      .map((item) => ({
+        ...item,
+        value: Math.round(item.value),
+        dataPointText: item.dataPointText || `₹${Math.round(item.value)}`,
+        count: item.count || 1,
+      }));
+  }, [chartData]);
+
+  if (!validChartData.length) return null;
 
   const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
-  const chartWidth = Math.max(width - 40, chartData.length * 120);
+  const chartWidth = Math.max(width - 40, validChartData.length * 120);
 
-  const maxValue = Math.max(...chartData.map((d) => d.value));
-  const minValue = Math.min(...chartData.map((d) => d.value));
-  const priceRange = maxValue - minValue;
+  const maxValue = Math.max(...validChartData.map((d) => d.value));
+  const minValue = Math.min(...validChartData.map((d) => d.value));
+  const priceRange = maxValue - minValue || 1;
 
   const getGradientColors = () => {
     if (isConsumerChart) {
@@ -71,7 +92,9 @@ const PriceChart = ({
             </View>
             <View style={modernStyles.statDivider} />
             <View style={modernStyles.statItem}>
-              <Text style={modernStyles.statValue}>{chartData.length}</Text>
+              <Text style={modernStyles.statValue}>
+                {validChartData.length}
+              </Text>
               <Text style={modernStyles.statLabel}>Data Points</Text>
             </View>
           </View>
@@ -82,11 +105,11 @@ const PriceChart = ({
               ? "per kg"
               : "per unit"}{" "}
             prices
-            {chartData.length > 1 && (
+            {validChartData.length > 1 && (
               <Text style={modernStyles.dateRange}>
                 {" • "}
-                {chartData[0]?.label} to{" "}
-                {chartData[chartData.length - 1]?.label}
+                {validChartData[0]?.label} to{" "}
+                {validChartData[validChartData.length - 1]?.label}
               </Text>
             )}
           </Text>
@@ -101,7 +124,8 @@ const PriceChart = ({
         >
           <View style={modernStyles.chartWrapper}>
             <LineChart
-              data={chartData}
+              key={`${selectedCrop}-${priceUnit}-${validChartData.length}`}
+              data={validChartData}
               width={chartWidth}
               height={320}
               yAxisLabel={"₹"}
@@ -125,7 +149,7 @@ const PriceChart = ({
               curved
               dataPointsColor={getGradientColors()[0]}
               dataPointsRadius={6}
-              spacing={chartData.length > 10 ? 60 : 90}
+              spacing={validChartData.length > 10 ? 60 : 90}
               initialSpacing={40}
               endSpacing={40}
               rulesColor={"rgba(44, 62, 80, 0.1)"}
