@@ -1,29 +1,30 @@
 import { View, Text, Image } from "react-native";
 import { Tabs, Redirect } from "expo-router";
 // import {home} from 'react-native-vector-icons/FontAwesome5';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { useContext, useEffect } from "react";
-import { GlobalContext } from "../../context/GlobalProvider";
-
+import Icon from "react-native-vector-icons/Ionicons";
 
 const TabIcon = ({ icon, color, name, focused }) => {
   return (
-    <View style={{ alignItems:"center", justifyContent:"center" }}>
-      <Icon name={icon} size={ focused ? 35 : 30} color={color} style={{fontWeight:'bold', }} />
+    <View style={{ alignItems: "center", justifyContent: "center" }}>
+      <Icon
+        name={icon}
+        size={focused ? 35 : 30}
+        color={color}
+        style={{ fontWeight: "bold" }}
+      />
       {/* <Text>{name}</Text> */}
     </View>
   );
 };
 
 const TabLayout = () => {
-
   return (
     <>
-      <Tabs 
+      <Tabs
         screenOptions={{
-            tabBarShowLabel: false,
-            tabBarActiveTintColor: "#49A760",
-            tabBarInactiveTintColor: "#BDBDBD",
+          tabBarShowLabel: false,
+          tabBarActiveTintColor: "#49A760",
+          tabBarInactiveTintColor: "#BDBDBD",
         }}
       >
         <Tabs.Screen
@@ -31,7 +32,14 @@ const TabLayout = () => {
           options={{
             title: "Home",
             headerShown: false,
-            tabBarIcon: ({color, focused})=>( <TabIcon icon='home' name="Home" color={color} focused={focused} /> ),
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon="home"
+                name="Home"
+                color={color}
+                focused={focused}
+              />
+            ),
           }}
         />
         <Tabs.Screen
@@ -39,7 +47,24 @@ const TabLayout = () => {
           options={{
             title: "Statistics",
             headerShown: false,
-            tabBarIcon: ({color, focused})=>( <TabIcon icon="stats-chart" name="Home" color={color} focused={focused} /> ),
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon="stats-chart"
+                name="Statistics"
+                color={color}
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="map"
+          options={{
+            title: "Map",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon icon="map" name="Map" color={color} focused={focused} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -47,7 +72,14 @@ const TabLayout = () => {
           options={{
             title: "Profile",
             headerShown: false,
-            tabBarIcon: ({color, focused})=>( <TabIcon icon="person" name="Home" color={color} focused={focused} /> ),
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon="person"
+                name="Profile"
+                color={color}
+                focused={focused}
+              />
+            ),
           }}
         />
       </Tabs>
