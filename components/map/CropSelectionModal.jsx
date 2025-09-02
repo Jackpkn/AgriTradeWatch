@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { CROP_OPTIONS } from "../../constants/mapConfig";
+import { CROP_OPTIONS } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const CropSelectionModal = ({ visible, selectedCrop, onSelect, onClose }) => {

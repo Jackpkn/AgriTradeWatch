@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { CROP_OPTIONS, MAP_TYPES } from "../../constants/mapConfig";
+import { CROP_OPTIONS, MAP_TYPES } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const MapHeader = ({

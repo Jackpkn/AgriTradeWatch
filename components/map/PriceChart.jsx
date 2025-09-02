@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, ScrollView, Dimensions } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { LinearGradient } from "expo-linear-gradient";
-import { CROP_OPTIONS, MAP_CONFIG } from "../../constants/mapConfig";
+import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const { width } = Dimensions.get("window");
