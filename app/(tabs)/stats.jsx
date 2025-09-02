@@ -13,8 +13,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchCrops } from "../../components/crud";
-import { GlobalContext } from "../../context/GlobalProvider";
+import { fetchCrops } from "@/components/crud";
+import { GlobalContext } from "@/context/GlobalProvider";
 import { Picker } from "@react-native-picker/picker";
 
 const { width } = Dimensions.get("window");

@@ -8,10 +8,10 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { GlobalContext } from "../../context/GlobalProvider";
+import { GlobalContext } from "@/context/GlobalProvider";
 import { router } from "expo-router";
-import { auth } from "../../firebase";
-import { getUserData } from "../../components/crud";
+import { auth } from "@/firebase";
+import { getUserData } from "@/components/crud";
 
 const profile = () => {
   // Safely get context with error handling

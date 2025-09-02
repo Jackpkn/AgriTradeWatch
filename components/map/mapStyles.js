@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from "react-native";
-import { MAP_CONFIG } from "../../constants/mapConfig";
+import { MAP_CONFIG } from "@/constants/mapConfig";
 
 const { width } = Dimensions.get("window");
 

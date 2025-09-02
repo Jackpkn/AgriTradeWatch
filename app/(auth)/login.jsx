@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,114 +7,92 @@ import {
   Image,
   StyleSheet,
   ScrollView,
-  BackHandler,
   Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons"; // For icons
-import FontAwesome from "react-native-vector-icons/FontAwesome"; // For social media icons
-import illustration from "../../assets/images/workers-farm-activity-illustration 2.png";
-import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import api from "../../components/GlobalApi";
-import { GlobalContext } from "../../context/GlobalProvider";
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth } from "../../firebase";
+import { Link, router } from "expo-router";
+import Icon from "react-native-vector-icons/Ionicons";
+import { loginStyles as styles } from "@/components/auth/LoginStyle"; 
+import { GlobalContext } from "@/context/GlobalProvider";
+import { auth } from "@/firebase";
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
-import { getUserData } from "../../components/crud";
+import { getUserData } from "@/components/crud";
+import { FormInput } from "@/components/auth/FormComponents";
 
+import illustration from "@/assets/images/workers-farm-activity-illustration 2.png";
+
+// --- Main LoginScreen Component ---
 const LoginScreen = () => {
-  // Safely get context with error handling
-  let contextValue;
-  try {
-    contextValue = useContext(GlobalContext);
-  } catch (error) {
-    contextValue = {};
+  const context = useContext(GlobalContext);
+  if (!context) {
+    throw new Error("LoginScreen must be used within a GlobalProvider");
   }
+  const { setJwt, setMainUser, setIsLogged, setIsLoading, isGuest, logoutGuest } = context;
 
-  const {
-    setJwt = () => {},
-    setMainUser = () => {},
-    setIsLogged = () => {},
-    setIsLoading = () => {},
-    logoutGuest = () => {},
-    isGuest = false
-  } = contextValue || {};
-
-  const [shouldNavigate, setShouldNavigate] = useState(false);
-
-  const onAuthStateChangedApp = useCallback((user) => {
-    if (user) {
-      console.log("User authenticated in login screen");
-      setShouldNavigate(true);
-    } else {
-      console.log("No user found in login screen");
-    }
-  }, []);
-
-  // Handle navigation in useEffect to avoid render-time navigation
-  useEffect(() => {
-    if (shouldNavigate) {
-      router.replace("/(tabs)/home");
-    }
-  }, [shouldNavigate]);
-
-  useEffect(() => {
-    const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
-    return () => sub();
-  }, [onAuthStateChangedApp]);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User is authenticated, navigating to home.");
+        router.replace("/(tabs)/home");
+      } else {
+        console.log("No authenticated user found.");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleInputChange = (field, value) => {
+    setForm((prevForm) => ({ ...prevForm, [field]: value }));
   };
 
   const handleLogin = async () => {
+    const { email, password } = form;
     if (!email || !password) {
-      Alert.alert("Error", "Please enter your email and password");
+      Alert.alert("Error", "Please enter your email and password.");
       return;
     }
 
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
-      // If user was in guest mode, logout first
       if (isGuest) {
         await logoutGuest();
       }
 
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login successful:", res.user.email);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      // Get user data from Firestore
-      const userData = await getUserData(res.user.uid);
+      console.log("Login successful:", user.email);
+
+      const userData = await getUserData(user.uid);
       if (userData) {
         setMainUser(userData);
-        setJwt(res.user.uid);
+        setJwt(user.uid);
         setIsLogged(true);
+      } else {
+        throw new Error("Could not find user data.");
       }
-
-      setShouldNavigate(true);
     } catch (error) {
       console.error("Login error:", error);
-
-      let errorMessage = "An error occurred during login";
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = "No account found with this email address";
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "Incorrect password";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "Invalid email address";
-      } else if (error.code === 'auth/user-disabled') {
-        errorMessage = "This account has been disabled";
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Too many failed login attempts. Please try again later";
-      } else if (error.message) {
-        errorMessage = error.message;
+      let errorMessage = "An error occurred during login. Please try again.";
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = "Invalid email or password.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Please enter a valid email address.";
+          break;
+        case 'auth/user-disabled':
+          errorMessage = "This account has been disabled.";
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = "Too many failed login attempts. Please try again later.";
+          break;
       }
-
       Alert.alert("Login Failed", errorMessage);
     } finally {
       setIsLoading(false);
@@ -122,191 +100,54 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView>
-      <ScrollView
-        contentContainerStyle={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-          backgroundColor: "white",
-          height: "100%",
-        }}
-      >
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          <View style={styles.logoContainer}>
-            {/* You can add your own illustration here */}
-            <Image
-              source={illustration} // Add your image to the assets folder
-              style={styles.illustration}
-            />
-          </View>
+          <Image source={illustration} style={styles.illustration} />
+          <Text style={styles.title}>Welcome Back!</Text>
+          <Text style={styles.subtitle}>Please enter your details to continue.</Text>
 
-          <Text style={styles.title}>Log In</Text>
-          <Text style={styles.subtitle}>
-            please enter your details to continue
-          </Text>
-
-          <View style={styles.inputContainer}>
-            <Icon
-              name="mail-outline"
-              size={20}
-              color="#000"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={(text) => setEmail(text)}
-              keyboardType="email-address"
-            />
-          </View>
+          <FormInput
+            icon="mail-outline"
+            placeholder="Email Address"
+            value={form.email}
+            onChangeText={(text) => handleInputChange("email", text)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
           <View style={styles.inputContainer}>
-            <Icon
-              name="lock-closed-outline"
-              size={20}
-              color="#000"
-              style={styles.inputIcon}
-            />
+            <Icon name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
-              value={password}
-              onChangeText={(text) => setPassword(text)}
+              placeholderTextColor="#9A9A9A"
+              value={form.password}
+              onChangeText={(text) => handleInputChange("password", text)}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity
-              onPress={togglePasswordVisibility}
-              style={styles.eyeIcon}
-            >
-              <Icon
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-                size={20}
-                color="#000"
-              />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#666" />
             </TouchableOpacity>
           </View>
 
-          {/* <TouchableOpacity          >
-            <Text style={styles.forgotPasswordText}>Forgot Password</Text>
-          </TouchableOpacity> */}
-
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Log in</Text>
+          <TouchableOpacity style={styles.submitButton} onPress={handleLogin}>
+            <Text style={styles.submitButtonText}>Log In</Text>
           </TouchableOpacity>
-          {/* 
-          <Text style={styles.orText}>or sign in with</Text>
 
-          <View style={styles.socialLoginContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="facebook" size={30} color="#3b5998" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="google" size={30} color="#DB4437" />
-            </TouchableOpacity>
-          </View> */}
-
-          <TouchableOpacity>
-            <Text style={styles.signUpText}>
-              Don’t have an account?{" "}
-              <Link href="/signup" style={styles.signUpLink}>
-                {" "}
-                Sign Up
-              </Link>
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUpText}>Don't have an account? </Text>
+            <Link href="/(auth)/signup" asChild>
+              <TouchableOpacity>
+                <Text style={styles.signUpLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "white",
-    justifyContent: "center",
-    height: "100vh",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  illustration: {
-    width: 180,
-    height: 180,
-    resizeMode: "contain",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 5,
-  },
-  subtitle: {
-    textAlign: "center",
-    color: "grey",
-    marginBottom: 20,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  eyeIcon: {
-    paddingHorizontal: 10,
-  },
-  forgotPasswordText: {
-    color: "green",
-    textAlign: "right",
-    marginBottom: 20,
-  },
-  loginButton: {
-    backgroundColor: "green",
-    paddingVertical: 15,
-    marginTop: 30,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  orText: {
-    textAlign: "center",
-    marginBottom: 20,
-    color: "grey",
-  },
-  socialLoginContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  socialButton: {
-    marginHorizontal: 10,
-  },
-  signUpText: {
-    textAlign: "center",
-    color: "grey",
-  },
-  signUpLink: {
-    color: "green",
-  },
-});
-
 export default LoginScreen;
+

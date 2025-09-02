@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,345 +7,199 @@ import {
   Image,
   StyleSheet,
   ScrollView,
+  Modal,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import illustration from "../../assets/images/workers-farm-activity-illustration 2.png";
-import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GlobalContext } from "../../context/GlobalProvider";
-import { Picker } from "@react-native-picker/picker";
-import { auth } from "../../firebase";
+import { signUpStyles as styles } from "@/components/auth/SignUpStyles";
+import { Link, router } from "expo-router";
+import Icon from "react-native-vector-icons/Ionicons";
+
+import { GlobalContext } from "@/context/GlobalProvider";
+import { auth } from "@/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { registerUser } from "../../components/crud";
+import { registerUser } from "@/components/crud";
+import { FormInput, SelectionButton, SelectionModal } from "@/components/auth/FormComponents"; 
+import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
 
-export const FormInput = ({
-  icon,
-  placeholder,
-  value,
-  handleChangeText,
-  keyboardType = "default",
-  style,
-}) => {
-  return (
-    <View style={style ? style : styles.inputContainer}>
-      <Icon name={icon} size={20} color="#000" style={styles.inputIcon} />
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        value={value}
-        onChangeText={handleChangeText}
-        keyboardType={keyboardType}
-      />
-    </View>
-  );
-};
+import illustration from "@/assets/images/workers-farm-activity-illustration 2.png";
 
+// --- Main SignUp Component ---
 const SignUp = () => {
-  // Safely get context with error handling
-  let contextValue;
-  try {
-    contextValue = useContext(GlobalContext);
-  } catch (error) {
-    contextValue = {};
+  const context = useContext(GlobalContext);
+  if (!context) {
+    throw new Error("SignUp must be used within a GlobalProvider");
   }
+  const { setMainUser, setIsLoading } = context;
 
-  const {
-    setJwt = () => {},
-    setMainUser = () => {},
-    setIsLogged = () => {},
-    mainUser = {},
-    jwt = "",
-    setIsLoading = () => {},
-  } = contextValue || {};
-  const [shouldNavigate, setShouldNavigate] = useState(false);
-
-  const onAuthStateChangedApp = useCallback((user) => {
-    if (user) {
-      console.log("User authenticated in signup screen");
-      setShouldNavigate(true);
-    } else {
-      console.log("No user found in signup screen");
-    }
-  }, []);
-
-  // Handle navigation in useEffect to avoid render-time navigation
-  useEffect(() => {
-    if (shouldNavigate) {
-      router.replace("/(tabs)/home");
-    }
-  }, [shouldNavigate]);
-
-  useEffect(() => {
-    // GoogleSignin.configure({
-    //   webClientId: '809126175103-5q48dvth8pirnjom3mt6vols0njo2tmh.apps.googleusercontent.com',
-    // });
-
-    const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
-    return sub;
-  }, []);
-
-  const [user, setUser] = useState({
+  const [form, setForm] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
-    username: "",
     job: "",
     phoneNumber: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
+  const [modalVisible, setModalVisible] = useState(null);
+  const [selectedUserType, setSelectedUserType] = useState("Farmer");
+  const [selectedLocation, setSelectedLocation] = useState("Auto-detect Current");
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User authenticated, navigating to home.");
+        router.replace("/(tabs)/home");
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleInputChange = (field, value) => {
+    setForm((prevForm) => ({ ...prevForm, [field]: value }));
   };
 
   const handleFormSubmit = async () => {
-    console.log(user);
-
-    if (
-      !user.name ||
-      !user.email ||
-      !user.password ||
-      !user.username ||
-      !user.job ||
-      !user.phoneNumber
-    ) {
-      alert("Please fill all the fields");
+    const { name, email, password, username, phoneNumber } = form;
+    if (!name || !email || !password || !username || !phoneNumber) {
+      Alert.alert("Error", "Please fill in all required fields.");
       return;
     }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(user.email)) {
-      alert("Please enter a valid email address");
-      return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        Alert.alert("Error", "Please enter a valid email address.");
+        return;
+    }
+    if (password.length < 6) {
+        Alert.alert("Error", "Password must be at least 6 characters long.");
+        return;
     }
 
-    // Validate phone number (example: must be 10 digits)
-    if (user.phoneNumber.length !== 10) {
-      alert("Please enter a valid 10-digit phone number");
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      const userData = {
+        ...form,
+        userType: selectedUserType,
+        locationMethod: selectedLocation,
+      };
 
-      registerUser(user.email, user.password, user);
-
-      setMainUser(user);
-      setShouldNavigate(true);
+      const newUser = await registerUser(email, password, userData);
+       
+      setMainUser(newUser); 
+      Alert.alert("Success", "Account created successfully!");
     } catch (error) {
-      console.error("Error:", error.message);
-      alert(error);
+      console.error("Registration Error:", error);
+      Alert.alert("Registration Failed", error.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView>
-      <ScrollView contentContainerStyle={{ width: "100%" }}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          <View style={styles.logoContainer}>
-            {/* You can add your own illustration here */}
-            <Image
-              source={illustration} // Add your image to the assets folder
-              style={styles.illustration}
-            />
-          </View>
-
-          <Text style={styles.title}>Sign Up</Text>
-          <Text style={styles.subtitle}>Create an account to Continue</Text>
-
-          <FormInput
-            icon="person-outline"
-            placeholder="Name"
-            value={user.name}
-            handleChangeText={(text) => setUser({ ...user, name: text })}
+          <Image source={illustration} style={styles.illustration} />
+          <Text style={styles.title}>Create Your Account</Text>
+          <Text style={styles.subtitle}>Join our community to get started.</Text>
+          
+          <SelectionButton
+            label="I am a"
+            value={selectedUserType}
+            icon={USER_TYPES.find(type => type.name === selectedUserType)?.icon || "👤"}
+            onPress={() => setModalVisible('userType')}
           />
-          <FormInput
-            icon="person-outline"
-            placeholder="Username"
-            value={user.username}
-            handleChangeText={(text) => setUser({ ...user, username: text })}
+          <SelectionButton
+            label="My Location"
+            value={selectedLocation}
+            icon={LOCATION_OPTIONS.find(loc => loc.name === selectedLocation)?.icon || "📍"}
+            onPress={() => setModalVisible('location')}
           />
-          <FormInput
-            icon="mail-outline"
-            placeholder="Email"
-            value={user.email}
-            handleChangeText={(text) => setUser({ ...user, email: text })}
+          
+          <FormInput 
+            icon="person-outline" 
+            placeholder="Full Name" 
+            value={form.name} 
+            onChangeText={(text) => handleInputChange("name", text)} 
           />
-
+          <FormInput 
+            icon="at-outline" 
+            placeholder="Username" 
+            value={form.username} 
+            onChangeText={(text) => handleInputChange("username", text)} 
+            autoCapitalize="none" 
+          />
+          <FormInput 
+            icon="mail-outline" 
+            placeholder="Email Address" 
+            value={form.email} 
+            onChangeText={(text) => handleInputChange("email", text)} 
+            keyboardType="email-address" 
+            autoCapitalize="none" 
+          />
+          
           <View style={styles.inputContainer}>
-            <Icon
-              name="lock-closed-outline"
-              size={20}
-              color="#000"
-              style={styles.inputIcon}
-            />
+            <Icon name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
-              value={user.password}
-              onChangeText={(text) => setUser({ ...user, password: text })}
+              placeholderTextColor="#9A9A9A"
+              value={form.password}
+              onChangeText={(text) => handleInputChange("password", text)}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity
-              onPress={togglePasswordVisibility}
-              style={styles.eyeIcon}
-            >
-              <Icon
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-                size={20}
-                color="#000"
-              />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#666" />
             </TouchableOpacity>
           </View>
 
-          <FormInput
-            icon="call-outline"
-            placeholder="Phone Number"
-            value={user.phoneNumber}
-            handleChangeText={(text) => setUser({ ...user, phoneNumber: text })}
+          <FormInput 
+            icon="briefcase-outline" 
+            placeholder="Job (Optional)" 
+            value={form.job} 
+            onChangeText={(text) => handleInputChange("job", text)} 
+          />
+          <FormInput 
+            icon="call-outline" 
+            placeholder="Phone Number" 
+            value={form.phoneNumber} 
+            onChangeText={(text) => handleInputChange("phoneNumber", text)} 
+            keyboardType="phone-pad" 
+            maxLength={10} 
           />
 
-          <View style={styles.inputContainer}>
-            <Icon
-              name="briefcase-outline"
-              size={20}
-              color="#000"
-              style={styles.inputIcon}
-            />
-            <Picker
-              selectedValue={user.job}
-              style={styles.input}
-              onValueChange={(itemValue) =>
-                setUser({ ...user, job: itemValue })
-              }
-            >
-              <Picker.Item label="Select Job" value="" />
-              <Picker.Item label="Consumer" value="consumer" />
-              <Picker.Item label="Farmer" value="farmer" />
-            </Picker>
+          <TouchableOpacity style={styles.submitButton} onPress={handleFormSubmit}>
+            <Text style={styles.submitButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <Link href="/(auth)/login" asChild>
+              <TouchableOpacity>
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
-
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleFormSubmit}
-          >
-            <Text style={styles.loginButtonText}>Sign Up</Text>
-          </TouchableOpacity>
-
-          {/* <Text style={styles.orText}>or sign in with</Text>
-
-          <View style={styles.socialLoginContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <FontAwesome name="facebook" size={30} color="#3b5998" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} >
-              <FontAwesome name="google" size={30} color="#DB4437" />
-            </TouchableOpacity>
-          </View> */}
-
-          <TouchableOpacity>
-            <Text style={styles.signUpText}>
-              Already have an account?{" "}
-              <Link href="/login" style={styles.signUpLink}>
-                {" "}
-                Log In
-              </Link>
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <SelectionModal
+        visible={modalVisible === 'userType'}
+        onClose={() => setModalVisible(null)}
+        title="Select User Type"
+        options={USER_TYPES}
+        selectedValue={selectedUserType}
+        onSelect={setSelectedUserType}
+      />
+      <SelectionModal
+        visible={modalVisible === 'location'}
+        onClose={() => setModalVisible(null)}
+        title="Select Location Method"
+        options={LOCATION_OPTIONS}
+        selectedValue={selectedLocation}
+        onSelect={setSelectedLocation}
+      />
     </SafeAreaView>
   );
 };
 
 export default SignUp;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  illustration: {
-    width: 180,
-    height: 180,
-    resizeMode: "contain",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 5,
-  },
-  subtitle: {
-    textAlign: "center",
-    color: "grey",
-    marginBottom: 20,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  eyeIcon: {
-    paddingHorizontal: 10,
-  },
-  forgotPasswordText: {
-    color: "green",
-    textAlign: "right",
-    marginBottom: 20,
-  },
-  loginButton: {
-    backgroundColor: "green",
-    paddingVertical: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20,
-    marginTop: 30,
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  orText: {
-    textAlign: "center",
-    marginBottom: 20,
-    color: "grey",
-  },
-  socialLoginContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  socialButton: {
-    marginHorizontal: 10,
-  },
-  signUpText: {
-    textAlign: "center",
-    color: "grey",
-  },
-  signUpLink: {
-    color: "green",
-  },
-});

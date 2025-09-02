@@ -1,35 +1,37 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Image, ImageBackground, ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { Image, ImageBackground, ScrollView, Text, View, TouchableOpacity, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import logo from "../assets/images/logo.png";
-import { GlobalContext } from "../context/GlobalProvider";
+import logo from "@/assets/images/logo.png";
+import { indexStyles as styles } from "@/components/IndexCss";
+import { GlobalContext } from "@/context/GlobalProvider";
 import { useContext, useEffect, useCallback, useState } from "react";
-import { auth } from "../firebase";
+import { auth } from "@/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { enableScreens } from "react-native-screens";
-import { networkManager } from "../utils/networkUtils";
-// import GuestRoleSelection from "../components/GuestRoleSelection"; // Commented out - guest features disabled
-
+import { networkManager } from "@/utils/networkUtils";
+import Icon from "react-native-vector-icons/Ionicons";
+// import { LANGUAGES } from "../constants/authConstants";
+import { LANGUAGES } from "@/constants/authConstants";
 export default function Index() {
   enableScreens();
   const [authError, setAuthError] = useState(null);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleRetry = async () => {
     console.log("Retrying authentication setup...");
     setAuthError(null);
 
     try {
-      // Check network connectivity
       if (networkManager) {
         const status = await networkManager.getNetworkStatus();
         if (!status.isConnected) {
           console.log("Still offline, showing offline message");
-          return; // Stay on offline screen
+          return;
         }
       }
-
-      // Force a re-render by updating state
       window.location.reload?.() || router.replace("/");
     } catch (error) {
       console.error("Error during retry:", error);
@@ -51,7 +53,7 @@ export default function Index() {
     isAuthenticated = false,
     isLogged = false,
     isGuest = false,
-    isLoading = true,
+    isLoading: contextLoading = true,
     isOnline = true
   } = contextValue || {};
 
@@ -60,43 +62,21 @@ export default function Index() {
       console.log("Auth state changed:", {
         hasUser: !!user,
         isGuest,
-        isLoading,
+        isLoading: contextLoading,
         userEmail: user?.email || null
       });
 
       if (user) {
         console.log("User authenticated, navigating to home");
         router.replace("/(tabs)/home");
-      } else if (!user && !isLoading) {
-        console.log("No user found, redirecting to login (guest features disabled)");
-        // Force login - redirect to login screen
-        router.replace("/(auth)/login");
+      } else if (!user && !contextLoading) {
+        console.log("No user found, staying on landing page");
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Error in onAuthStateChanged:", error);
     }
-  }, [isGuest, isLoading]);
-
-  // Handle navigation when authentication state changes
-  useEffect(() => {
-    try {
-      console.log("Navigation effect triggered:", {
-        isAuthenticated,
-        isLoading,
-        isGuest
-      });
-
-      if (isAuthenticated && !isLoading) {
-        console.log("Authentication state changed, navigating to home");
-        router.replace("/(tabs)/home");
-      } else if (!isAuthenticated && !isLoading) {
-        console.log("User not authenticated, redirecting to login");
-        router.replace("/(auth)/login");
-      }
-    } catch (error) {
-      console.error("Error in navigation effect:", error);
-    }
-  }, [isAuthenticated, isLoading, isGuest]);
+  }, [isGuest, contextLoading]);
 
   // Listen for Firebase auth state changes
   useEffect(() => {
@@ -104,8 +84,29 @@ export default function Index() {
     return () => sub();
   }, [onAuthStateChangedApp]);
 
+  // Handle navigation when authentication state changes
+  useEffect(() => {
+    try {
+      console.log("Navigation effect triggered:", {
+        isAuthenticated,
+        isLoading: contextLoading,
+        isGuest
+      });
+
+      if (isAuthenticated && !contextLoading) {
+        console.log("Authentication state changed, navigating to home");
+        router.replace("/(tabs)/home");
+      } else if (!isAuthenticated && !contextLoading) {
+        console.log("User not authenticated, showing landing page");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error in navigation effect:", error);
+    }
+  }, [isAuthenticated, contextLoading, isGuest]);
+
   // Safely get network status
-  const isOffline = !isOnline && !isLoading;
+  const isOffline = !isOnline && !contextLoading;
 
   // Show offline state
   if (isOffline) {
@@ -170,39 +171,138 @@ export default function Index() {
   }
 
   // Show loading while initializing
-  if (isLoading) {
+  if (isLoading || contextLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7", justifyContent: "center", alignItems: "center" }}>
         <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 18, color: "#49A760", marginBottom: 8 }}>MandiGo</Text>
+          <Image source={logo} style={{ width: 120, height: 120, marginBottom: 20 }} />
+          <Text style={{ fontSize: 24, color: "#49A760", marginBottom: 8, fontWeight: "bold" }}>MandiGo</Text>
           <Text style={{ fontSize: 16, color: "#666" }}>Setting up your experience...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // If not authenticated, redirect to login (guest features disabled)
-  if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login (guest features disabled)");
-    // This will be handled by the useEffect above, but we show a loading state here
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7", justifyContent: "center", alignItems: "center" }}>
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 18, color: "#49A760", marginBottom: 8 }}>MandiGo</Text>
-          <Text style={{ fontSize: 16, color: "#666" }}>Redirecting to login...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Show loading while navigating (authenticated but still loading)
-  console.log("Showing redirect screen - user is authenticated");
+  // Show landing page
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7", justifyContent: "center", alignItems: "center" }}>
-      <View style={{ alignItems: "center" }}>
-        <Text style={{ fontSize: 18, color: "#49A760", marginBottom: 8 }}>Welcome!</Text>
-        <Text style={{ fontSize: 16, color: "#666" }}>Taking you to your dashboard...</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7" }}>
+      <StatusBar style="dark" />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          {/* Header with Logo */}
+          <View style={styles.header}>
+            <Image source={logo} style={styles.logo} />
+            <Text style={styles.appName}>MandiGo</Text>
+            <Text style={styles.tagline}>Your Agricultural Trade Companion</Text>
+          </View>
+
+          {/* Language Selection */}
+          <View style={styles.languageSection}>
+            <Text style={styles.sectionTitle}>Choose Language</Text>
+            <TouchableOpacity
+              style={styles.languageButton}
+              onPress={() => setShowLanguageModal(true)}
+            >
+              <Text style={styles.languageFlag}>{selectedLanguage === "English" ? "🇮🇳" : "🇮🇳"}</Text>
+              <Text style={styles.languageText}>{selectedLanguage}</Text>
+              <Icon name="chevron-down" size={20} color="#666" />
+            </TouchableOpacity>
+            <Text style={styles.comingSoon}>🌱 Coming Soon - More languages will be available</Text>
+          </View>
+
+          {/* Main Options */}
+          <View style={styles.optionsSection}>
+            <TouchableOpacity
+              style={[styles.optionButton, styles.loginButton]}
+              onPress={() => router.push("/(auth)/login")}
+            >
+              <Icon name="log-in" size={24} color="#fff" />
+              <Text style={styles.optionButtonText}>Login</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.optionButton, styles.registerButton]}
+              onPress={() => router.push("/(auth)/signup")}
+            >
+              <Icon name="person-add" size={24} color="#fff" />
+              <Text style={styles.optionButtonText}>Register</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Quick Links */}
+          <View style={styles.quickLinksSection}>
+            <Text style={styles.sectionTitle}>Quick Links</Text>
+            
+            <TouchableOpacity style={styles.quickLinkButton}>
+              <Icon name="information-circle" size={20} color="#49A760" />
+              <Text style={styles.quickLinkText}>About Us</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickLinkButton}>
+              <Icon name="document-text" size={20} color="#49A760" />
+              <Text style={styles.quickLinkText}>Disclaimer</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© 2025 MandiGo. All rights reserved.</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Language</Text>
+              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.languageList}>
+              {LANGUAGES.map((language) => (
+                <TouchableOpacity
+                  key={language.code}
+                  style={[
+                    styles.languageItem,
+                    selectedLanguage === language.name && styles.selectedLanguageItem
+                  ]}
+                  onPress={() => {
+                    setSelectedLanguage(language.name);
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  <Text style={styles.languageItemFlag}>{language.flag}</Text>
+                  <Text style={[
+                    styles.languageItemText,
+                    selectedLanguage === language.name && styles.selectedLanguageText
+                  ]}>
+                    {language.name}
+                  </Text>
+                  {selectedLanguage === language.name && (
+                    <Icon name="checkmark" size={20} color="#49A760" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <View style={styles.modalFooter}>
+              <Text style={styles.comingSoonModal}>
+                🌱 Coming Soon - More languages will be available
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
+

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getMandatoryLocation } from "../components/getLocation";
-import { networkManager, addNetworkListener } from "../utils/networkUtils";
-import { auth } from "../firebase";
+import { getMandatoryLocation } from "@/components/getLocation";
+import { networkManager, addNetworkListener } from "@/utils/networkUtils";
+import { auth } from "@/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 // Create context with a safer approach

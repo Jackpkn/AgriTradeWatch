@@ -8,33 +8,33 @@ import React, {
 } from "react";
 import { View, ScrollView, Text, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GlobalContext } from "../../context/GlobalProvider";
+import { GlobalContext } from "@/context/GlobalProvider"; 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Custom hooks
-import { useMapData } from "../../hooks/useMapData";
-import { useGeolocation } from "../../hooks/useGeolocation";
+import { useMapData } from "@/hooks/useMapData";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 // Components
-import ErrorBoundary from "../../components/ErrorBoundary";
-import MapHeader from "../../components/map/MapHeader";
-import InteractiveMap from "../../components/map/InteractiveMap";
-import RadiusSlider from "../../components/map/RadiusSlider";
-import ConsumerInfoPanel from "../../components/map/ConsumerInfoPanel";
-import PriceUnitToggle from "../../components/map/PriceUnitToggle";
-import MapLegend from "../../components/map/MapLegend";
-import PriceChart from "../../components/map/PriceChart";
-import CropSelectionModal from "../../components/map/CropSelectionModal";
-import OfflineIndicator from "../../components/OfflineIndicator";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import MapHeader from "@/components/map/MapHeader";
+import InteractiveMap from "@/components/map/InteractiveMap";
+import RadiusSlider from "@/components/map/RadiusSlider";
+import ConsumerInfoPanel from "@/components/map/ConsumerInfoPanel";
+import PriceUnitToggle from "@/components/map/PriceUnitToggle";
+import MapLegend from "@/components/map/MapLegend";
+import PriceChart from "@/components/map/PriceChart";
+import CropSelectionModal from "@/components/map/CropSelectionModal";
+import OfflineIndicator from "@/components/OfflineIndicator";
 
 // Utils and constants
 import {
   processChartData,
   calculateConsumerStats,
-} from "../../utils/chartDataProcessor";
-import { MAP_CONFIG } from "../../constants/mapConfig";
-import { mapStyles } from "../../components/map/mapStyles";
-import { performanceMonitor } from "../../utils/performance";
+} from "@/utils/chartDataProcessor";
+import { MAP_CONFIG } from "@/constants/mapConfig";
+import { mapStyles } from "@/components/map/mapStyles";
+import { performanceMonitor } from "@/utils/performance";
 
 const Map = () => {
   const { currentLocation } = useContext(GlobalContext);

@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { GlobalContext } from "../context/GlobalProvider";
+import { GlobalContext } from "@/context/GlobalProvider";
 
 const NetworkStatusBar = () => {
   // Safely get context with error handling

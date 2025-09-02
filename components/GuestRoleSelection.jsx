@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { GlobalContext } from "../context/GlobalProvider";
+  import { GlobalContext } from "../context/GlobalProvider";
 import { router } from "expo-router";
 
 const { width } = Dimensions.get("window");

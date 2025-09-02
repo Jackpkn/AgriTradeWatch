@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import Slider from "@react-native-community/slider";
-import { MAP_CONFIG } from "../../constants/mapConfig";
+import { MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const RadiusSlider = ({ radius, onRadiusChange }) => {

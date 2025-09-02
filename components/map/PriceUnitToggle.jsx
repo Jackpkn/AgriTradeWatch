@@ -1,6 +1,6 @@
 import React from "react";
 import { View, TouchableOpacity, Text } from "react-native";
-import { MAP_CONFIG } from "../../constants/mapConfig";
+import { MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const PriceUnitToggle = ({ priceUnit, onPriceUnitChange }) => {

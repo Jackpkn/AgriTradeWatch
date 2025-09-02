@@ -2,7 +2,7 @@
 
 import React, { useContext } from 'react';
 import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
-import { GlobalContext } from '../context/GlobalProvider';
+import { GlobalContext } from "@/context/GlobalProvider";
 
 const GlobalLoader = () => {
   // Safely get context with error handling

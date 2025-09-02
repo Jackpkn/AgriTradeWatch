@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { useContext } from "react";
-import { GlobalContext } from "../context/GlobalProvider";
+import { GlobalContext } from "@/context/GlobalProvider";
 
 const OfflineIndicator = ({ style = {} }) => {
   const { isOnline, networkType } = useContext(GlobalContext);
