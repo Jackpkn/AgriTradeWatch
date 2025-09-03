@@ -4,6 +4,8 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Modal,
+  Alert,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +14,8 @@ import { GlobalContext } from "@/context/GlobalProvider";
 import { router } from "expo-router";
 import { auth } from "@/firebase";
 import { getUserData } from "@/components/crud";
+import Icon from "react-native-vector-icons/Ionicons";
+import { LANGUAGES, USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
 
 const profile = () => {
   // Safely get context with error handling
@@ -26,6 +30,12 @@ const profile = () => {
   const { setIsLoading = () => {} } = contextValue || {};
 
   const [user, setUser] = useState(null);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showUserTypeModal, setShowUserTypeModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [selectedUserType, setSelectedUserType] = useState("Farmer");
+  const [selectedLocation, setSelectedLocation] = useState("Auto-detect Current");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -33,6 +43,11 @@ const profile = () => {
         setIsLoading(true);
         const userData = await getUserData(auth.currentUser.uid);
         setUser(userData);
+        
+        // Set preferences from user data
+        if (userData.userType) setSelectedUserType(userData.userType);
+        if (userData.locationMethod) setSelectedLocation(userData.locationMethod);
+        // Language will be stored in app state/context later
       } catch (error) {
         console.error("Error fetching user data: ", error);
       } finally {
@@ -46,7 +61,7 @@ const profile = () => {
     try {
       setIsLoading(true);
       await auth.signOut();
-      router.replace("/login");
+      router.replace("/");
       console.log("User has been logged out successfully");
     } catch (error) {
       console.error("Error during logout: ", error);
@@ -55,12 +70,54 @@ const profile = () => {
     }
   }, [setIsLoading]);
 
+  const handleLanguageChange = (language) => {
+    setSelectedLanguage(language);
+    // TODO: Save language preference to user profile/database
+    Alert.alert("Language Changed", `${language} will be applied to the app.`);
+  };
+
+  const handleUserTypeChange = (userType) => {
+    setSelectedUserType(userType);
+    // TODO: Update user type in database
+    Alert.alert("User Type Updated", `Your profile has been updated to ${userType}.`);
+  };
+
+  const handleLocationChange = (location) => {
+    setSelectedLocation(location);
+    // TODO: Update location preference in database
+    Alert.alert("Location Updated", `Location preference updated to ${location}.`);
+  };
+
   const profileFields = [
     { label: "Full Name", value: user?.name, icon: "👤" },
     { label: "Email Address", value: user?.email, icon: "📧" },
     { label: "Username", value: user?.username, icon: "@" },
     { label: "Occupation", value: user?.job, icon: "💼" },
     { label: "Phone Number", value: user?.phoneNumber, icon: "📱" },
+  ];
+
+  const preferenceFields = [
+    { 
+      label: "Language", 
+      value: selectedLanguage, 
+      icon: "🌐", 
+      onPress: () => setShowLanguageModal(true),
+      editable: true 
+    },
+    { 
+      label: "User Type", 
+      value: selectedUserType, 
+      icon: "👥", 
+      onPress: () => setShowUserTypeModal(true),
+      editable: true 
+    },
+    { 
+      label: "Location Method", 
+      value: selectedLocation, 
+      icon: "📍", 
+      onPress: () => setShowLocationModal(true),
+      editable: true 
+    },
   ];
 
   return user ? (
@@ -116,6 +173,38 @@ const profile = () => {
             </View>
           </View>
 
+          {/* Preferences Card */}
+          <View style={styles.profileCard}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Preferences</Text>
+              <Text style={styles.cardSubtitle}>Customize your experience</Text>
+            </View>
+
+            <View style={styles.fieldsContainer}>
+              {preferenceFields.map((field, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.fieldRow}
+                  onPress={field.onPress}
+                  disabled={!field.editable}
+                >
+                  <View style={styles.fieldIcon}>
+                    <Text style={styles.iconText}>{field.icon}</Text>
+                  </View>
+                  <View style={styles.fieldContent}>
+                    <Text style={styles.fieldLabel}>{field.label}</Text>
+                    <Text style={styles.fieldValue} numberOfLines={1}>
+                      {field.value || "Not set"}
+                    </Text>
+                  </View>
+                  {field.editable && (
+                    <Icon name="chevron-forward" size={20} color="#49A760" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity style={styles.secondaryButton}>
@@ -136,6 +225,152 @@ const profile = () => {
           </View>
         </ScrollView>
       </LinearGradient>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Language</Text>
+              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalList}>
+              {LANGUAGES.map((language) => (
+                <TouchableOpacity
+                  key={language.code}
+                  style={[
+                    styles.modalItem,
+                    selectedLanguage === language.name && styles.selectedModalItem
+                  ]}
+                  onPress={() => {
+                    handleLanguageChange(language.name);
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemFlag}>{language.flag}</Text>
+                  <Text style={[
+                    styles.modalItemText,
+                    selectedLanguage === language.name && styles.selectedModalItemText
+                  ]}>
+                    {language.name}
+                  </Text>
+                  {selectedLanguage === language.name && (
+                    <Icon name="checkmark" size={20} color="#49A760" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* User Type Selection Modal */}
+      <Modal
+        visible={showUserTypeModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowUserTypeModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}> 
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select User Type</Text>
+              <TouchableOpacity onPress={() => setShowUserTypeModal(false)}>
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalList}>
+              {USER_TYPES.map((userType) => (
+                <TouchableOpacity
+                  key={userType.id}
+                  style={[
+                    styles.modalItem,
+                    selectedUserType === userType.name && styles.selectedModalItem
+                  ]}
+                  onPress={() => {
+                    handleUserTypeChange(userType.name);
+                    setShowUserTypeModal(false);
+                  }}
+                >
+                  <Text style={styles.modalItemIcon}>{userType.icon}</Text>
+                  <View style={styles.modalItemContent}>
+                    <Text style={[
+                      styles.modalItemText,
+                      selectedUserType === userType.name && styles.selectedModalItemText
+                    ]}>
+                      {userType.name}
+                    </Text>
+                    <Text style={styles.modalItemDescription}>
+                      {userType.description}
+                    </Text>
+                  </View>
+                  {selectedUserType === userType.name && (
+                    <Icon name="checkmark" size={20} color="#49A760" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Location Selection Modal */}
+      <Modal
+        visible={showLocationModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLocationModal(false)}
+      >
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Location Method</Text>
+            <TouchableOpacity onPress={() => setShowLocationModal(false)}>
+              <Icon name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.modalList}>
+            {LOCATION_OPTIONS.map((location) => (
+              <TouchableOpacity
+                key={location.id}
+                style={[
+                  styles.modalItem,
+                  selectedLocation === location.name && styles.selectedModalItem
+                ]}
+                onPress={() => {
+                  handleLocationChange(location.name);
+                  setShowLocationModal(false);
+                }}
+              >
+                <Text style={styles.modalItemIcon}>{location.icon}</Text>
+                <View style={styles.modalItemContent}>
+                  <Text style={[
+                    styles.modalItemText,
+                    selectedLocation === location.name && styles.selectedModalItemText
+                  ]}>
+                    {location.name}
+                  </Text>
+                  <Text style={styles.modalItemDescription}>
+                    {location.description}
+                  </Text>
+                </View>
+                {selectedLocation === location.name && (
+                  <Icon name="checkmark" size={20} color="#49A760" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </SafeAreaView>
   ) : (
     <View style={styles.errorContainer}>
@@ -147,7 +382,7 @@ const profile = () => {
         </Text>
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => router.replace("/login")}
+          onPress={() => router.replace("/")}
         >
           <Text style={styles.loginButtonText}>Go to Login</Text>
         </TouchableOpacity>
@@ -215,6 +450,7 @@ const styles = StyleSheet.create({
   profileCard: {
     backgroundColor: "#fff",
     marginHorizontal: 20,
+    marginBottom: 20,
     borderRadius: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -236,6 +472,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     color: "#1F4E3D",
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "400",
   },
   editButton: {
     paddingHorizontal: 16,
@@ -378,5 +619,72 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    width: "90%",
+    maxHeight: "70%",
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+  },
+  modalList: {
+    maxHeight: 300,
+  },
+  modalItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  selectedModalItem: {
+    backgroundColor: "#e8f5e8",
+  },
+  modalItemFlag: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  modalItemIcon: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  modalItemContent: {
+    flex: 1,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
+  },
+  selectedModalItemText: {
+    color: "#49A760",
+    fontWeight: "600",
+  },
+  modalItemDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 2,
   },
 });

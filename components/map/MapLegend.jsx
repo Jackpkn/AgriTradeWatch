@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { CROP_OPTIONS, MAP_CONFIG } from "../../constants/mapConfig";
+import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const MapLegend = ({ selectedCrop, radius }) => {

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useCallback } from "react";
 import { View, Text } from "react-native";
 import WebView from "react-native-webview";
-import { CROP_OPTIONS, MAP_CONFIG } from "../../constants/mapConfig";
+import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 
 const InteractiveMap = React.forwardRef(({
