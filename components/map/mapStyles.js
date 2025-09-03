@@ -558,4 +558,358 @@ export const mapStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  
+  // Price Display Section
+  priceDisplaySection: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  priceSectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  dateRangeSelector: {
+    flexDirection: "row",
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 16,
+  },
+  dateButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  dateButtonActive: {
+    backgroundColor: "#49A760",
+  },
+  dateButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  dateButtonTextActive: {
+    color: "#fff",
+  },
+  priceCardsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  priceCard: {
+    flex: 1,
+    backgroundColor: "#f8fffe",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e8f5e8",
+  },
+  priceCardTitle: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  priceCardValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#49A760",
+    textAlign: "center",
+  },
+  noDataMessage: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  noDataText: {
+    fontSize: 14,
+    color: "#6c757d",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  
+  // Collapsed state styles for price section
+  priceDisplaySectionCollapsed: {
+    padding: 12,
+    marginBottom: 12,
+    transform: [{ scaleY: 0.85 }],
+  },
+  priceSectionTitleCollapsed: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  dateRangeSelectorCollapsed: {
+    padding: 2,
+    marginBottom: 12,
+  },
+  dateButtonCollapsed: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  dateButtonTextCollapsed: {
+    fontSize: 12,
+  },
+  priceCardsContainerCollapsed: {
+    gap: 8,
+  },
+  priceCardCollapsed: {
+    padding: 10,
+  },
+  priceCardTitleCollapsed: {
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  priceCardValueCollapsed: {
+    fontSize: 14,
+  },
+  
+  // Enhanced Radius Section
+  radiusSection: {
+    backgroundColor: "#fff",
+    padding: 20,
+    marginTop: 1,
+    marginHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  radiusSectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  radiusSectionSubtitle: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 16,
+  },
+  radiusTypeToggle: {
+    flexDirection: "row",
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  radiusTypeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  radiusTypeButtonActive: {
+    backgroundColor: "#49A760",
+  },
+  radiusTypeButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  radiusTypeButtonTextActive: {
+    color: "#fff",
+  },
+  radiusSliderContainer: {
+    alignItems: "center",
+  },
+  radiusValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#49A760",
+    marginBottom: 16,
+  },
+  sliderContainer: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  sliderHint: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 12,
+    fontStyle: "italic",
+  },
+  sliderTrack: {
+    height: 6,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 3,
+    marginBottom: 16,
+    position: "relative",
+  },
+  sliderFill: {
+    height: "100%",
+    backgroundColor: "#49A760",
+    borderRadius: 3,
+  },
+  sliderThumb: {
+    position: "absolute",
+    width: 20,
+    height: 20,
+    backgroundColor: "#49A760",
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    top: -7, // Center the thumb on the track
+    transform: [{ translateX: -10 }], // Center horizontally
+  },
+  sliderSteps: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  sliderStep: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: "#f8f9fa",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  sliderStepActive: {
+    backgroundColor: "#49A760",
+    borderColor: "#49A760",
+  },
+  sliderStepText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#666",
+  },
+  sliderStepTextActive: {
+    color: "#fff",
+  },
+  kmSliderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  kmButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#f8f9fa",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    minWidth: 60,
+    alignItems: "center",
+  },
+  kmButtonActive: {
+    backgroundColor: "#49A760",
+    borderColor: "#49A760",
+  },
+  kmButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  kmButtonTextActive: {
+    color: "#fff",
+  },
+  
+  // Date Picker Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    width: "90%",
+    maxWidth: 400,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+  },
+  datePickerContainer: {
+    gap: 20,
+  },
+  datePickerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  datePickerLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  datePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    gap: 8,
+  },
+  datePickerButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  applyDateButton: {
+    backgroundColor: "#49A760",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  applyDateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  applyDateButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  applyDateButtonTextDisabled: {
+    color: "#666",
+  },
 });

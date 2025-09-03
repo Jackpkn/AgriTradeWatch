@@ -6,10 +6,12 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { View, ScrollView, Text, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, Modal, PanResponder } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GlobalContext } from "@/context/GlobalProvider"; 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Ionicons } from "@expo/vector-icons";
 
 // Custom hooks
 import { useMapData } from "@/hooks/useMapData";
@@ -48,6 +50,22 @@ const Map = () => {
   const [priceUnit, setPriceUnit] = useState(
     MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_UNIT
   );
+  
+  // Price display states
+  const [selectedDateRange, setSelectedDateRange] = useState('today'); // 'today', 'yesterday', 'custom'
+  const [customStartDate, setCustomStartDate] = useState(new Date());
+  const [customEndDate, setCustomEndDate] = useState(new Date());
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
+  const [showNativeDatePicker, setShowNativeDatePicker] = useState(false);
+  const [datePickerMode, setDatePickerMode] = useState('start'); // 'start' or 'end'
+  
+  // Price data state (will be populated from API)
+  const [priceData, setPriceData] = useState({
+    today: { min: 0, max: 0, modal: 0 },
+    yesterday: { min: 0, max: 0, modal: 0 },
+    custom: { min: 0, max: 0, modal: 0 }
+  });
+  const [priceLoading, setPriceLoading] = useState(false);
 
   // Custom hooks
   const {
@@ -62,6 +80,7 @@ const Map = () => {
   // Refs
   const radiusTimeoutRef = useRef(null);
   const webViewRef = useRef(null);
+  const sliderContainerRef = useRef(null);
 
   // Debounced radius setter to prevent infinite loops
   const debouncedSetRadius = useCallback((value) => {
@@ -82,6 +101,26 @@ const Map = () => {
       }
     }, MAP_CONFIG.RADIUS.DEBOUNCE_MS);
   }, []);
+
+  // PanResponder for slider dragging
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {},
+    onPanResponderMove: (evt, gestureState) => {
+      if (sliderContainerRef.current) {
+        sliderContainerRef.current.measure((x, y, width, height, pageX, pageY) => {
+          const touchX = evt.nativeEvent.pageX - pageX;
+          const percentage = Math.max(0, Math.min(1, touchX / width));
+          const newRadius = (percentage * 500) / 1000; // Convert to km
+          // Round to nearest 50m
+          const roundedRadius = Math.round(newRadius * 1000 / 50) * 50 / 1000;
+          debouncedSetRadius(roundedRadius);
+        });
+      }
+    },
+    onPanResponderRelease: () => {},
+  }), [debouncedSetRadius]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -106,6 +145,15 @@ const Map = () => {
     currentLocation?.coords?.longitude,
     markerPosition,
   ]);
+
+  // Fetch price data when date range changes
+  useEffect(() => {
+    if (selectedDateRange === 'custom') {
+      fetchPriceData('custom', customStartDate, customEndDate);
+    } else {
+      fetchPriceData(selectedDateRange);
+    }
+  }, [selectedDateRange, customStartDate, customEndDate, fetchPriceData]);
 
   // Filter crops based on radius and name with performance monitoring
   const filteredCrops = useMemo(() => {
@@ -173,6 +221,30 @@ const Map = () => {
     setMarkerPosition(newPosition);
   }, []);
 
+  // Fetch price data based on date range
+  const fetchPriceData = useCallback(async (dateRange, startDate = null, endDate = null) => {
+    try {
+      setPriceLoading(true);
+      
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/prices?dateRange=${dateRange}&startDate=${startDate}&endDate=${endDate}&crop=${selectedCrop}&latitude=${markerPosition?.latitude}&longitude=${markerPosition?.longitude}&radius=${radius}`);
+      // const data = await response.json();
+      
+      // For now, setting empty data until API is implemented
+      setPriceData(prev => ({
+        ...prev,
+        [dateRange]: { min: 0, max: 0, modal: 0 }
+      }));
+      
+      console.log(`Price data requested for ${dateRange} - API integration needed`);
+    } catch (error) {
+      console.error('Error fetching price data:', error);
+      // Set error state if needed
+    } finally {
+      setPriceLoading(false);
+    }
+  }, [selectedCrop, markerPosition, radius]);
+
   const handleCropSelect = useCallback((crop) => {
     setSelectedCrop(crop);
   }, []);
@@ -233,6 +305,119 @@ const Map = () => {
             onMapTypeChange={handleMapTypeChange}
           />
 
+                      {/* Price Display Section - Compact Design */}
+            <View style={mapStyles.priceDisplaySection}>
+              <Text style={mapStyles.priceSectionTitle}>Price Information</Text>
+              
+              {/* Show no data message */}
+              {!priceLoading && priceData[selectedDateRange]?.min === 0 && (
+                <View style={mapStyles.noDataMessage}>
+                  <Text style={mapStyles.noDataText}>
+                    No price data available for {selectedDateRange}. 
+                    {selectedDateRange === 'custom' ? ' Select a date range to view prices.' : ' Prices will appear here once data is available.'}
+                  </Text>
+                </View>
+              )}
+            
+            {/* Date Range Selector */}
+            <View style={mapStyles.dateRangeSelector}>
+              <TouchableOpacity
+                style={[
+                  mapStyles.dateButton,
+                  selectedDateRange === 'today' && mapStyles.dateButtonActive
+                ]}
+                onPress={() => {
+                  setSelectedDateRange('today');
+                  fetchPriceData('today');
+                }}
+              >
+                <Text style={[
+                  mapStyles.dateButtonText,
+                  selectedDateRange === 'today' && mapStyles.dateButtonTextActive
+                ]}>Today</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  mapStyles.dateButton,
+                  selectedDateRange === 'yesterday' && mapStyles.dateButtonActive
+                ]}
+                onPress={() => {
+                  setSelectedDateRange('yesterday');
+                  fetchPriceData('yesterday');
+                }}
+              >
+                <Text style={[
+                  mapStyles.dateButtonText,
+                  selectedDateRange === 'yesterday' && mapStyles.dateButtonTextActive
+                ]}>Yesterday</Text>
+              </TouchableOpacity>
+                
+              <TouchableOpacity
+                style={[
+                  mapStyles.dateButton,
+                  selectedDateRange === 'custom' && mapStyles.dateButtonActive
+                ]}
+                onPress={() => setShowCustomDateModal(true)}
+              >
+                <Text style={[
+                  mapStyles.dateButtonText,
+                  selectedDateRange === 'custom' && mapStyles.dateButtonTextActive
+                ]}>
+                  {selectedDateRange === 'custom' 
+                    ? `Custom (${customStartDate.toLocaleDateString()} - ${customEndDate.toLocaleDateString()})`
+                    : 'Custom Range'
+                  }
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Price Cards */}
+            <View style={mapStyles.priceCardsContainer}>
+              <View style={mapStyles.priceCard}>
+                <Text style={mapStyles.priceCardTitle}>Min Price</Text>
+                {priceLoading ? (
+                  <ActivityIndicator size="small" color="#49A760" />
+                ) : (
+                  <Text style={mapStyles.priceCardValue}>
+                    {priceData[selectedDateRange]?.min > 0 
+                      ? `₹${priceData[selectedDateRange].min}` 
+                      : 'No data'
+                    }
+                  </Text>
+                )}
+              </View>
+              
+              <View style={mapStyles.priceCard}>
+                <Text style={mapStyles.priceCardTitle}>Max Price</Text>
+                {priceLoading ? (
+                  <ActivityIndicator size="small" color="#49A760" />
+                ) : (
+                  <Text style={mapStyles.priceCardValue}>
+                    {priceData[selectedDateRange]?.max > 0 
+                      ? `₹${priceData[selectedDateRange].max}` 
+                      : 'No data'
+                    }
+                  </Text>
+                )}
+              </View>
+              
+              <View style={mapStyles.priceCard}>
+                <Text style={mapStyles.priceCardTitle}>Modal Price</Text>
+                {priceLoading ? (
+                  <ActivityIndicator size="small" color="#49A760" />
+                ) : (
+                  <Text style={mapStyles.priceCardValue}>
+                    {priceData[selectedDateRange]?.modal > 0 
+                      ? `₹${priceData[selectedDateRange].modal}` 
+                      : 'No data'
+                    }
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+
           {/* ScrollView for content below header */}
           <ScrollView
             style={mapStyles.contentScroll}
@@ -256,8 +441,123 @@ const Map = () => {
 
             {/* Map Legend */}
             <MapLegend selectedCrop={selectedCrop} radius={radius} />
-            {/* Distance slider below map */}
-            <RadiusSlider radius={radius} onRadiusChange={debouncedSetRadius} />
+            {/* Enhanced Radius Slider */}
+            <View style={mapStyles.radiusSection}>
+              <Text style={mapStyles.radiusSectionTitle}>Location Radius</Text>
+              <Text style={mapStyles.radiusSectionSubtitle}>
+                Drag the marker on the map to change location, then adjust radius below
+              </Text>
+              
+              {/* Radius Type Toggle */}
+              <View style={mapStyles.radiusTypeToggle}>
+                <TouchableOpacity
+                  style={[
+                    mapStyles.radiusTypeButton,
+                    radius <= 0.5 && mapStyles.radiusTypeButtonActive
+                  ]}
+                  onPress={() => {
+                    if (radius > 0.5) setRadius(0.1); // Reset to 100m when switching to meters
+                  }}
+                >
+                  <Text style={[
+                    mapStyles.radiusTypeButtonText,
+                    radius <= 0.5 && mapStyles.radiusTypeButtonTextActive
+                  ]}>Meters</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    mapStyles.radiusTypeButton,
+                    radius > 0.5 && mapStyles.radiusTypeButtonActive
+                  ]}
+                  onPress={() => {
+                    if (radius <= 0.5) setRadius(2); // Reset to 2km when switching to km
+                  }}
+                >
+                  <Text style={[
+                    mapStyles.radiusTypeButtonText,
+                    radius > 0.5 && mapStyles.radiusTypeButtonTextActive
+                  ]}>Kilometers</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Radius Slider */}
+              <View style={mapStyles.radiusSliderContainer}>
+                <Text style={mapStyles.radiusValue}>
+                  {radius <= 0.5 
+                    ? `${Math.round(radius * 1000)}m` 
+                    : `${radius}km`
+                  }
+                </Text>
+                
+                {/* Meter-based slider (0-500m with draggable slider) */}
+                {radius <= 0.5 && (
+                  <View style={mapStyles.sliderContainer}>
+                    <Text style={mapStyles.sliderHint}>
+                      Drag the slider or tap steps below to adjust radius
+                    </Text>
+                    <View 
+                      ref={sliderContainerRef}
+                      style={mapStyles.sliderTrack}
+                      {...panResponder.panHandlers}
+                    >
+                      <View 
+                        style={[
+                          mapStyles.sliderFill, 
+                          { width: `${(radius * 1000 / 500) * 100}%` }
+                        ]} 
+                      />
+                      <View
+                        style={[
+                          mapStyles.sliderThumb,
+                          { left: `${(radius * 1000 / 500) * 100}%` }
+                        ]}
+                      />
+                    </View>
+                    
+                    {/* Step indicators below slider */}
+                    <View style={mapStyles.sliderSteps}>
+                      {[0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500].map((step) => (
+                        <TouchableOpacity
+                          key={step}
+                          style={[
+                            mapStyles.sliderStep,
+                            Math.round(radius * 1000) === step && mapStyles.sliderStepActive
+                          ]}
+                          onPress={() => debouncedSetRadius(step / 1000)}
+                        >
+                          <Text style={[
+                            mapStyles.sliderStepText,
+                            Math.round(radius * 1000) === step && mapStyles.sliderStepTextActive
+                          ]}>{step}m</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Kilometer-based slider (2, 3, 4, 5, 50km) */}
+                {radius > 0.5 && (
+                  <View style={mapStyles.kmSliderContainer}>
+                    {[2, 3, 4, 5, 50].map((km) => (
+                      <TouchableOpacity
+                        key={km}
+                        style={[
+                          mapStyles.kmButton,
+                          radius === km && mapStyles.kmButtonActive
+                        ]}
+                        onPress={() => debouncedSetRadius(km)}
+                      >
+                        <Text style={[
+                          mapStyles.kmButtonText,
+                          radius === km && mapStyles.kmButtonTextActive
+                        ]}>{km}km</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
 
             {/* Consumer Information Panel */}
             <ConsumerInfoPanel
@@ -326,6 +626,100 @@ const Map = () => {
             onSelect={handleCropSelect}
             onClose={() => setShowCropModal(false)}
           />
+
+          {/* Date Range Picker Modal */}
+          <Modal
+            visible={showCustomDateModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowCustomDateModal(false)}
+          >
+            <View style={mapStyles.modalOverlay}>
+              <View style={mapStyles.modalContent}>
+                <View style={mapStyles.modalHeader}>
+                  <Text style={mapStyles.modalTitle}>Select Date Range</Text>
+                  <TouchableOpacity onPress={() => setShowCustomDateModal(false)}>
+                    <Ionicons name="close" size={24} color="#666" />
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={mapStyles.datePickerContainer}>
+                  <View style={mapStyles.datePickerRow}>
+                    <Text style={mapStyles.datePickerLabel}>From Date:</Text>
+                    <TouchableOpacity
+                      style={mapStyles.datePickerButton}
+                      onPress={() => {
+                        setDatePickerMode('start');
+                        setShowNativeDatePicker(true);
+                      }}
+                    >
+                      <Text style={mapStyles.datePickerButtonText}>
+                        {customStartDate.toLocaleDateString()}
+                      </Text>
+                      <Ionicons name="calendar" size={20} color="#49A760" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={mapStyles.datePickerRow}>
+                    <Text style={mapStyles.datePickerLabel}>To Date:</Text>
+                    <TouchableOpacity
+                      style={mapStyles.datePickerButton}
+                      onPress={() => {
+                        setDatePickerMode('end');
+                        setShowNativeDatePicker(true);
+                      }}
+                    >
+                      <Text style={mapStyles.datePickerButtonText}>
+                        {customEndDate.toLocaleDateString()}
+                      </Text>
+                      <Ionicons name="calendar" size={20} color="#49A760" />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={[
+                      mapStyles.applyDateButton,
+                      customEndDate < customStartDate && mapStyles.applyDateButtonDisabled
+                    ]}
+                    onPress={() => {
+                      if (customEndDate >= customStartDate) {
+                        setSelectedDateRange('custom');
+                        setShowCustomDateModal(false);
+                        fetchPriceData('custom', customStartDate, customEndDate);
+                      }
+                    }}
+                    disabled={customEndDate < customStartDate}
+                  >
+                    <Text style={[
+                      mapStyles.applyDateButtonText,
+                      customEndDate < customStartDate && mapStyles.applyDateButtonTextDisabled
+                    ]}>
+                      {customEndDate < customStartDate ? 'Invalid Date Range' : 'Apply Date Range'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+
+          {/* Native Date Picker */}
+          {showNativeDatePicker && (
+            <DateTimePicker
+              value={datePickerMode === 'start' ? customStartDate : customEndDate}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                if (selectedDate) {
+                  if (datePickerMode === 'start') {
+                    setCustomStartDate(selectedDate);
+                  } else {
+                    setCustomEndDate(selectedDate);
+                  }
+                }
+                setShowNativeDatePicker(false);
+              }}
+            />
+          )}
         </SafeAreaView>
       </GestureHandlerRootView>
     </ErrorBoundary>
