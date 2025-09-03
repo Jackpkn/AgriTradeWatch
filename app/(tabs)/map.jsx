@@ -146,7 +146,7 @@ const Map = () => {
     markerPosition,
   ]);
 
-  // Fetch price data when date range changes
+  // Fetch price data when date range changes or crop changes
   useEffect(() => {
     if (selectedDateRange === 'custom') {
       fetchPriceData('custom', customStartDate, customEndDate);
@@ -154,6 +154,20 @@ const Map = () => {
       fetchPriceData(selectedDateRange);
     }
   }, [selectedDateRange, customStartDate, customEndDate, fetchPriceData]);
+  
+  // Fetch price data when crop changes
+  useEffect(() => {
+    if (selectedCrop && allCrops.length > 0) {
+      fetchPriceData(selectedDateRange, customStartDate, customEndDate);
+    }
+  }, [selectedCrop, allCrops, fetchPriceData, selectedDateRange, customStartDate, customEndDate]);
+  
+  // Fetch initial price data when component mounts
+  useEffect(() => {
+    if (selectedCrop && allCrops.length > 0 && !dataLoading) {
+      fetchPriceData('today');
+    }
+  }, [selectedCrop, allCrops, dataLoading, fetchPriceData]);
 
   // Filter crops based on radius and name with performance monitoring
   const filteredCrops = useMemo(() => {
@@ -221,29 +235,132 @@ const Map = () => {
     setMarkerPosition(newPosition);
   }, []);
 
-  // Fetch price data based on date range
-  const fetchPriceData = useCallback(async (dateRange, startDate = null, endDate = null) => {
+  // Calculate price data from existing crop data based on date range
+  const calculatePriceData = useCallback((dateRange, startDate = null, endDate = null) => {
     try {
       setPriceLoading(true);
       
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/prices?dateRange=${dateRange}&startDate=${startDate}&endDate=${endDate}&crop=${selectedCrop}&latitude=${markerPosition?.latitude}&longitude=${markerPosition?.longitude}&radius=${radius}`);
-      // const data = await response.json();
+      // Filter crops by the selected crop type
+      const relevantCrops = allCrops.filter(crop => 
+        crop.name?.toLowerCase() === selectedCrop.toLowerCase()
+      );
       
-      // For now, setting empty data until API is implemented
+      if (relevantCrops.length === 0) {
+        setPriceData(prev => ({
+          ...prev,
+          [dateRange]: { min: 0, max: 0, modal: 0 }
+        }));
+        return;
+      }
+      
+      let filteredCrops = relevantCrops;
+      
+      // Filter by date range if needed
+      if (dateRange === 'custom' && startDate && endDate) {
+        filteredCrops = relevantCrops.filter(crop => {
+          if (!crop.createdAt) return false;
+          
+          const cropDate = new Date(crop.createdAt.seconds * 1000);
+          return cropDate >= startDate && cropDate <= endDate;
+        });
+      } else if (dateRange === 'today') {
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+        
+        filteredCrops = relevantCrops.filter(crop => {
+          if (!crop.createdAt) return false;
+          const cropDate = new Date(crop.createdAt.seconds * 1000);
+          return cropDate >= startOfDay && cropDate < endOfDay;
+        });
+      } else if (dateRange === 'yesterday') {
+        const today = new Date();
+        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+        const endOfYesterday = new Date(startOfYesterday.getTime() + 24 * 60 * 60 * 1000);
+        
+        filteredCrops = relevantCrops.filter(crop => {
+          if (!crop.createdAt) return false;
+          const cropDate = new Date(crop.createdAt.seconds * 1000);
+          return cropDate >= startOfYesterday && cropDate < endOfYesterday;
+        });
+      }
+      
+      if (filteredCrops.length === 0) {
+        setPriceData(prev => ({
+          ...prev,
+          [dateRange]: { min: 0, max: 0, modal: 0 }
+        }));
+        return;
+      }
+      
+      // Extract prices and convert to numbers
+      const prices = filteredCrops
+        .map(crop => parseFloat(crop.pricePerUnit))
+        .filter(price => !isNaN(price) && price > 0);
+      
+      if (prices.length === 0) {
+        setPriceData(prev => ({
+          ...prev,
+          [dateRange]: { min: 0, max: 0, modal: 0 }
+        }));
+        return;
+      }
+      
+      // Calculate min, max, and modal (most common) price
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      
+      // Calculate modal price (most frequent price)
+      const priceCounts = {};
+      prices.forEach(price => {
+        priceCounts[price] = (priceCounts[price] || 0) + 1;
+      });
+      
+      let modalPrice = prices[0];
+      let maxCount = 1;
+      
+      Object.entries(priceCounts).forEach(([price, count]) => {
+        if (count > maxCount) {
+          maxCount = count;
+          modalPrice = parseFloat(price);
+        }
+      });
+      
+      const newPriceData = {
+        min: minPrice,
+        max: maxPrice,
+        modal: modalPrice
+      };
+      
+      setPriceData(prev => ({
+        ...prev,
+        [dateRange]: newPriceData
+      }));
+      
+      console.log(`Price data calculated for ${dateRange}:`, {
+        crop: selectedCrop,
+        totalCrops: relevantCrops.length,
+        filteredCrops: filteredCrops.length,
+        prices: prices.length,
+        priceData: newPriceData
+      });
+      
+    } catch (error) {
+      console.error('Error calculating price data:', error);
       setPriceData(prev => ({
         ...prev,
         [dateRange]: { min: 0, max: 0, modal: 0 }
       }));
-      
-      console.log(`Price data requested for ${dateRange} - API integration needed`);
-    } catch (error) {
-      console.error('Error fetching price data:', error);
-      // Set error state if needed
     } finally {
       setPriceLoading(false);
     }
-  }, [selectedCrop, markerPosition, radius]);
+  }, [allCrops, selectedCrop]);
+  
+  // Fetch price data based on date range (now uses calculatePriceData)
+  const fetchPriceData = useCallback(async (dateRange, startDate = null, endDate = null) => {
+    calculatePriceData(dateRange, startDate, endDate);
+  }, [calculatePriceData]);
 
   const handleCropSelect = useCallback((crop) => {
     setSelectedCrop(crop);
