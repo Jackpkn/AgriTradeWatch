@@ -14,7 +14,7 @@ import { GlobalContext } from "../../context/GlobalProvider";
 import { router } from "expo-router";
 import { auth } from "../../firebase";
 import { getUserData } from "../../components/crud";
-import OfflineIndicator from "../../components/OfflineIndicator";
+import OfflineIndicator from "../../components/OfflineIndicator";   
 
 const { width } = Dimensions.get("window");
 
@@ -74,74 +74,44 @@ const home = () => {
     },
     {
       id: 2,
-      title: "Market Analytics",
-      description: "View detailed price trends and statistics",
-      icon: "analytics",
-      route: "stats",
-      gradient: ["#2196F3", "#1976D2"],
-      bgColor: "#f0f7ff",
-    },
-    {
-      id: 3,
       title: "Price Map",
-      description: "Explore crop prices in your area",
+      description: "Today/Yesterday/Date Range prices with location pin & radius",
       icon: "map",
       route: "map",
       gradient: ["#FF9800", "#F57C00"],
       bgColor: "#fff8f0",
     },
     {
-      id: 4,
-      title: "My Profile",
-      description: "Manage your account and preferences",
-      icon: "person-circle",
-      route: "profile",
+      id: 3,
+      title: "Digital Thela",
+      description: "Upcoming trading feature - Coming Soon",
+      icon: "cart",
+      route: "map", // Placeholder route for now
       gradient: ["#9C27B0", "#7B1FA2"],
       bgColor: "#f8f0ff",
     },
   ];
 
-  // Dynamic quick actions based on user status
+  // Quick actions for the three main features
   const quickActions = React.useMemo(() => {
-    const baseActions = [
+    return [
       {
-        title: "Today's Prices",
-        icon: "today",
-        action: () => router.push("stats"),
-      },
-      {
-        title: "Nearby Markets",
-        icon: "location",
-        action: () => router.push("map"),
-      },
-    ];
-
-    if (isLogged) {
-      // Add actions for logged-in users (login is now mandatory)
-      baseActions.push({
-        title: "Add Crop Data",
+        title: "Add Crop",
         icon: "add-circle",
         action: () => router.push("crops"),
-      });
-      baseActions.push({
-        title: "My Profile",
-        icon: "person",
-        action: () => router.push("profile"),
-      });
-    } else {
-      // If somehow not logged in (shouldn't happen with mandatory login)
-      console.warn("Home screen: User not logged in but reached home - redirecting to login");
-      baseActions.push({
-        title: "Please Login",
-        icon: "log-in",
-        action: () => router.replace("/(auth)/login"),
-      });
-    }
-
-    // Note: Guest features are disabled - login is now mandatory
-
-    return baseActions;
-  }, [isLogged]);
+      },
+      {
+        title: "Price Map",
+        icon: "map",
+        action: () => router.push("map"),
+      },
+      {
+        title: "Digital Thela",
+        icon: "cart",
+        action: () => router.push("map"), // Placeholder for now
+      },
+    ];
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -169,24 +139,24 @@ const home = () => {
                 </Text>
                 <Text style={styles.welcomeSubtitle}>
                   {isLogged
-                    ? "Continue managing your crops and tracking prices"
+                    ? "Manage crops, explore prices, and prepare for digital trading"
                     : "Please login to access your account"
                   }
                 </Text>
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>10+</Text>
-                    <Text style={styles.statLabel}>Active Users</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>10+</Text>
-                    <Text style={styles.statLabel}>Crop Types</Text>
+                    <Text style={styles.statNumber}>3</Text>
+                    <Text style={styles.statLabel}>Core Features</Text>
                   </View>
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>24/7</Text>
-                    <Text style={styles.statLabel}>Live Updates</Text>
+                    <Text style={styles.statLabel}>Price Updates</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statNumber}>Coming</Text>
+                    <Text style={styles.statLabel}>Digital Trading</Text>
                   </View>
                 </View>
               </LinearGradient>
@@ -217,13 +187,17 @@ const home = () => {
 
           {/* Main Features */}
           <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitleMain}>Main Features</Text>
+            <Text style={styles.sectionTitleMain}>Core Features</Text>
             <View style={styles.featuresGrid}>
               {features.map((feature) => (
                 <TouchableOpacity
                   key={feature.id}
-                  style={styles.featureCard}
-                  onPress={() => router.push(feature.route)}
+                  style={[
+                    styles.featureCard,
+                    feature.title === "Digital Thela" && styles.comingSoonCard
+                  ]}
+                  onPress={feature.title === "Digital Thela" ? null : () => router.push(feature.route)}
+                  disabled={feature.title === "Digital Thela"}
                 >
                   <View
                     style={[
@@ -241,18 +215,24 @@ const home = () => {
                   <Text style={styles.featureDescription}>
                     {feature.description}
                   </Text>
-                  <TouchableOpacity
-                    style={styles.featureButton}
-                    onPress={() => router.push(feature.route)}
-                  >
-                    <LinearGradient
-                      colors={feature.gradient}
-                      style={styles.featureButtonGradient}
+                  {feature.title === "Digital Thela" ? (
+                    <View style={styles.comingSoonButton}>
+                      <Text style={styles.comingSoonText}>Coming Soon</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.featureButton}
+                      onPress={() => router.push(feature.route)}
                     >
-                      <Text style={styles.featureButtonText}>Explore</Text>
-                      <Ionicons name="arrow-forward" size={16} color="#fff" />
-                    </LinearGradient>
-                  </TouchableOpacity>
+                      <LinearGradient
+                        colors={feature.gradient}
+                        style={styles.featureButtonGradient}
+                      >
+                        <Text style={styles.featureButtonText}>Explore</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#fff" />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
@@ -459,6 +439,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  comingSoonCard: {
+    opacity: 0.7,
+  },
+  comingSoonButton: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  comingSoonText: {
+    color: "#666",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 
