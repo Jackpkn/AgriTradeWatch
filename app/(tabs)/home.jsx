@@ -92,23 +92,23 @@ const home = () => {
     },
   ];
 
-  // Quick actions for the three main features
+  // Quick actions for immediate user needs
   const quickActions = React.useMemo(() => {
     return [
       {
-        title: "Add Crop",
-        icon: "add-circle",
-        action: () => router.push("crops"),
-      },
-      {
-        title: "Price Map",
-        icon: "map",
+        title: "View Recent Prices",
+        icon: "trending-up",
         action: () => router.push("map"),
       },
       {
-        title: "Digital Thela",
-        icon: "cart",
-        action: () => router.push("map"), // Placeholder for now
+        title: "Find Nearby Markets",
+        icon: "location",
+        action: () => router.push("map"),
+      },
+      {
+        title: "Check Notifications",
+        icon: "notifications",
+        action: () => router.push("profile"),
       },
     ];
   }, []);
@@ -156,7 +156,7 @@ const home = () => {
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>Coming</Text>
-                    <Text style={styles.statLabel}>Digital Trading</Text>
+                    <Text style={styles.statLabel}>Digital Thela</Text>
                   </View>
                 </View>
               </LinearGradient>
