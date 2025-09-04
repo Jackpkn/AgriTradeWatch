@@ -687,6 +687,7 @@ export const mapStyles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
     marginTop: 1,
+    marginBottom: 10,
     marginHorizontal: 20,
     borderRadius: 16,
     shadowColor: "#000",

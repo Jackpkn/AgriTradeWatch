@@ -160,7 +160,7 @@ const stats = () => {
       );
     }
 
-    // Safe calculation of min/max values
+    // Safe calculation of min/max values and additional statistics
     const values = data
       .map((d) => d.value)
       .filter((val) => !isNaN(val) && val > 0);
@@ -177,6 +177,51 @@ const stats = () => {
 
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
+    
+    // Calculate median price
+    const sortedValues = [...values].sort((a, b) => a - b);
+    let medianValue;
+    if (sortedValues.length % 2 === 0) {
+      const mid1 = sortedValues[Math.floor(sortedValues.length / 2) - 1];
+      const mid2 = sortedValues[Math.floor(sortedValues.length / 2)];
+      medianValue = (mid1 + mid2) / 2;
+    } else {
+      medianValue = sortedValues[Math.floor(sortedValues.length / 2)];
+    }
+    
+    // Calculate average price
+    const averageValue = values.reduce((sum, val) => sum + val, 0) / values.length;
+    
+    // Calculate price range
+    const priceRange = maxValue - minValue;
+    
+    // Calculate price volatility (percentage)
+    const priceVolatility = minValue > 0 ? ((priceRange / minValue) * 100).toFixed(1) : 0;
+    
+    // Calculate TODAY's prices specifically
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+    
+    const todayData = data.filter(item => {
+      const itemDate = new Date(item.timestamp);
+      return itemDate >= startOfToday && itemDate < endOfToday;
+    });
+    
+    const todayValues = todayData
+      .map(d => d.value)
+      .filter(val => !isNaN(val) && val > 0);
+    
+    let todayHighest = 0;
+    let todayLowest = 0;
+    let todayAverage = 0;
+    
+    if (todayValues.length > 0) {
+      todayHighest = Math.max(...todayValues);
+      todayLowest = Math.min(...todayValues);
+      todayAverage = todayValues.reduce((sum, val) => sum + val, 0) / todayValues.length;
+    }
+    
     const chartWidth = Math.max(width - 40, data.length * 80);
 
     const gradientColors =
@@ -184,6 +229,85 @@ const stats = () => {
 
     return (
       <View style={styles.chartWrapper}>
+        {/* Enhanced Market Analytics Stats */}
+        <View style={styles.marketAnalyticsContainer}>
+          <Text style={styles.marketAnalyticsTitle}>Market Analytics</Text>
+          
+          {/* TODAY'S PRICES - Highlighted Section */}
+          <View style={styles.todayPricesSection}>
+            <Text style={styles.todayPricesTitle}>📅 Today's Prices</Text>
+            <View style={styles.todayPricesRow}>
+              <View style={styles.todayPriceItem}>
+                <Ionicons name="trending-up" size={24} color="#49A760" />
+                <Text style={styles.todayPriceValue}>₹{todayHighest}</Text>
+                <Text style={styles.todayPriceLabel}>Highest Today</Text>
+                <Text style={styles.todayPriceCount}>{todayValues.length} entries</Text>
+              </View>
+              <View style={styles.todayPriceItem}>
+                <Ionicons name="trending-down" size={24} color="#FF6B6B" />
+                <Text style={styles.todayPriceValue}>₹{todayLowest}</Text>
+                <Text style={styles.todayPriceLabel}>Lowest Today</Text>
+                <Text style={styles.todayPriceCount}>{todayValues.length} entries</Text>
+              </View>
+            </View>
+            {todayValues.length > 0 && (
+              <View style={styles.todayAverageRow}>
+                <Ionicons name="analytics" size={20} color="#FF9800" />
+                <Text style={styles.todayAverageText}>
+                  Today's Average: ₹{todayAverage.toFixed(1)}
+                </Text>
+              </View>
+            )}
+          </View>
+          
+          {/* OVERALL MARKET STATS */}
+          <Text style={styles.overallStatsTitle}>📊 Overall Market Stats</Text>
+          
+          {/* Primary Stats Row */}
+          <View style={styles.primaryStatsRow}>
+            <View style={styles.primaryStatItem}>
+              <Ionicons name="trending-up" size={20} color="#49A760" />
+              <Text style={styles.primaryStatValue}>₹{maxValue}</Text>
+              <Text style={styles.primaryStatLabel}>All Time High</Text>
+            </View>
+            <View style={styles.primaryStatItem}>
+              <Ionicons name="trending-down" size={20} color="#FF6B6B" />
+              <Text style={styles.primaryStatValue}>₹{minValue}</Text>
+              <Text style={styles.primaryStatLabel}>All Time Low</Text>
+            </View>
+            <View style={styles.primaryStatItem}>
+              <Ionicons name="analytics" size={20} color="#FF9800" />
+              <Text style={styles.primaryStatValue}>₹{medianValue.toFixed(1)}</Text>
+              <Text style={styles.primaryStatLabel}>Overall Median</Text>
+            </View>
+          </View>
+          
+          {/* Secondary Stats Row */}
+          <View style={styles.secondaryStatsRow}>
+            <View style={styles.secondaryStatItem}>
+              <Ionicons name="pulse" size={16} color="#9C27B0" />
+              <Text style={styles.secondaryStatValue}>₹{averageValue.toFixed(1)}</Text>
+              <Text style={styles.secondaryStatLabel}>Overall Avg</Text>
+            </View>
+            <View style={styles.secondaryStatItem}>
+              <Ionicons name="resize" size={16} color="#607D8B" />
+              <Text style={styles.secondaryStatValue}>₹{priceRange}</Text>
+              <Text style={styles.secondaryStatLabel}>Price Range</Text>
+            </View>
+            <View style={styles.secondaryStatItem}>
+              <Ionicons name="trending-up" size={16} color="#E91E63" />
+              <Text style={styles.secondaryStatValue}>{priceVolatility}%</Text>
+              <Text style={styles.secondaryStatLabel}>Volatility</Text>
+            </View>
+            <View style={styles.secondaryStatItem}>
+              <Ionicons name="bar-chart" size={16} color="#795548" />
+              <Text style={styles.secondaryStatValue}>{data.length}</Text>
+              <Text style={styles.secondaryStatLabel}>Total Points</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Original Chart Stats (keeping for compatibility) */}
         <View style={styles.chartStats}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>₹{maxValue}</Text>
@@ -679,6 +803,173 @@ const styles = StyleSheet.create({
     color: "#999",
     marginTop: 8,
     textAlign: "center",
+  },
+  // Market Analytics Styles
+  marketAnalyticsContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  marketAnalyticsTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    textAlign: "center",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  primaryStatsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    gap: 12,
+  },
+  primaryStatItem: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    minHeight: 80,
+  },
+  primaryStatValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  primaryStatLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#666",
+    textAlign: "center",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  secondaryStatsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  secondaryStatItem: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    minHeight: 60,
+  },
+  secondaryStatValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  secondaryStatLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#666",
+    textAlign: "center",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  // Today's Prices Styles
+  todayPricesSection: {
+    backgroundColor: "#f0f9ff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: "#49A760",
+    borderStyle: "dashed",
+  },
+  todayPricesTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#49A760",
+    textAlign: "center",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  todayPricesRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  todayPriceItem: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  todayPriceValue: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#1F4E3D",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  todayPriceLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#49A760",
+    textAlign: "center",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+    marginBottom: 4,
+  },
+  todayPriceCount: {
+    fontSize: 10,
+    color: "#666",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  todayAverageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    gap: 8,
+  },
+  todayAverageText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FF9800",
+    textAlign: "center",
+  },
+  overallStatsTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    textAlign: "center",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
 
