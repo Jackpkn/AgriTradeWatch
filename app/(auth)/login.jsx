@@ -38,7 +38,7 @@ const LoginScreen = () => {
         console.log("User is authenticated, navigating to home.");
         router.replace("/(tabs)/home");
       } else {
-        console.log("No authenticated user found.");
+        console.log("No authenticated user found, staying on login page.");
       }
     });
 

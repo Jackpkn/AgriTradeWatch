@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Image, ImageBackground, ScrollView, Text, View, TouchableOpacity, Modal } from "react-native";
+import { Image, ImageBackground, ScrollView, Text, View, TouchableOpacity, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import logo from "@/assets/images/logo.png";
 import { indexStyles as styles } from "@/components/IndexCss";
@@ -11,14 +11,27 @@ import { onAuthStateChanged } from "firebase/auth";
 import { enableScreens } from "react-native-screens";
 import { networkManager } from "@/utils/networkUtils";
 import Icon from "react-native-vector-icons/Ionicons";
-// import { LANGUAGES } from "../constants/authConstants";
-import { LANGUAGES } from "@/constants/authConstants";
 export default function Index() {
   enableScreens();
   const [authError, setAuthError] = useState(null);
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [isLoading, setIsLoading] = useState(true);
+
+  // Handle opening About Us URL
+  const handleAboutUsPress = async () => {
+    try {
+      const url = 'https://mandigo.in/page/aboutus/';
+      const supported = await Linking.canOpenURL(url);
+      
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log("Cannot open URL:", url);
+      }
+    } catch (error) {
+      console.error("Error opening About Us URL:", error);
+    }
+  };
 
   const handleRetry = async () => {
     console.log("Retrying authentication setup...");
@@ -50,10 +63,6 @@ export default function Index() {
   }
 
   const {
-    isAuthenticated = false,
-    isLogged = false,
-    isGuest = false,
-    isLoading: contextLoading = true,
     isOnline = true
   } = contextValue || {};
 
@@ -61,22 +70,20 @@ export default function Index() {
     try {
       console.log("Auth state changed:", {
         hasUser: !!user,
-        isGuest,
-        isLoading: contextLoading,
         userEmail: user?.email || null
       });
 
       if (user) {
         console.log("User authenticated, navigating to home");
         router.replace("/(tabs)/home");
-      } else if (!user && !contextLoading) {
+      } else {
         console.log("No user found, staying on landing page");
         setIsLoading(false);
       }
     } catch (error) {
       console.error("Error in onAuthStateChanged:", error);
     }
-  }, [isGuest, contextLoading]);
+  }, []);
 
   // Listen for Firebase auth state changes
   useEffect(() => {
@@ -84,29 +91,11 @@ export default function Index() {
     return () => sub();
   }, [onAuthStateChangedApp]);
 
-  // Handle navigation when authentication state changes
-  useEffect(() => {
-    try {
-      console.log("Navigation effect triggered:", {
-        isAuthenticated,
-        isLoading: contextLoading,
-        isGuest
-      });
-
-      if (isAuthenticated && !contextLoading) {
-        console.log("Authentication state changed, navigating to home");
-        router.replace("/(tabs)/home");
-      } else if (!isAuthenticated && !contextLoading) {
-        console.log("User not authenticated, showing landing page");
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error in navigation effect:", error);
-    }
-  }, [isAuthenticated, contextLoading, isGuest]);
+  // Remove the duplicate navigation effect that was causing conflicts
+  // The Firebase auth state listener above handles navigation properly
 
   // Safely get network status
-  const isOffline = !isOnline && !contextLoading;
+  const isOffline = !isOnline;
 
   // Show offline state
   if (isOffline) {
@@ -171,7 +160,7 @@ export default function Index() {
   }
 
   // Show loading while initializing
-  if (isLoading || contextLoading) {
+  if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7", justifyContent: "center", alignItems: "center" }}>
         <View style={{ alignItems: "center" }}>
@@ -200,12 +189,12 @@ export default function Index() {
           <View style={styles.languageSection}>
             <Text style={styles.sectionTitle}>Choose Language</Text>
             <TouchableOpacity
-              style={styles.languageButton}
-              onPress={() => setShowLanguageModal(true)}
+              style={[styles.languageButton, styles.languageButtonDisabled]}
+              disabled={true}
             >
               <Text style={styles.languageFlag}>{selectedLanguage === "English" ? "🇮🇳" : "🇮🇳"}</Text>
               <Text style={styles.languageText}>{selectedLanguage}</Text>
-              <Icon name="chevron-down" size={20} color="#666" />
+              <Icon name="chevron-down" size={20} color="#ccc" />
             </TouchableOpacity>
             <Text style={styles.comingSoon}>🌱 Coming Soon - More languages will be available</Text>
           </View>
@@ -233,7 +222,7 @@ export default function Index() {
           <View style={styles.quickLinksSection}>
             <Text style={styles.sectionTitle}>Quick Links</Text>
             
-            <TouchableOpacity style={styles.quickLinkButton}>
+            <TouchableOpacity style={styles.quickLinkButton} onPress={handleAboutUsPress}>
               <Icon name="information-circle" size={20} color="#49A760" />
               <Text style={styles.quickLinkText}>About Us</Text>
             </TouchableOpacity>
@@ -250,58 +239,6 @@ export default function Index() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Language Selection Modal */}
-      <Modal
-        visible={showLanguageModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowLanguageModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Language</Text>
-              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
-                <Icon name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView style={styles.languageList}>
-              {LANGUAGES.map((language) => (
-                <TouchableOpacity
-                  key={language.code}
-                  style={[
-                    styles.languageItem,
-                    selectedLanguage === language.name && styles.selectedLanguageItem
-                  ]}
-                  onPress={() => {
-                    setSelectedLanguage(language.name);
-                    setShowLanguageModal(false);
-                  }}
-                >
-                  <Text style={styles.languageItemFlag}>{language.flag}</Text>
-                  <Text style={[
-                    styles.languageItemText,
-                    selectedLanguage === language.name && styles.selectedLanguageText
-                  ]}>
-                    {language.name}
-                  </Text>
-                  {selectedLanguage === language.name && (
-                    <Icon name="checkmark" size={20} color="#49A760" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            
-            <View style={styles.modalFooter}>
-              <Text style={styles.comingSoonModal}>
-                🌱 Coming Soon - More languages will be available
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

@@ -4,12 +4,9 @@ import { StatusBar } from "expo-status-bar";
 import { PaperProvider } from "react-native-paper";
 import { GlobalProvider } from "@/context/GlobalProvider";
 import GlobalLoader from "@/components/Loader";
-import { LocationPermissionLoading } from "@/components/getLocation";
 import ErrorBoundary from "../components/ErrorBoundary";
 import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useContext } from "react";
-import { GlobalContext } from "@/context/GlobalProvider";
 
 Sentry.init({
   dsn: "https://e8591e6cfdfaee9608dd7142e6891045@o4509895087423488.ingest.de.sentry.io/4509895089324112",
@@ -32,15 +29,8 @@ Sentry.init({
 
 Sentry;
 
-// App Layout Component that handles location permission
+// App Layout Component
 const AppLayout = () => {
-  const { isLoading, locationRequested } = useContext(GlobalContext);
-
-  // Show loading screen while requesting location permission
-  if (isLoading && !locationRequested) {
-    return <LocationPermissionLoading />;
-  }
-
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />

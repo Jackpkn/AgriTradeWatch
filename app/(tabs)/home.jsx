@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -38,6 +38,9 @@ const home = () => {
     isLoading = true
   } = contextValue || {};
 
+  // State for user activities
+  const [userActivities, setUserActivities] = useState([]);
+
   // Redirect to login if not authenticated (mandatory login)
   React.useEffect(() => {
     if (!isLogged && !isLoading) {
@@ -61,6 +64,117 @@ const home = () => {
   useEffect(() => {
     getUser();
   }, [getUser]);
+
+  // Function to get user activities (mock data for now)
+  const getUserActivities = React.useCallback(async () => {
+    try {
+      // This would normally fetch from Firebase
+      // For now, using mock data to demonstrate the structure
+      const mockActivities = [
+        {
+          id: 1,
+          type: 'price_check',
+          description: 'Checked tomato prices at 3 markets',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+          icon: 'eye',
+          iconColor: '#49A760',
+          metadata: {
+            crop: 'tomato',
+            markets: 3,
+            priceRange: '₹40-60/kg'
+          }
+        },
+        {
+          id: 2,
+          type: 'favorite_added',
+          description: 'Added potato to favorites',
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+          icon: 'star',
+          iconColor: '#FFD700',
+          metadata: {
+            crop: 'potato',
+            market: 'Central Mandi'
+          }
+        },
+        {
+          id: 3,
+          type: 'price_alert',
+          description: 'Set price alert for onions',
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+          icon: 'notifications',
+          iconColor: '#FF6B35',
+          metadata: {
+            crop: 'onions',
+            targetPrice: '₹25/kg',
+            market: 'Local Market'
+          }
+        },
+        {
+          id: 4,
+          type: 'market_search',
+          description: 'Searched for markets near Mumbai',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+          icon: 'location',
+          iconColor: '#4A90E2',
+          metadata: {
+            location: 'Mumbai',
+            results: 12
+          }
+        },
+        {
+          id: 5,
+          type: 'price_comparison',
+          description: 'Compared wheat prices across 5 markets',
+          timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+          icon: 'trending-up',
+          iconColor: '#9C27B0',
+          metadata: {
+            crop: 'wheat',
+            markets: 5,
+            bestPrice: '₹22/kg'
+          }
+        }
+      ];
+      
+      setUserActivities(mockActivities);
+    } catch (error) {
+      console.error("Error getting user activities:", error);
+    }
+  }, []);
+
+  // Function to format timestamp
+  const formatTimestamp = (timestamp) => {
+    const now = new Date();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 60) {
+      return `${minutes} minutes ago`;
+    } else if (hours < 24) {
+      return `${hours} hours ago`;
+    } else if (days < 7) {
+      return `${days} days ago`;
+    } else {
+      return timestamp.toLocaleDateString();
+    }
+  };
+
+  // Function to get activity icon and color
+  const getActivityIcon = (activity) => {
+    return {
+      name: activity.icon,
+      color: activity.iconColor
+    };
+  };
+
+  // Load user activities when component mounts
+  useEffect(() => {
+    if (isLogged && userRole === 'consumer') {
+      getUserActivities();
+    }
+  }, [isLogged, userRole, getUserActivities]);
 
   const features = [
     {
@@ -184,6 +298,65 @@ const home = () => {
               ))}
             </View>
           </View>
+
+          {/* Consumer Dashboard - Role-Based Content */}
+          {userRole === 'consumer' && (
+            <View style={styles.consumerDashboardSection}>
+              <Text style={styles.sectionTitle}>Consumer Dashboard</Text>
+              
+              {/* Role-Specific Quick Actions */}
+              <View style={styles.roleQuickActionsContainer}>
+                <TouchableOpacity style={styles.roleQuickActionCard}>
+                  <View style={styles.roleQuickActionIcon}>
+                    <Ionicons name="notifications" size={20} color="#FF6B35" />
+                  </View>
+                  <Text style={styles.roleQuickActionText}>Price Alerts</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.roleQuickActionCard}>
+                  <View style={styles.roleQuickActionIcon}>
+                    <Ionicons name="heart" size={20} color="#FF6B35" />
+                  </View>
+                  <Text style={styles.roleQuickActionText}>Favorites</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.roleQuickActionCard}>
+                  <View style={styles.roleQuickActionIcon}>
+                    <Ionicons name="calendar" size={20} color="#FF6B35" />
+                  </View>
+                  <Text style={styles.roleQuickActionText}>Shopping List</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Recent Activity with Real Data */}
+              <View style={styles.recentActivityContainer}>
+                <Text style={styles.recentActivityTitle}>Recent Activity</Text>
+                {userActivities.length > 0 ? (
+                  userActivities.slice(0, 5).map((activity) => (
+                    <View key={activity.id} style={styles.activityItem}>
+                      <View style={[styles.activityIcon, { backgroundColor: getActivityIcon(activity).color + '20' }]}>
+                        <Ionicons 
+                          name={getActivityIcon(activity).name} 
+                          size={16} 
+                          color={getActivityIcon(activity).color} 
+                        />
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityText}>{activity.description}</Text>
+                        <Text style={styles.activityTime}>{formatTimestamp(activity.timestamp)}</Text>
+                      </View>
+                    </View>
+                  ))
+                ) : (
+                  <View style={styles.noActivityContainer}>
+                    <Ionicons name="information-circle" size={24} color="#999" />
+                    <Text style={styles.noActivityText}>No recent activity</Text>
+                    <Text style={styles.noActivitySubtext}>Start exploring prices to see your activity here</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
 
           {/* Main Features */}
           <View style={styles.featuresSection}>
@@ -456,6 +629,107 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+  },
+  // Consumer Dashboard Styles
+  consumerDashboardSection: {
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  roleQuickActionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+    gap: 12,
+  },
+  roleQuickActionCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    width: (width - 56) / 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  roleQuickActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF5F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  roleQuickActionText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#1F4E3D",
+    textAlign: "center",
+  },
+  recentActivityContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  recentActivityTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginBottom: 16,
+  },
+  activityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  activityIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityText: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "400",
+  },
+  noActivityContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  noActivityText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  noActivitySubtext: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    lineHeight: 20,
   },
 });
 

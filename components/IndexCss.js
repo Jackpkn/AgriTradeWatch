@@ -47,6 +47,11 @@ export const indexStyles = {
       minWidth: 200,
       justifyContent: "space-between",
     },
+    languageButtonDisabled: {
+      backgroundColor: "#f5f5f5",
+      borderColor: "#e0e0e0",
+      opacity: 0.7,
+    },
     languageFlag: {
       fontSize: 20,
       marginRight: 12,
