@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,8 @@ import { GlobalContext } from "../../context/GlobalProvider";
 import { router } from "expo-router";
 import { auth } from "../../firebase";
 import { getUserData } from "../../components/crud";
-import OfflineIndicator from "../../components/OfflineIndicator";   
-
-const { width } = Dimensions.get("window");
+import OfflineIndicator from "../../components/OfflineIndicator";
+import { useOrientation } from "../../utils/orientationUtils";   
 
 const home = () => {
   // Safely get context with error handling
@@ -40,6 +39,12 @@ const home = () => {
 
   // State for user activities
   const [userActivities, setUserActivities] = useState([]);
+  
+  // Use orientation hook
+  const { screenData, isLandscape, width, breakpoints } = useOrientation();
+
+  // Create responsive styles
+  const styles = useMemo(() => createStyles(isLandscape, width), [isLandscape, width]);
 
   // Redirect to login if not authenticated (mandatory login)
   React.useEffect(() => {
@@ -416,7 +421,8 @@ const home = () => {
   );
 };
 
-const styles = StyleSheet.create({
+// Function to create responsive styles
+const createStyles = (isLandscape, screenWidth) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8fffe",
@@ -512,7 +518,6 @@ const styles = StyleSheet.create({
   },
   quickActionsContainer: {
     flexDirection: "row",
-    // flexWrap: "wrap",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     gap: 12,
@@ -522,7 +527,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
-    width: (width - 56) / 3,
+    flex: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -549,23 +554,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   featuresGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 16,
+    flexDirection: isLandscape ? "row" : "row",
+    flexWrap: isLandscape ? "nowrap" : "wrap",
+    justifyContent: isLandscape ? "space-around" : "space-between",
+    gap: isLandscape ? 20 : 16,
   },
   featureCard: {
     backgroundColor: "#fff",
     borderRadius: 20,
-    padding: 20,
-    width: (width - 56) / 2,
+    padding: isLandscape ? 16 : 20,
+    width: isLandscape ? "30%" : "48%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
     alignItems: "center",
-    minHeight: 200,
+    minHeight: isLandscape ? 180 : 200,
   },
   featureIconContainer: {
     width: 64,
@@ -647,7 +652,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
-    width: (width - 56) / 3,
+    flex: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,

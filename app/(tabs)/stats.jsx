@@ -9,7 +9,7 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,7 +17,7 @@ import { fetchCrops } from "@/components/crud";
 import { GlobalContext } from "@/context/GlobalProvider";
 import { Picker } from "@react-native-picker/picker";
 
-const { width } = Dimensions.get("window");
+// We'll get dimensions dynamically in the component
 
 const stats = () => {
   // Safely get context with error handling
@@ -37,6 +37,13 @@ const stats = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [renderError, setRenderError] = useState(null);
   const [isComponentMounted, setIsComponentMounted] = useState(false);
+  const [showConsumerAnalytics, setShowConsumerAnalytics] = useState(true);
+  const [showFarmerAnalytics, setShowFarmerAnalytics] = useState(true);
+  const [screenData, setScreenData] = useState(Dimensions.get("window"));
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  // Create styles early so they're available throughout the component
+  const styles = useMemo(() => createStyles(isLandscape, screenData.width), [isLandscape, screenData.width]);
 
   // Add component lifecycle logging
   useEffect(() => {
@@ -46,6 +53,23 @@ const stats = () => {
       console.log("Stats component unmounted");
       setIsComponentMounted(false);
     };
+  }, []);
+
+  // Handle orientation changes
+  useEffect(() => {
+    const onChange = (result) => {
+      setScreenData(result.window);
+      setIsLandscape(result.window.width > result.window.height);
+    };
+
+    const subscription = Dimensions.addEventListener("change", onChange);
+
+    // Set initial orientation
+    const initialDimensions = Dimensions.get("window");
+    setScreenData(initialDimensions);
+    setIsLandscape(initialDimensions.width > initialDimensions.height);
+
+    return () => subscription?.remove();
   }, []);
 
   const cropOptions = [
@@ -59,7 +83,15 @@ const stats = () => {
     { label: "Garlic", value: "garlic", icon: "🧄" },
   ];
 
-  const CropChart = ({ cropsArray, cropName, type }) => {
+  const CropChart = ({
+    cropsArray,
+    cropName,
+    type,
+    showAnalytics,
+    onToggleAnalytics,
+    screenData,
+    isLandscape,
+  }) => {
     try {
       // Add null/undefined checks for cropsArray
       if (!cropsArray || !Array.isArray(cropsArray)) {
@@ -177,7 +209,7 @@ const stats = () => {
 
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
-    
+
     // Calculate median price
     const sortedValues = [...values].sort((a, b) => a - b);
     let medianValue;
@@ -188,124 +220,168 @@ const stats = () => {
     } else {
       medianValue = sortedValues[Math.floor(sortedValues.length / 2)];
     }
-    
+
     // Calculate average price
-    const averageValue = values.reduce((sum, val) => sum + val, 0) / values.length;
-    
+    const averageValue =
+      values.reduce((sum, val) => sum + val, 0) / values.length;
+
     // Calculate price range
     const priceRange = maxValue - minValue;
-    
+
     // Calculate price volatility (percentage)
-    const priceVolatility = minValue > 0 ? ((priceRange / minValue) * 100).toFixed(1) : 0;
-    
+    const priceVolatility =
+      minValue > 0 ? ((priceRange / minValue) * 100).toFixed(1) : 0;
+
     // Calculate TODAY's prices specifically
     const today = new Date();
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
     const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
-    
-    const todayData = data.filter(item => {
+
+    const todayData = data.filter((item) => {
       const itemDate = new Date(item.timestamp);
       return itemDate >= startOfToday && itemDate < endOfToday;
     });
-    
+
     const todayValues = todayData
-      .map(d => d.value)
-      .filter(val => !isNaN(val) && val > 0);
-    
+      .map((d) => d.value)
+      .filter((val) => !isNaN(val) && val > 0);
+
     let todayHighest = 0;
     let todayLowest = 0;
     let todayAverage = 0;
-    
+
     if (todayValues.length > 0) {
       todayHighest = Math.max(...todayValues);
       todayLowest = Math.min(...todayValues);
-      todayAverage = todayValues.reduce((sum, val) => sum + val, 0) / todayValues.length;
+      todayAverage =
+        todayValues.reduce((sum, val) => sum + val, 0) / todayValues.length;
     }
-    
-    const chartWidth = Math.max(width - 40, data.length * 80);
+
+    const chartWidth = Math.max(
+      screenData.width - 40,
+      data.length * (isLandscape ? 100 : 80)
+    );
 
     const gradientColors =
       type === "consumer" ? ["#49A760", "#3d8b4f"] : ["#2196F3", "#1976D2"];
 
     return (
       <View style={styles.chartWrapper}>
+        {/* Toggle Button for Market Analytics */}
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={onToggleAnalytics}
+        >
+          <Ionicons
+            name={showAnalytics ? "eye-off" : "eye"}
+            size={20}
+            color="#49A760"
+          />
+          <Text style={styles.toggleButtonText}>
+            {showAnalytics ? "Hide" : "Show"} Market Analytics
+          </Text>
+          <Ionicons
+            name={showAnalytics ? "chevron-up" : "chevron-down"}
+            size={16}
+            color="#49A760"
+          />
+        </TouchableOpacity>
+
         {/* Enhanced Market Analytics Stats */}
-        <View style={styles.marketAnalyticsContainer}>
-          <Text style={styles.marketAnalyticsTitle}>Market Analytics</Text>
-          
-          {/* TODAY'S PRICES - Highlighted Section */}
-          <View style={styles.todayPricesSection}>
-            <Text style={styles.todayPricesTitle}>📅 Today's Prices</Text>
-            <View style={styles.todayPricesRow}>
-              <View style={styles.todayPriceItem}>
-                <Ionicons name="trending-up" size={24} color="#49A760" />
-                <Text style={styles.todayPriceValue}>₹{todayHighest}</Text>
-                <Text style={styles.todayPriceLabel}>Highest Today</Text>
-                <Text style={styles.todayPriceCount}>{todayValues.length} entries</Text>
+        {showAnalytics && (
+          <View style={styles.marketAnalyticsContainer}>
+            <Text style={styles.marketAnalyticsTitle}>Market Analytics</Text>
+
+            {/* TODAY'S PRICES - Highlighted Section */}
+            <View style={styles.todayPricesSection}>
+              <Text style={styles.todayPricesTitle}>📅 Today's Prices</Text>
+              <View style={styles.todayPricesRow}>
+                <View style={styles.todayPriceItem}>
+                  <Ionicons name="trending-up" size={24} color="#49A760" />
+                  <Text style={styles.todayPriceValue}>₹{todayHighest}</Text>
+                  <Text style={styles.todayPriceLabel}>Highest Today</Text>
+                  <Text style={styles.todayPriceCount}>
+                    {todayValues.length} entries
+                  </Text>
+                </View>
+                <View style={styles.todayPriceItem}>
+                  <Ionicons name="trending-down" size={24} color="#FF6B6B" />
+                  <Text style={styles.todayPriceValue}>₹{todayLowest}</Text>
+                  <Text style={styles.todayPriceLabel}>Lowest Today</Text>
+                  <Text style={styles.todayPriceCount}>
+                    {todayValues.length} entries
+                  </Text>
+                </View>
               </View>
-              <View style={styles.todayPriceItem}>
-                <Ionicons name="trending-down" size={24} color="#FF6B6B" />
-                <Text style={styles.todayPriceValue}>₹{todayLowest}</Text>
-                <Text style={styles.todayPriceLabel}>Lowest Today</Text>
-                <Text style={styles.todayPriceCount}>{todayValues.length} entries</Text>
-              </View>
+              {todayValues.length > 0 && (
+                <View style={styles.todayAverageRow}>
+                  <Ionicons name="analytics" size={20} color="#FF9800" />
+                  <Text style={styles.todayAverageText}>
+                    Today's Average: ₹{todayAverage.toFixed(1)}
+                  </Text>
+                </View>
+              )}
             </View>
-            {todayValues.length > 0 && (
-              <View style={styles.todayAverageRow}>
+
+            {/* OVERALL MARKET STATS */}
+            <Text style={styles.overallStatsTitle}>
+              📊 Overall Market Stats
+            </Text>
+
+            {/* Primary Stats Row */}
+            <View style={styles.primaryStatsRow}>
+              <View style={styles.primaryStatItem}>
+                <Ionicons name="trending-up" size={20} color="#49A760" />
+                <Text style={styles.primaryStatValue}>₹{maxValue}</Text>
+                <Text style={styles.primaryStatLabel}>All Time High</Text>
+              </View>
+              <View style={styles.primaryStatItem}>
+                <Ionicons name="trending-down" size={20} color="#FF6B6B" />
+                <Text style={styles.primaryStatValue}>₹{minValue}</Text>
+                <Text style={styles.primaryStatLabel}>All Time Low</Text>
+              </View>
+              <View style={styles.primaryStatItem}>
                 <Ionicons name="analytics" size={20} color="#FF9800" />
-                <Text style={styles.todayAverageText}>
-                  Today's Average: ₹{todayAverage.toFixed(1)}
+                <Text style={styles.primaryStatValue}>
+                  ₹{medianValue.toFixed(1)}
                 </Text>
+                <Text style={styles.primaryStatLabel}>Overall Median</Text>
               </View>
-            )}
-          </View>
-          
-          {/* OVERALL MARKET STATS */}
-          <Text style={styles.overallStatsTitle}>📊 Overall Market Stats</Text>
-          
-          {/* Primary Stats Row */}
-          <View style={styles.primaryStatsRow}>
-            <View style={styles.primaryStatItem}>
-              <Ionicons name="trending-up" size={20} color="#49A760" />
-              <Text style={styles.primaryStatValue}>₹{maxValue}</Text>
-              <Text style={styles.primaryStatLabel}>All Time High</Text>
             </View>
-            <View style={styles.primaryStatItem}>
-              <Ionicons name="trending-down" size={20} color="#FF6B6B" />
-              <Text style={styles.primaryStatValue}>₹{minValue}</Text>
-              <Text style={styles.primaryStatLabel}>All Time Low</Text>
-            </View>
-            <View style={styles.primaryStatItem}>
-              <Ionicons name="analytics" size={20} color="#FF9800" />
-              <Text style={styles.primaryStatValue}>₹{medianValue.toFixed(1)}</Text>
-              <Text style={styles.primaryStatLabel}>Overall Median</Text>
-            </View>
-          </View>
-          
-          {/* Secondary Stats Row */}
-          <View style={styles.secondaryStatsRow}>
-            <View style={styles.secondaryStatItem}>
-              <Ionicons name="pulse" size={16} color="#9C27B0" />
-              <Text style={styles.secondaryStatValue}>₹{averageValue.toFixed(1)}</Text>
-              <Text style={styles.secondaryStatLabel}>Overall Avg</Text>
-            </View>
-            <View style={styles.secondaryStatItem}>
-              <Ionicons name="resize" size={16} color="#607D8B" />
-              <Text style={styles.secondaryStatValue}>₹{priceRange}</Text>
-              <Text style={styles.secondaryStatLabel}>Price Range</Text>
-            </View>
-            <View style={styles.secondaryStatItem}>
-              <Ionicons name="trending-up" size={16} color="#E91E63" />
-              <Text style={styles.secondaryStatValue}>{priceVolatility}%</Text>
-              <Text style={styles.secondaryStatLabel}>Volatility</Text>
-            </View>
-            <View style={styles.secondaryStatItem}>
-              <Ionicons name="bar-chart" size={16} color="#795548" />
-              <Text style={styles.secondaryStatValue}>{data.length}</Text>
-              <Text style={styles.secondaryStatLabel}>Total Points</Text>
+
+            {/* Secondary Stats Row */}
+            <View style={styles.secondaryStatsRow}>
+              <View style={styles.secondaryStatItem}>
+                <Ionicons name="pulse" size={16} color="#9C27B0" />
+                <Text style={styles.secondaryStatValue}>
+                  ₹{averageValue.toFixed(1)}
+                </Text>
+                <Text style={styles.secondaryStatLabel}>Overall Avg</Text>
+              </View>
+              <View style={styles.secondaryStatItem}>
+                <Ionicons name="resize" size={16} color="#607D8B" />
+                <Text style={styles.secondaryStatValue}>₹{priceRange}</Text>
+                <Text style={styles.secondaryStatLabel}>Price Range</Text>
+              </View>
+              <View style={styles.secondaryStatItem}>
+                <Ionicons name="trending-up" size={16} color="#E91E63" />
+                <Text style={styles.secondaryStatValue}>
+                  {priceVolatility}%
+                </Text>
+                <Text style={styles.secondaryStatLabel}>Volatility</Text>
+              </View>
+              <View style={styles.secondaryStatItem}>
+                <Ionicons name="bar-chart" size={16} color="#795548" />
+                <Text style={styles.secondaryStatValue}>{data.length}</Text>
+                <Text style={styles.secondaryStatLabel}>Total Points</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Original Chart Stats (keeping for compatibility) */}
         <View style={styles.chartStats}>
@@ -571,6 +647,12 @@ const stats = () => {
                 cropsArray={consumerCrops}
                 cropName={consumerCropName}
                 type="consumer"
+                showAnalytics={showConsumerAnalytics}
+                onToggleAnalytics={() =>
+                  setShowConsumerAnalytics(!showConsumerAnalytics)
+                }
+                screenData={screenData}
+                isLandscape={isLandscape}
               />
             </View>
 
@@ -597,6 +679,12 @@ const stats = () => {
                 cropsArray={farmerCrops}
                 cropName={farmerCropName}
                 type="farmer"
+                showAnalytics={showFarmerAnalytics}
+                onToggleAnalytics={() =>
+                  setShowFarmerAnalytics(!showFarmerAnalytics)
+                }
+                screenData={screenData}
+                isLandscape={isLandscape}
               />
             </View>
           </ScrollView>
@@ -625,352 +713,375 @@ const stats = () => {
   }
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8fffe",
-  },
-  gradient: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  header: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 24,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  headerGradient: {
-    padding: 24,
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#fff",
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  sectionCard: {
-    backgroundColor: "#fff",
-    marginHorizontal: 20,
-    marginBottom: 24,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
-    overflow: "hidden",
-  },
-  sectionHeader: {
-    marginBottom: 20,
-  },
-  sectionHeaderGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    paddingBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#fff",
-    marginLeft: 12,
-  },
-  selectorContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  selectorLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F4E3D",
-    marginBottom: 12,
-  },
-  pickerContainer: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-    overflow: "hidden",
-  },
-  selectedCropDisplay: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  cropIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  selectedCropText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F4E3D",
-    flex: 1,
-  },
-  picker: {
-    height: 50,
-    color: "#1F4E3D",
-  },
-  pickerItem: {
-    fontSize: 16,
-  },
-  chartWrapper: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  chartStats: {
-    flexDirection: "row",
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    justifyContent: "space-around",
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1F4E3D",
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
-  },
-  chartScrollContainer: {
-    paddingRight: 20,
-  },
-  chartContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  xAxisLabel: {
-    color: "#666",
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  yAxisLabel: {
-    color: "#666",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  noDataContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 16,
-    marginHorizontal: 20,
-  },
-  noDataText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#666",
-    marginTop: 16,
-    textAlign: "center",
-  },
-  noDataSubtext: {
-    fontSize: 14,
-    color: "#999",
-    marginTop: 8,
-    textAlign: "center",
-  },
-  // Market Analytics Styles
-  marketAnalyticsContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
-  },
-  marketAnalyticsTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1F4E3D",
-    textAlign: "center",
-    marginBottom: 16,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  primaryStatsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-    gap: 12,
-  },
-  primaryStatItem: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-    minHeight: 80,
-  },
-  primaryStatValue: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1F4E3D",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  primaryStatLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#666",
-    textAlign: "center",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-  },
-  secondaryStatsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  secondaryStatItem: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-    minHeight: 60,
-  },
-  secondaryStatValue: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1F4E3D",
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  secondaryStatLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#666",
-    textAlign: "center",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-  },
-  // Today's Prices Styles
-  todayPricesSection: {
-    backgroundColor: "#f0f9ff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: "#49A760",
-    borderStyle: "dashed",
-  },
-  todayPricesTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#49A760",
-    textAlign: "center",
-    marginBottom: 16,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  todayPricesRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  todayPriceItem: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  todayPriceValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#1F4E3D",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  todayPriceLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#49A760",
-    textAlign: "center",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-    marginBottom: 4,
-  },
-  todayPriceCount: {
-    fontSize: 10,
-    color: "#666",
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-  todayAverageRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-    gap: 8,
-  },
-  todayAverageText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FF9800",
-    textAlign: "center",
-  },
-  overallStatsTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1F4E3D",
-    textAlign: "center",
-    marginBottom: 16,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-});
+// Function to create responsive styles
+const createStyles = (isLandscape, screenWidth) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#f8fffe",
+    },
+    gradient: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 40,
+    },
+    header: {
+      marginHorizontal: 20,
+      marginTop: 20,
+      marginBottom: 24,
+      borderRadius: 20,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    headerGradient: {
+      padding: 24,
+      alignItems: "center",
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: "800",
+      color: "#fff",
+      marginTop: 12,
+      marginBottom: 8,
+    },
+    headerSubtitle: {
+      fontSize: 14,
+      color: "rgba(255, 255, 255, 0.9)",
+      textAlign: "center",
+      lineHeight: 20,
+    },
+    sectionCard: {
+      backgroundColor: "#fff",
+      marginHorizontal: 20,
+      marginBottom: 24,
+      borderRadius: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 6,
+      overflow: "hidden",
+    },
+    sectionHeader: {
+      marginBottom: 20,
+    },
+    sectionHeaderGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 20,
+      paddingBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: "#fff",
+      marginLeft: 12,
+    },
+    selectorContainer: {
+      paddingHorizontal: 20,
+      marginBottom: 20,
+    },
+    selectorLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#1F4E3D",
+      marginBottom: 12,
+    },
+    pickerContainer: {
+      backgroundColor: "#f8f9fa",
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "#e9ecef",
+      overflow: "hidden",
+    },
+    selectedCropDisplay: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      backgroundColor: "#fff",
+      borderBottomWidth: 1,
+      borderBottomColor: "#f0f0f0",
+    },
+    cropIcon: {
+      fontSize: 20,
+      marginRight: 12,
+    },
+    selectedCropText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#1F4E3D",
+      flex: 1,
+    },
+    picker: {
+      height: 50,
+      color: "#1F4E3D",
+    },
+    pickerItem: {
+      fontSize: 14,
+    },
+    chartWrapper: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    toggleButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#f8f9fa",
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: "#e9ecef",
+      gap: 8,
+    },
+    toggleButtonText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#49A760",
+    },
+    chartStats: {
+      flexDirection: "row",
+      backgroundColor: "#f8f9fa",
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 20,
+      justifyContent: "space-around",
+    },
+    statItem: {
+      alignItems: "center",
+    },
+    statValue: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: "#1F4E3D",
+      marginBottom: 4,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: "#666",
+      fontWeight: "500",
+    },
+    chartScrollContainer: {
+      paddingRight: 20,
+    },
+    chartContainer: {
+      backgroundColor: "#fff",
+      borderRadius: 16,
+      padding: isLandscape ? 20 : 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
+      minHeight: isLandscape ? 320 : 280,
+    },
+    xAxisLabel: {
+      color: "#666",
+      fontSize: 11,
+      fontWeight: "500",
+    },
+    yAxisLabel: {
+      color: "#666",
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    noDataContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 40,
+      backgroundColor: "#f8f9fa",
+      borderRadius: 16,
+      marginHorizontal: 20,
+    },
+    noDataText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#666",
+      marginTop: 16,
+      textAlign: "center",
+    },
+    noDataSubtext: {
+      fontSize: 12,
+      color: "#999",
+      marginTop: 8,
+      textAlign: "center",
+    },
+    // Market Analytics Styles
+    marketAnalyticsContainer: {
+      backgroundColor: "#fff",
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
+      borderWidth: 1,
+      borderColor: "#f0f0f0",
+    },
+    marketAnalyticsTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: "#1F4E3D",
+      textAlign: "center",
+      marginBottom: 16,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    primaryStatsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 16,
+      gap: isLandscape ? 16 : 12,
+      flexWrap: isLandscape ? "nowrap" : "wrap",
+    },
+    primaryStatItem: {
+      flex: 1,
+      alignItems: "center",
+      backgroundColor: "#f8f9fa",
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#e9ecef",
+      minHeight: 80,
+    },
+    primaryStatValue: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: "#1F4E3D",
+      marginTop: 8,
+      marginBottom: 4,
+    },
+    primaryStatLabel: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: "#666",
+      textAlign: "center",
+      textTransform: "uppercase",
+      letterSpacing: 0.3,
+    },
+    secondaryStatsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: isLandscape ? 12 : 8,
+      flexWrap: isLandscape ? "nowrap" : "wrap",
+    },
+    secondaryStatItem: {
+      flex: 1,
+      alignItems: "center",
+      backgroundColor: "#f8f9fa",
+      padding: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: "#e9ecef",
+      minHeight: 60,
+    },
+    secondaryStatValue: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: "#1F4E3D",
+      marginTop: 6,
+      marginBottom: 2,
+    },
+    secondaryStatLabel: {
+      fontSize: 9,
+      fontWeight: "600",
+      color: "#666",
+      textAlign: "center",
+      textTransform: "uppercase",
+      letterSpacing: 0.3,
+    },
+    // Today's Prices Styles
+    todayPricesSection: {
+      backgroundColor: "#f0f9ff",
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 20,
+      borderWidth: 2,
+      borderColor: "#49A760",
+      borderStyle: "dashed",
+    },
+    todayPricesTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: "#49A760",
+      textAlign: "center",
+      marginBottom: 16,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    todayPricesRow: {
+      flexDirection: isLandscape ? "row" : "row",
+      justifyContent: "space-between",
+      gap: isLandscape ? 20 : 16,
+      flexWrap: isLandscape ? "nowrap" : "wrap",
+    },
+    todayPriceItem: {
+      flex: 1,
+      alignItems: "center",
+      backgroundColor: "#fff",
+      padding: 16,
+      borderRadius: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    todayPriceValue: {
+      fontSize: 20,
+      fontWeight: "800",
+      color: "#1F4E3D",
+      marginTop: 8,
+      marginBottom: 4,
+    },
+    todayPriceLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      color: "#49A760",
+      textAlign: "center",
+      textTransform: "uppercase",
+      letterSpacing: 0.3,
+      marginBottom: 4,
+    },
+    todayPriceCount: {
+      fontSize: 9,
+      color: "#666",
+      textAlign: "center",
+      fontStyle: "italic",
+    },
+    todayAverageRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 16,
+      paddingTop: 16,
+      borderTopWidth: 1,
+      borderTopColor: "#e0e0e0",
+      gap: 8,
+    },
+    todayAverageText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: "#FF9800",
+      textAlign: "center",
+    },
+    overallStatsTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: "#1F4E3D",
+      textAlign: "center",
+      marginBottom: 16,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+  });
 
 export default stats;

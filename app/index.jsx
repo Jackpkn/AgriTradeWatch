@@ -227,10 +227,10 @@ export default function Index() {
               <Text style={styles.quickLinkText}>About Us</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickLinkButton}>
+            {/* <TouchableOpacity style={styles.quickLinkButton}>
               <Icon name="document-text" size={20} color="#49A760" />
               <Text style={styles.quickLinkText}>Disclaimer</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Footer */}

@@ -3,8 +3,11 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "adb uninstall com.devsingal.Agritradewatch && npx expo run:android",
+    "start": "expo start",
+
     "reset-project": "node ./scripts/reset-project.js",
+    "reinstall": "adb uninstall com.devsingal.Agritradewatch && npx expo run:android",
+
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",

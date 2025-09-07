@@ -35,11 +35,18 @@ import {
   calculateConsumerStats,
 } from "@/utils/chartDataProcessor";
 import { MAP_CONFIG } from "@/constants/mapConfig";
-import { mapStyles } from "@/components/map/mapStyles";
+import { createMapStyles } from "@/components/map/mapStyles";
 import { performanceMonitor } from "@/utils/performance";
+import { useOrientation } from "@/utils/orientationUtils";
 
 const Map = () => {
   const { currentLocation } = useContext(GlobalContext);
+
+  // Use orientation hook
+  const { screenData, isLandscape, width, breakpoints } = useOrientation();
+
+  // Create responsive styles
+  const mapStyles = useMemo(() => createMapStyles(isLandscape, width), [isLandscape, width]);
 
   // State management
   const [selectedCrop, setSelectedCrop] = useState("onion");

@@ -1,9 +1,8 @@
 import { StyleSheet, Dimensions } from "react-native";
 import { MAP_CONFIG } from "@/constants/mapConfig";
 
-const { width } = Dimensions.get("window");
-
-export const mapStyles = StyleSheet.create({
+// Function to create responsive map styles
+export const createMapStyles = (isLandscape, screenWidth) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eafbe7",
@@ -926,3 +925,6 @@ export const mapStyles = StyleSheet.create({
     color: "#666",
   },
 });
+
+// Default export for backward compatibility
+export const mapStyles = createMapStyles(false, Dimensions.get("window").width);
