@@ -25,18 +25,15 @@ export const GlobalProvider = ({ children }) => {
   const [networkType, setNetworkType] = useState("unknown");
 
   // Authentication state monitoring
-  useEffect(() => {
-    console.log("GlobalProvider: Setting up authentication listener");
+  useEffect(() => { 
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("GlobalProvider: User authenticated:", user.email);
+      if (user) { 
         setIsLogged(true);
         setIsGuest(false); // Ensure guest mode is disabled
         setGuestRole(null);
         // You can fetch additional user data here if needed
-      } else {
-        console.log("GlobalProvider: User not authenticated");
+      } else { 
         setIsLogged(false);
         setIsGuest(false);
         setGuestRole(null);
@@ -80,18 +77,13 @@ export const GlobalProvider = ({ children }) => {
 
       await getMandatoryLocation(
         (location) => {
-          console.log(
-            "GlobalProvider: Location permission granted and location obtained"
-          );
+        
           setCurrentLocation(location);
           setLocationRequested(true);
           setIsLoading(false);
         },
         (error) => {
-          console.error(
-            "GlobalProvider: Location permission denied or error:",
-            error
-          );
+         
           setIsLoading(false);
           // The getMandatoryLocation function will handle showing alerts and exiting the app
         },

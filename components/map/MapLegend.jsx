@@ -10,59 +10,47 @@ const MapLegend = ({ selectedCrop, radius }) => {
     {
       id: "inside",
       color: MAP_CONFIG.COLORS.INSIDE_RADIUS,
-      label: `Within ${Math.round(radius * 1000)}m`,
-      description: "Available nearby",
+      label: `Within ${radius <= 0.5 ? `${Math.round(radius * 1000)}m` : `${radius}km`}`,
       type: "circle",
     },
     {
       id: "outside",
       color: MAP_CONFIG.COLORS.OUTSIDE_RADIUS,
       label: "Beyond radius",
-      description: "Further away",
       type: "circle",
     },
     {
       id: "user",
       color: MAP_CONFIG.COLORS.USER_LOCATION,
       label: "Your location",
-      description: "Current position",
       type: "center",
     },
   ];
 
   return (
-    <View style={mapStyles.modernMapLegend}>
-      <View style={mapStyles.legendHeader}>
-        <View style={mapStyles.legendTitleContainer}>
-          <Text style={mapStyles.legendCropIcon}>{selectedCropData?.icon}</Text>
-          <View style={mapStyles.legendTitleTextContainer}>
-            <Text style={mapStyles.legendTitle}>
-              {selectedCropData?.label} Locations
-            </Text>
-            <Text style={mapStyles.legendSubtitle}>Map indicators</Text>
-          </View>
-        </View>
+    <View style={mapStyles.compactMapLegend}>
+      <View style={mapStyles.compactLegendHeader}>
+        <Text style={mapStyles.compactLegendCropIcon}>{selectedCropData?.icon}</Text>
+        <Text style={mapStyles.compactLegendTitle}>
+          {selectedCropData?.label} Map Legend
+        </Text>
       </View>
 
-      <View style={mapStyles.legendItemsContainer}>
-        {legendItems.map((item) => (
-          <View key={item.id} style={mapStyles.modernLegendItem}>
-            <View style={mapStyles.legendMarkerContainer}>
-              <View
-                style={[
-                  item.type === "center"
-                    ? mapStyles.modernLegendMarkerCenter
-                    : mapStyles.modernLegendMarker,
-                  { backgroundColor: item.color },
-                ]}
-              />
-            </View>
-            <View style={mapStyles.legendTextContainer}>
-              <Text style={mapStyles.modernLegendLabel}>{item.label}</Text>
-              <Text style={mapStyles.modernLegendDescription}>
-                {item.description}
-              </Text>
-            </View>
+      <View style={mapStyles.compactLegendItemsContainer}>
+        {legendItems.map((item, index) => (
+          <View key={item.id} style={mapStyles.compactLegendItem}>
+            <View
+              style={[
+                item.type === "center"
+                  ? mapStyles.compactLegendMarkerCenter
+                  : mapStyles.compactLegendMarker,
+                { backgroundColor: item.color },
+              ]}
+            />
+            <Text style={mapStyles.compactLegendLabel}>{item.label}</Text>
+            {index < legendItems.length - 1 && (
+              <View style={mapStyles.compactLegendSeparator} />
+            )}
           </View>
         ))}
       </View>

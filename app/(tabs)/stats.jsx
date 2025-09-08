@@ -47,10 +47,8 @@ const stats = () => {
 
   // Add component lifecycle logging
   useEffect(() => {
-    console.log("Stats component mounted");
     setIsComponentMounted(true);
     return () => {
-      console.log("Stats component unmounted");
       setIsComponentMounted(false);
     };
   }, []);
@@ -94,8 +92,7 @@ const stats = () => {
   }) => {
     try {
       // Add null/undefined checks for cropsArray
-      if (!cropsArray || !Array.isArray(cropsArray)) {
-        console.log(`CropChart ${type}: Invalid cropsArray`, typeof cropsArray);
+      if (!cropsArray || !Array.isArray(cropsArray)) { 
         return (
           <View style={styles.noDataContainer}>
             <Ionicons name="refresh-outline" size={48} color="#ccc" />
@@ -104,7 +101,6 @@ const stats = () => {
         );
       }
     } catch (error) {
-      console.error(`CropChart ${type} error:`, error);
       return (
         <View style={styles.noDataContainer}>
           <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />

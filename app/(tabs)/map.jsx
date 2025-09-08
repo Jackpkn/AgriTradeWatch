@@ -21,7 +21,6 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import MapHeader from "@/components/map/MapHeader";
 import InteractiveMap from "@/components/map/InteractiveMap";
-import RadiusSlider from "@/components/map/RadiusSlider";
 import ConsumerInfoPanel from "@/components/map/ConsumerInfoPanel";
 import PriceUnitToggle from "@/components/map/PriceUnitToggle";
 import MapLegend from "@/components/map/MapLegend";
@@ -381,15 +380,17 @@ const Map = () => {
     setPriceUnit(unit);
   }, []);
 
-  // Debug logging
+  // Debug logging (only in development)
   useEffect(() => {
-    console.log("Map visibility check:", {
-      hasCurrentLocation: !!currentLocation,
-      hasMarkerPosition: !!markerPosition,
-      allCropsCount: allCrops.length,
-      dataLoading,
-      dataError: !!dataError,
-    });
+    if (__DEV__) {
+      console.log("Map visibility check:", {
+        hasCurrentLocation: !!currentLocation,
+        hasMarkerPosition: !!markerPosition,
+        allCropsCount: allCrops.length,
+        dataLoading,
+        dataError: !!dataError,
+      });
+    }
   }, [currentLocation, markerPosition, allCrops, dataLoading, dataError]);
 
   // Loading state
@@ -429,125 +430,12 @@ const Map = () => {
             onMapTypeChange={handleMapTypeChange}
           />
 
-                      {/* Price Display Section - Compact Design */}
-            <View style={mapStyles.priceDisplaySection}>
-              <Text style={mapStyles.priceSectionTitle}>Price Information</Text>
-              
-              {/* Show no data message */}
-              {!priceLoading && priceData[selectedDateRange]?.min === 0 && (
-                <View style={mapStyles.noDataMessage}>
-                  <Text style={mapStyles.noDataText}>
-                    No price data available for {selectedDateRange}. 
-                    {selectedDateRange === 'custom' ? ' Select a date range to view prices.' : ' Prices will appear here once data is available.'}
-                  </Text>
-                </View>
-              )}
-            
-            {/* Date Range Selector */}
-            <View style={mapStyles.dateRangeSelector}>
-              <TouchableOpacity
-                style={[
-                  mapStyles.dateButton,
-                  selectedDateRange === 'today' && mapStyles.dateButtonActive
-                ]}
-                onPress={() => {
-                  setSelectedDateRange('today');
-                  fetchPriceData('today');
-                }}
-              >
-                <Text style={[
-                  mapStyles.dateButtonText,
-                  selectedDateRange === 'today' && mapStyles.dateButtonTextActive
-                ]}>Today</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  mapStyles.dateButton,
-                  selectedDateRange === 'yesterday' && mapStyles.dateButtonActive
-                ]}
-                onPress={() => {
-                  setSelectedDateRange('yesterday');
-                  fetchPriceData('yesterday');
-                }}
-              >
-                <Text style={[
-                  mapStyles.dateButtonText,
-                  selectedDateRange === 'yesterday' && mapStyles.dateButtonTextActive
-                ]}>Yesterday</Text>
-              </TouchableOpacity>
-                
-              <TouchableOpacity
-                style={[
-                  mapStyles.dateButton,
-                  selectedDateRange === 'custom' && mapStyles.dateButtonActive
-                ]}
-                onPress={() => setShowCustomDateModal(true)}
-              >
-                <Text style={[
-                  mapStyles.dateButtonText,
-                  selectedDateRange === 'custom' && mapStyles.dateButtonTextActive
-                ]}>
-                  {selectedDateRange === 'custom' 
-                    ? `Custom (${customStartDate.toLocaleDateString()} - ${customEndDate.toLocaleDateString()})`
-                    : 'Custom Range'
-                  }
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Price Cards */}
-            <View style={mapStyles.priceCardsContainer}>
-              <View style={mapStyles.priceCard}>
-                <Text style={mapStyles.priceCardTitle}>Min Price</Text>
-                {priceLoading ? (
-                  <ActivityIndicator size="small" color="#49A760" />
-                ) : (
-                  <Text style={mapStyles.priceCardValue}>
-                    {priceData[selectedDateRange]?.min > 0 
-                      ? `₹${priceData[selectedDateRange].min}` 
-                      : 'No data'
-                    }
-                  </Text>
-                )}
-              </View>
-              
-              <View style={mapStyles.priceCard}>
-                <Text style={mapStyles.priceCardTitle}>Max Price</Text>
-                {priceLoading ? (
-                  <ActivityIndicator size="small" color="#49A760" />
-                ) : (
-                  <Text style={mapStyles.priceCardValue}>
-                    {priceData[selectedDateRange]?.max > 0 
-                      ? `₹${priceData[selectedDateRange].max}` 
-                      : 'No data'
-                    }
-                  </Text>
-                )}
-              </View>
-              
-              <View style={mapStyles.priceCard}>
-                <Text style={mapStyles.priceCardTitle}>Modal Price</Text>
-                {priceLoading ? (
-                  <ActivityIndicator size="small" color="#49A760" />
-                ) : (
-                  <Text style={mapStyles.priceCardValue}>
-                    {priceData[selectedDateRange]?.modal > 0 
-                      ? `₹${priceData[selectedDateRange].modal}` 
-                      : 'No data'
-                    }
-                  </Text>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* ScrollView for content below header */}
+          {/* Main Content Area */}
           <ScrollView
             style={mapStyles.contentScroll}
             showsVerticalScrollIndicator={false}
           >
-            {/* Interactive Map */}
+            {/* Interactive Map Section */}
             <View style={mapStyles.mapContainer}>
               <InteractiveMap
                 ref={webViewRef}
@@ -565,7 +453,121 @@ const Map = () => {
 
             {/* Map Legend */}
             <MapLegend selectedCrop={selectedCrop} radius={radius} />
-            {/* Enhanced Radius Slider */}
+
+            {/* Price Information Section */}
+            <View style={mapStyles.priceDisplaySection}>
+              <Text style={mapStyles.priceSectionTitle}>Price Information</Text>
+              
+              {/* Show no data message */}
+              {!priceLoading && priceData[selectedDateRange]?.min === 0 && (
+                <View style={mapStyles.noDataMessage}>
+                  <Text style={mapStyles.noDataText}>
+                    No price data available for {selectedDateRange}. 
+                    {selectedDateRange === 'custom' ? ' Select a date range to view prices.' : ' Prices will appear here once data is available.'}
+                  </Text>
+                </View>
+              )}
+            
+              {/* Date Range Selector */}
+              <View style={mapStyles.dateRangeSelector}>
+                <TouchableOpacity
+                  style={[
+                    mapStyles.dateButton,
+                    selectedDateRange === 'today' && mapStyles.dateButtonActive
+                  ]}
+                  onPress={() => {
+                    setSelectedDateRange('today');
+                    fetchPriceData('today');
+                  }}
+                >
+                  <Text style={[
+                    mapStyles.dateButtonText,
+                    selectedDateRange === 'today' && mapStyles.dateButtonTextActive
+                  ]}>Today</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    mapStyles.dateButton,
+                    selectedDateRange === 'yesterday' && mapStyles.dateButtonActive
+                  ]}
+                  onPress={() => {
+                    setSelectedDateRange('yesterday');
+                    fetchPriceData('yesterday');
+                  }}
+                >
+                  <Text style={[
+                    mapStyles.dateButtonText,
+                    selectedDateRange === 'yesterday' && mapStyles.dateButtonTextActive
+                  ]}>Yesterday</Text>
+                </TouchableOpacity>
+                  
+                <TouchableOpacity
+                  style={[
+                    mapStyles.dateButton,
+                    selectedDateRange === 'custom' && mapStyles.dateButtonActive
+                  ]}
+                  onPress={() => setShowCustomDateModal(true)}
+                >
+                  <Text style={[
+                    mapStyles.dateButtonText,
+                    selectedDateRange === 'custom' && mapStyles.dateButtonTextActive
+                  ]}>
+                    {selectedDateRange === 'custom' 
+                      ? `Custom (${customStartDate.toLocaleDateString()} - ${customEndDate.toLocaleDateString()})`
+                      : 'Custom Range'
+                    }
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Price Cards */}
+              <View style={mapStyles.priceCardsContainer}>
+                <View style={mapStyles.priceCard}>
+                  <Text style={mapStyles.priceCardTitle}>Min Price</Text>
+                  {priceLoading ? (
+                    <ActivityIndicator size="small" color="#49A760" />
+                  ) : (
+                    <Text style={mapStyles.priceCardValue}>
+                      {priceData[selectedDateRange]?.min > 0 
+                        ? `₹${priceData[selectedDateRange].min}` 
+                        : 'No data'
+                      }
+                    </Text>
+                  )}
+                </View>
+                
+                <View style={mapStyles.priceCard}>
+                  <Text style={mapStyles.priceCardTitle}>Max Price</Text>
+                  {priceLoading ? (
+                    <ActivityIndicator size="small" color="#49A760" />
+                  ) : (
+                    <Text style={mapStyles.priceCardValue}>
+                      {priceData[selectedDateRange]?.max > 0 
+                        ? `₹${priceData[selectedDateRange].max}` 
+                        : 'No data'
+                      }
+                    </Text>
+                  )}
+                </View>
+                
+                <View style={mapStyles.priceCard}>
+                  <Text style={mapStyles.priceCardTitle}>Modal Price</Text>
+                  {priceLoading ? (
+                    <ActivityIndicator size="small" color="#49A760" />
+                  ) : (
+                    <Text style={mapStyles.priceCardValue}>
+                      {priceData[selectedDateRange]?.modal > 0 
+                        ? `₹${priceData[selectedDateRange].modal}` 
+                        : 'No data'
+                      }
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+
+            {/* Location Radius Section */}
             <View style={mapStyles.radiusSection}>
               <Text style={mapStyles.radiusSectionTitle}>Location Radius</Text>
               <Text style={mapStyles.radiusSectionSubtitle}>
@@ -701,23 +703,36 @@ const Map = () => {
               onPriceUnitChange={handlePriceUnitChange}
             />
 
-            {/* Debug info */}
-            <View style={mapStyles.debugSection}>
-              <Text style={mapStyles.debugText}>
-                Retailer:{" "}
-                {allConsumerCrops.length} | Farmer: {allFarmerCrops.length}
-              </Text>
-              <Text style={mapStyles.debugText}>
-                Selected: {selectedCrop} | Radius: {Math.round(radius * 1000)}m
-                | Unit: {priceUnit}
-              </Text>
-              <Text style={mapStyles.debugText}>
-              Data Points In radius: {filteredCrops.length} | Outside:{" "}
-                {allCrops.filter(
-                  (crop) =>
-                    crop.name?.toLowerCase() === selectedCrop.toLowerCase()
-                ).length - filteredCrops.length}
-              </Text>
+            {/* Data Summary Section */}
+            <View style={mapStyles.dataSummarySection}>
+              <Text style={mapStyles.dataSummaryTitle}>Data Summary</Text>
+              <View style={mapStyles.dataSummaryGrid}>
+                <View style={mapStyles.dataSummaryCard}>
+                  <Text style={mapStyles.dataSummaryLabel}>Total Data Points</Text>
+                  <Text style={mapStyles.dataSummaryValue}>{allCrops.length}</Text>
+                  <Text style={mapStyles.dataSummarySubtext}>All crops in database</Text>
+                </View>
+                
+                <View style={mapStyles.dataSummaryCard}>
+                  <Text style={mapStyles.dataSummaryLabel}>In Selected Radius</Text>
+                  <Text style={mapStyles.dataSummaryValue}>{filteredCrops.length}</Text>
+                  <Text style={mapStyles.dataSummarySubtext}>
+                    {selectedCrop} within {radius <= 0.5 ? `${Math.round(radius * 1000)}m` : `${radius}km`}
+                  </Text>
+                </View>
+                
+                <View style={mapStyles.dataSummaryCard}>
+                  <Text style={mapStyles.dataSummaryLabel}>Consumers</Text>
+                  <Text style={mapStyles.dataSummaryValue}>{allConsumerCrops.length}</Text>
+                  <Text style={mapStyles.dataSummarySubtext}>Buying data points</Text>
+                </View>
+                
+                <View style={mapStyles.dataSummaryCard}>
+                  <Text style={mapStyles.dataSummaryLabel}>Farmers</Text>
+                  <Text style={mapStyles.dataSummaryValue}>{allFarmerCrops.length}</Text>
+                  <Text style={mapStyles.dataSummarySubtext}>Selling data points</Text>
+                </View>
+              </View>
             </View>
 
             {/* Consumer Chart Section */}
