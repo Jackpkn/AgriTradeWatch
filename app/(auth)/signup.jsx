@@ -16,12 +16,7 @@ import { Link, router } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
 
 import { GlobalContext } from "@/context/GlobalProvider";
-// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
-// import { auth } from "@/firebase";
-// import { onAuthStateChanged } from "firebase/auth";
-// import { registerUser } from "@/components/crud";
-
-// NEW API IMPORTS
+// API IMPORTS
 import { authService } from "@/services";
 import { FormInput, SelectionButton, SelectionModal } from "@/components/auth/FormComponents"; 
 import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
@@ -50,15 +45,7 @@ const SignUp = () => {
   const [selectedLocation, setSelectedLocation] = useState("Auto-detect Current");
 
   useEffect(() => {
-    // FIREBASE AUTH STATE - COMMENTED OUT FOR API MIGRATION
-    // const unsubscribe = onAuthStateChanged(auth, (user) => {
-    //   if (user) {
-    //     console.log("User authenticated, navigating to home.");
-    //     router.replace("/(tabs)/home");
-    //   }
-    // });
-
-    // NEW API AUTH STATE MONITORING
+    // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
         console.log("User authenticated, navigating to home.");
@@ -96,11 +83,7 @@ const SignUp = () => {
         locationMethod: selectedLocation,
       };
 
-      // FIREBASE REGISTRATION - COMMENTED OUT FOR API MIGRATION
-      // const newUser = await registerUser(email, password, userData);
-      // setMainUser(newUser);
-
-      // NEW API REGISTRATION
+      // API REGISTRATION
       const result = await authService.register(userData);
       const { user, token } = result;
       

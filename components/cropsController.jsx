@@ -1,25 +1,9 @@
-// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
-// import { auth, db } from '@/firebase';
-// import { addDoc, collection, getDocs } from 'firebase/firestore';
-
-// NEW API IMPORTS
+// API IMPORTS
 import { farmersService, consumersService } from '@/services';
 
 export const addCrop = async (crop, job = "farmers", userID, imageUri = "") => {
   try {
-    // FIREBASE ADD CROP - COMMENTED OUT FOR API MIGRATION
-    // const path = job === 'consumer' ? 'consumers' : 'farmers'
-    // await addDoc(collection(db, path), {
-    //   createdAt: new Date(),
-    //   userID: userID,
-    //   name: crop.name,
-    //   pricePerUnit: crop.pricePerUnit,
-    //   quantity: crop.quantity,
-    //   image: imageUri,
-    //   location: crop.location,
-    // });
-
-    // NEW API ADD CROP
+    // API ADD CROP
     const cropData = {
       commodity: crop.name,
       quantity: crop.quantity,
