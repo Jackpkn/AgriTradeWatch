@@ -14,12 +14,7 @@ import { Link, router } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
 import { loginStyles as styles } from "@/components/auth/LoginStyle"; 
 import { GlobalContext } from "@/context/GlobalProvider";
-// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
-// import { auth } from "@/firebase";
-// import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
-// import { getUserData } from "@/components/crud";
-
-// NEW API IMPORTS
+// API IMPORTS
 import { authService } from "@/services";
 import { FormInput } from "@/components/auth/FormComponents";
 
@@ -37,17 +32,7 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    // FIREBASE AUTH STATE - COMMENTED OUT FOR API MIGRATION
-    // const unsubscribe = onAuthStateChanged(auth, (user) => {
-    //   if (user) {
-    //     console.log("User is authenticated, navigating to home.");
-    //     router.replace("/(tabs)/home");
-    //   } else {
-    //     console.log("No authenticated user found, staying on login page.");
-    //   }
-    // });
-
-    // NEW API AUTH STATE MONITORING
+    // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
         console.log("User is authenticated, navigating to home.");
@@ -77,19 +62,7 @@ const LoginScreen = () => {
         await logoutGuest();
       }
 
-      // FIREBASE LOGIN - COMMENTED OUT FOR API MIGRATION
-      // const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // const user = userCredential.user;
-      // const userData = await getUserData(user.uid);
-      // if (userData) {
-      //   setMainUser(userData);
-      //   setJwt(user.uid);
-      //   setIsLogged(true);
-      // } else {
-      //   throw new Error("Could not find user data.");
-      // }
-
-      // NEW API LOGIN
+      // API LOGIN
       const result = await authService.login(email, password);
       const { user, token } = result;
       
