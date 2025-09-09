@@ -1,0 +1,503 @@
+/**
+ * Responsive Styles Utility
+ * Provides utilities for creating responsive styles based on screen dimensions
+ */
+
+import { StyleSheet, Dimensions } from 'react-native';
+import { createResponsiveStyles, getResponsiveValue } from '../theme';
+
+// Get screen dimensions
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Check if device is in landscape mode
+export const isLandscape = () => screenWidth > screenHeight;
+
+// Get responsive dimensions
+export const getResponsiveDimensions = () => ({
+  width: screenWidth,
+  height: screenHeight,
+  isLandscape: isLandscape(),
+  isTablet: screenWidth >= 768,
+  isDesktop: screenWidth >= 992,
+});
+
+// Create responsive styles with orientation support
+export const createOrientationStyles = (styleCreator) => {
+  return (isLandscape, screenWidth) => {
+    const responsiveProps = {
+      isLandscape,
+      screenWidth,
+      screenHeight,
+      isTablet: screenWidth >= 768,
+      isDesktop: screenWidth >= 992,
+    };
+    
+    return StyleSheet.create(styleCreator(responsiveProps));
+  };
+};
+
+// Common responsive patterns
+export const responsivePatterns = {
+  // Grid columns based on screen size
+  getGridColumns: (screenWidth) => {
+    if (screenWidth >= 992) return 3; // Desktop
+    if (screenWidth >= 768) return 2; // Tablet
+    return 1; // Mobile
+  },
+  
+  // Card width based on screen size
+  getCardWidth: (screenWidth, isLandscape) => {
+    if (isLandscape) {
+      return screenWidth >= 992 ? '30%' : '45%';
+    }
+    return screenWidth >= 768 ? '45%' : '100%';
+  },
+  
+  // Font size scaling
+  getScaledFontSize: (baseSize, screenWidth) => {
+    const scale = Math.min(screenWidth / 375, 1.2); // Scale based on iPhone width
+    return Math.round(baseSize * scale);
+  },
+  
+  // Padding scaling
+  getScaledPadding: (basePadding, screenWidth) => {
+    const scale = Math.min(screenWidth / 375, 1.1);
+    return Math.round(basePadding * scale);
+  },
+};
+
+// Pre-built responsive style creators
+export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWidth }) => ({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fffe',
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  headerSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  welcomeCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  headerGradient: {
+    padding: 28,
+    alignItems: 'center',
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 10,
+  },
+  quickActionsSection: {
+    paddingHorizontal: 20,
+    marginTop: 32,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  quickActionsContainer: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    flexWrap: isLandscape ? 'wrap' : 'nowrap',
+    justifyContent: isLandscape ? 'space-around' : 'center',
+    gap: isLandscape ? 16 : 20,
+  },
+  quickActionCard: {
+    flex: isLandscape ? 1 : undefined,
+    width: isLandscape ? '45%' : '100%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    minHeight: isLandscape ? 100 : 120,
+    alignItems: 'center',
+  },
+  quickActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  quickActionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  consumerDashboardSection: {
+    paddingHorizontal: 20,
+    marginTop: 32,
+  },
+  roleQuickActionsContainer: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    flexWrap: isLandscape ? 'wrap' : 'nowrap',
+    justifyContent: isLandscape ? 'space-around' : 'center',
+    gap: isLandscape ? 16 : 20,
+    marginBottom: 24,
+  },
+  roleQuickActionCard: {
+    flex: isLandscape ? 1 : undefined,
+    width: isLandscape ? '45%' : '100%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    minHeight: isLandscape ? 100 : 120,
+    alignItems: 'center',
+  },
+  roleQuickActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  roleQuickActionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  recentActivityContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  recentActivityTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 16,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityText: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 2,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: '#666',
+  },
+  noActivityContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noActivityText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  noActivitySubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  featuresSection: {
+    paddingHorizontal: 20,
+    marginTop: 32,
+  },
+  sectionTitleMain: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  featuresGrid: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    flexWrap: isLandscape ? 'wrap' : 'nowrap',
+    justifyContent: isLandscape ? 'space-around' : 'center',
+    gap: isLandscape ? 16 : 20,
+  },
+  featureCard: {
+    width: isLandscape ? (screenWidth >= 992 ? '30%' : '45%') : '100%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    minHeight: isLandscape ? 120 : 140,
+    alignItems: 'center',
+  },
+  comingSoonCard: {
+    opacity: 0.7,
+  },
+  featureIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  featureTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  featureDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  featureButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  featureButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  featureButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  comingSoonButton: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  comingSoonText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+}));
+
+export const createStatsStyles = createOrientationStyles(({ isLandscape, screenWidth }) => ({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fffe',
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  header: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  statsContainer: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    flexWrap: isLandscape ? 'wrap' : 'nowrap',
+    justifyContent: isLandscape ? 'space-around' : 'center',
+    gap: isLandscape ? 16 : 20,
+    paddingHorizontal: 20,
+  },
+  statItem: {
+    width: responsivePatterns.getCardWidth(screenWidth, isLandscape),
+    minHeight: isLandscape ? 120 : 140,
+  },
+}));
+
+export const createProfileStyles = createOrientationStyles(({ isLandscape, screenWidth }) => ({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FFFE',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  header: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  statsContainer: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    flexWrap: isLandscape ? 'wrap' : 'nowrap',
+    justifyContent: isLandscape ? 'space-around' : 'center',
+    gap: isLandscape ? 16 : 20,
+    paddingHorizontal: 20,
+  },
+  statItem: {
+    width: responsivePatterns.getCardWidth(screenWidth, isLandscape),
+    minHeight: isLandscape ? 120 : 140,
+  },
+  modalContent: {
+    width: isLandscape ? '60%' : '90%',
+    maxHeight: isLandscape ? '70%' : '80%',
+    padding: isLandscape ? 24 : 20,
+  },
+}));
+
+export const createCropsStyles = createOrientationStyles(({ isLandscape, screenWidth }) => ({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FFFE',
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  header: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  formContainer: {
+    paddingHorizontal: 20,
+    gap: 20,
+  },
+  inputRow: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    gap: isLandscape ? 16 : 20,
+  },
+  inputHalf: {
+    flex: isLandscape ? 1 : undefined,
+    width: isLandscape ? '48%' : '100%',
+  },
+  buttonRow: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    gap: isLandscape ? 16 : 20,
+    marginTop: 20,
+  },
+  buttonHalf: {
+    flex: isLandscape ? 1 : undefined,
+    width: isLandscape ? '48%' : '100%',
+  },
+}));
+
+export default {
+  isLandscape,
+  getResponsiveDimensions,
+  createOrientationStyles,
+  responsivePatterns,
+  createHomeStyles,
+  createStatsStyles,
+  createProfileStyles,
+  createCropsStyles,
+};
