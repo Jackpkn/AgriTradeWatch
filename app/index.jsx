@@ -6,8 +6,7 @@ import logo from "@/assets/images/logo.png";
 import { indexStyles as styles } from "@/components/IndexCss";
 import { GlobalContext } from "@/context/GlobalProvider";
 import { useContext, useEffect, useCallback, useState } from "react";
-import { auth } from "@/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+// Firebase dependencies removed - using API-based authentication
 import { enableScreens } from "react-native-screens";
 import { networkManager } from "@/utils/networkUtils";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -66,30 +65,15 @@ export default function Index() {
     isOnline = true
   } = contextValue || {};
 
-  const onAuthStateChangedApp = useCallback((user) => {
-    try {
-      console.log("Auth state changed:", {
-        hasUser: !!user,
-        userEmail: user?.email || null
-      });
-
-      if (user) {
-        console.log("User authenticated, navigating to home");
-        router.replace("/(tabs)/home");
-      } else {
-        console.log("No user found, staying on landing page");
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error in onAuthStateChanged:", error);
-    }
-  }, []);
-
-  // Listen for Firebase auth state changes
+  // Handle authentication state changes using API-based auth
   useEffect(() => {
-    const sub = onAuthStateChanged(auth, onAuthStateChangedApp);
-    return () => sub();
-  }, [onAuthStateChangedApp]);
+    if (isLogged) {
+      console.log("User authenticated, navigating to home");
+      router.replace("/(tabs)/home");
+    } else if (!isLoading) {
+      console.log("No user found, staying on landing page");
+    }
+  }, [isLogged, isLoading]);
 
   // Remove the duplicate navigation effect that was causing conflicts
   // The Firebase auth state listener above handles navigation properly

@@ -10,8 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlobalContext } from "../../context/GlobalProvider";
 import { router } from "expo-router";
-import { auth } from "../../firebase";
-import { getUserData } from "../../components/crud";
+// Firebase dependencies removed - using API-based authentication
 import OfflineIndicator from "../../components/OfflineIndicator";
 import { useOrientation } from "../../utils/orientationUtils";
 import { createHomeStyles } from "../../utils/responsiveStyles";   
@@ -53,21 +52,7 @@ const home = () => {
     }
   }, [isLogged, isLoading]);
 
-  const getUser = React.useCallback(async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const userData = await getUserData(user.uid);
-        setMainUser(userData);
-      }
-    } catch (error) {
-      console.error("Error getting user:", error);
-    }
-  }, [setMainUser]);
-
-  useEffect(() => {
-    getUser();
-  }, [getUser]);
+  // User data is now managed by GlobalProvider through API authentication
 
   // Function to get user activities (mock data for now)
   const getUserActivities = React.useCallback(async () => {

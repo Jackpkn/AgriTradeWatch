@@ -1,4 +1,4 @@
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+// Firebase storage removed - using API-based image handling
 import React, { useContext, useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, ScrollView, Image, Alert, TouchableOpacity } from "react-native";
 import { Linking, Platform } from "react-native";
@@ -16,7 +16,7 @@ import { getMandatoryLocation } from "@/components/getLocation";
 import { Picker } from "@react-native-picker/picker";
 import { Button } from "react-native-paper";
 import { addCrop } from "@/components/cropsController";
-import { auth } from "@/firebase";
+// Firebase auth removed - using API-based authentication
 import * as ImageManipulator from "expo-image-manipulator";
 import { router } from "expo-router";
 import { useOrientation } from "@/utils/orientationUtils";
@@ -248,17 +248,13 @@ const crops = () => {
     const path =
       mainUser.job.toLowerCase() === "farmer" ? "/farmers" : "/consumers";
 
-    const uploadImageToFirebase = async (uri) => {
+    const handleImageUpload = async (uri) => {
       try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        const storage = getStorage();
-        const storageRef = ref(storage, `images/${Date.now()}`);
-        await uploadBytes(storageRef, blob);
-        const downloadURL = await getDownloadURL(storageRef);
-        return downloadURL;
+        // For now, return the local URI
+        // In production, this would upload to your API server
+        return uri;
       } catch (error) {
-        console.error("Error while uploading image: ", error);
+        console.error("Error while handling image: ", error);
         return "";
       }
     };
@@ -271,7 +267,7 @@ const crops = () => {
           [{ resize: { width: 800 } }],
           { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
         );
-        return await uploadImageToFirebase(manipulatedImage.uri);
+        return await handleImageUpload(manipulatedImage.uri);
       } catch (error) {
         console.error("Error while compressing image: ", error);
         return "";
@@ -291,7 +287,7 @@ const crops = () => {
       };
 
       try {
-        await addCrop(cropData, mainUser.job, auth.currentUser.uid, imageUrl);
+        await addCrop(cropData, mainUser.job, mainUser.id, imageUrl);
         setIsLoading(false);
         Alert.alert("Success", "Crop submitted successfully!");
 
