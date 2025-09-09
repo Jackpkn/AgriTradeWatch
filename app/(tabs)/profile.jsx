@@ -105,22 +105,40 @@ const profile = () => {
     }
   }, [setIsLoading]);
 
-  const handleLanguageChange = (language) => {
+  const handleLanguageChange = async (language) => {
     setSelectedLanguage(language);
-    // TODO: Save language preference to user profile/database
-    Alert.alert("Language Changed", `${language} will be applied to the app.`);
+    try {
+      // Save language preference to user profile
+      await authService.updateUserProfile({ language });
+      Alert.alert("Language Changed", `${language} will be applied to the app.`);
+    } catch (error) {
+      console.error('Error updating language preference:', error);
+      Alert.alert("Error", "Failed to save language preference. Please try again.");
+    }
   };
 
-  const handleUserTypeChange = (userType) => {
+  const handleUserTypeChange = async (userType) => {
     setSelectedUserType(userType);
-    // TODO: Update user type in database
-    Alert.alert("User Type Updated", `Your profile has been updated to ${userType}.`);
+    try {
+      // Update user type in database
+      await authService.updateUserProfile({ job: userType });
+      Alert.alert("User Type Updated", `Your profile has been updated to ${userType}.`);
+    } catch (error) {
+      console.error('Error updating user type:', error);
+      Alert.alert("Error", "Failed to update user type. Please try again.");
+    }
   };
 
-  const handleLocationChange = (location) => {
+  const handleLocationChange = async (location) => {
     setSelectedLocation(location);
-    // TODO: Update location preference in database
-    Alert.alert("Location Updated", `Location preference updated to ${location}.`);
+    try {
+      // Update location preference in database
+      await authService.updateUserProfile({ locationMethod: location });
+      Alert.alert("Location Updated", `Location preference updated to ${location}.`);
+    } catch (error) {
+      console.error('Error updating location preference:', error);
+      Alert.alert("Error", "Failed to update location preference. Please try again.");
+    }
   };
 
   const profileFields = [
