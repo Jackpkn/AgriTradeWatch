@@ -20,6 +20,7 @@ import { authService } from "@/services";
 import Icon from "react-native-vector-icons/Ionicons";
 import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
 import { useOrientation } from "@/utils/orientationUtils";
+import { handleError, ERROR_CONTEXT } from "@/utils/errorHandler";
 
 const profile = () => {
   // Safely get context with error handling
@@ -27,7 +28,7 @@ const profile = () => {
   try {
     contextValue = useContext(GlobalContext);
   } catch (error) {
-    console.error("Error accessing GlobalContext in profile:", error);
+    handleError(error, ERROR_CONTEXT.PROFILE, { showAlert: false });
     contextValue = {};
   }
 
@@ -67,7 +68,10 @@ const profile = () => {
           if (currentUser.locationMethod) setSelectedLocation(currentUser.locationMethod);
         }
       } catch (error) {
-        console.error("Error fetching user data: ", error);
+        handleError(error, ERROR_CONTEXT.PROFILE, { 
+          showAlert: false,
+          customMessage: "Failed to load user data"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -86,7 +90,10 @@ const profile = () => {
         console.log("Cannot open URL:", url);
       }
     } catch (error) {
-      console.error("Error opening About Us URL:", error);
+      handleError(error, ERROR_CONTEXT.PROFILE, { 
+        showAlert: true,
+        customMessage: "Failed to open About Us page"
+      });
     }
   };
   const handleLogout = React.useCallback(async () => {
@@ -99,7 +106,10 @@ const profile = () => {
       router.replace("/");
       console.log("User has been logged out successfully");
     } catch (error) {
-      console.error("Error during logout: ", error);
+      handleError(error, ERROR_CONTEXT.AUTH, { 
+        showAlert: true,
+        customMessage: "Failed to logout. Please try again."
+      });
     } finally {
       setIsLoading(false);
     }
@@ -112,8 +122,10 @@ const profile = () => {
       await authService.updateUserProfile({ language });
       Alert.alert("Language Changed", `${language} will be applied to the app.`);
     } catch (error) {
-      console.error('Error updating language preference:', error);
-      Alert.alert("Error", "Failed to save language preference. Please try again.");
+      handleError(error, ERROR_CONTEXT.PROFILE, { 
+        showAlert: true,
+        customMessage: "Failed to save language preference. Please try again."
+      });
     }
   };
 
@@ -124,8 +136,10 @@ const profile = () => {
       await authService.updateUserProfile({ job: userType });
       Alert.alert("User Type Updated", `Your profile has been updated to ${userType}.`);
     } catch (error) {
-      console.error('Error updating user type:', error);
-      Alert.alert("Error", "Failed to update user type. Please try again.");
+      handleError(error, ERROR_CONTEXT.PROFILE, { 
+        showAlert: true,
+        customMessage: "Failed to update user type. Please try again."
+      });
     }
   };
 
@@ -136,8 +150,10 @@ const profile = () => {
       await authService.updateUserProfile({ locationMethod: location });
       Alert.alert("Location Updated", `Location preference updated to ${location}.`);
     } catch (error) {
-      console.error('Error updating location preference:', error);
-      Alert.alert("Error", "Failed to update location preference. Please try again.");
+      handleError(error, ERROR_CONTEXT.PROFILE, { 
+        showAlert: true,
+        customMessage: "Failed to update location preference. Please try again."
+      });
     }
   };
 
