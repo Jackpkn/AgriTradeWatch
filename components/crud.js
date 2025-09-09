@@ -1,26 +1,9 @@
-// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
-// import { auth, db } from '@/firebase';
-// import { createUserWithEmailAndPassword } from 'firebase/auth';
-// import { doc, getDoc, setDoc, updateDoc, collection, query, onSnapshot, getDocs } from 'firebase/firestore';
-
-// NEW API IMPORTS
+// API IMPORTS
 import { authService, userService, cropsService, farmersService, consumersService } from '@/services';
 
 export const registerUser = async (email, password, user) => {
   try {
-    // FIREBASE REGISTRATION - COMMENTED OUT FOR API MIGRATION
-    // const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // const newUser = userCredential.user;
-    // await setDoc(doc(db, 'users', newUser.uid), {
-    //   email: user.email,
-    //   createdAt: new Date(),
-    //   name: user.name,
-    //   username: user.username,
-    //   job: user.job,
-    //   phoneNumber: user.phoneNumber,
-    // });
-
-    // NEW API REGISTRATION
+    // API REGISTRATION
     const userData = {
       ...user,
       email,
@@ -39,11 +22,7 @@ export const registerUser = async (email, password, user) => {
 
 export const updateUser = async (userId, updatedData) => {
   try {
-    // FIREBASE UPDATE - COMMENTED OUT FOR API MIGRATION
-    // const userDocRef = doc(db, 'users', userId);
-    // await updateDoc(userDocRef, updatedData);
-
-    // NEW API UPDATE
+    // API UPDATE
     const updatedUser = await userService.updateUser(userId, updatedData);
     console.log('User data updated via API');
     return updatedUser;
@@ -55,19 +34,7 @@ export const updateUser = async (userId, updatedData) => {
 
 export const getUserData = async (userId) => {
   try {
-    // FIREBASE GET USER - COMMENTED OUT FOR API MIGRATION
-    // const userDocRef = doc(db, 'users', userId);
-    // const userDoc = await getDoc(userDocRef);
-    // if (userDoc.exists()) {
-    //   console.log('User data:', userDoc.data());
-    //   const userData = userDoc.data();
-    //   return userData;
-    // } else {
-    //   console.log('No such user!');
-    //   return null;
-    // }
-
-    // NEW API GET USER
+    // API GET USER
     const userData = await userService.getUserById(userId);
     console.log('User data retrieved via API:', userData);
     return userData;
@@ -86,19 +53,7 @@ export const getUserData = async (userId) => {
 export const fetchCrops = async (path) => {
   console.log('Fetching crops from collection:', path);
   try {
-    // FIREBASE FETCH CROPS - COMMENTED OUT FOR API MIGRATION
-    // const cropsQuery = query(collection(db, path));
-    // const snapshot = await getDocs(cropsQuery);
-    // const crops = [];
-    // snapshot.forEach((doc) => {
-    //   const cropData = { id: doc.id, ...doc.data() };
-    //   if (cropData.pricePerUnit) {
-    //     console.log(`Raw ${path} crop: ${cropData.name} - Price: ${cropData.pricePerUnit} (${typeof cropData.pricePerUnit})`);
-    //   }
-    //   crops.push(cropData);
-    // });
-
-    // NEW API FETCH CROPS
+    // API FETCH CROPS
     // Map Firebase collection paths to API endpoints
     let crops = [];
     
