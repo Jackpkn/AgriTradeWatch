@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getMandatoryLocation } from "@/components/getLocation";
 import { networkManager, addNetworkListener } from "@/utils/networkUtils";
-// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
-// import { auth } from "@/firebase";
-// import { onAuthStateChanged } from "firebase/auth";
-
-// NEW API IMPORTS
+// API IMPORTS
 import { authService } from "@/services";
 
 // Create context with a safer approach
@@ -30,22 +26,7 @@ export const GlobalProvider = ({ children }) => {
 
   // Authentication state monitoring
   useEffect(() => { 
-    // FIREBASE AUTH STATE - COMMENTED OUT FOR API MIGRATION
-    // const unsubscribe = onAuthStateChanged(auth, (user) => {
-    //   if (user) { 
-    //     setIsLogged(true);
-    //     setIsGuest(false);
-    //     setGuestRole(null);
-    //   } else { 
-    //     setIsLogged(false);
-    //     setIsGuest(false);
-    //     setGuestRole(null);
-    //     setMainUser({});
-    //     setJwt("");
-    //   }
-    // });
-
-    // NEW API AUTH STATE MONITORING
+    // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) { 
         setIsLogged(true);
@@ -121,7 +102,7 @@ export const GlobalProvider = ({ children }) => {
         (error) => {
          
           setIsLoading(false);
-          // The getMandatoryLocation function will handle showing alerts and exiting the app
+         
         },
         setCurrentLocation
       );
@@ -133,47 +114,6 @@ export const GlobalProvider = ({ children }) => {
     }
   }, [locationRequested]);
 
-  // Guest mode utilities - DISABLED: Login is now mandatory
-  /*
-  const loginAsGuest = (role) => {
-    try {
-      if (!role || !['farmer', 'consumer'].includes(role)) {
-        throw new Error('Invalid guest role. Must be "farmer" or "consumer"');
-      }
-      setIsGuest(true);
-      setGuestRole(role);
-      setIsLogged(false);
-      setMainUser({ role, isGuest: true });
-      console.log('User logged in as guest with role:', role);
-    } catch (error) {
-      console.error('Error setting guest mode:', error);
-      throw error;
-    }
-  };
-
-  const logoutGuest = () => {
-    try {
-      setIsGuest(false);
-      setGuestRole(null);
-      setIsLogged(false);
-      setMainUser({});
-      setJwt("");
-      console.log('Guest mode ended');
-    } catch (error) {
-      console.error('Error ending guest mode:', error);
-      throw error;
-    }
-  };
-
-  const requireAuthentication = () => {
-    if (!isLogged && !isGuest) {
-      throw new Error('Authentication required. Please login or continue as guest.');
-    }
-    if (isGuest) {
-      throw new Error('This feature requires login. Please login to continue.');
-    }
-  };
-  */
 
   // Create context value with safe defaults
   const contextValue = {
@@ -202,13 +142,6 @@ export const GlobalProvider = ({ children }) => {
     setMainUser,
     jwt,
     setJwt,
-
-    // Utility functions - Guest functions disabled, login mandatory
-    // loginAsGuest,     // Disabled - guest features not available
-    // logoutGuest,      // Disabled - guest features not available
-    // requireAuthentication, // Disabled - not needed with mandatory login
-
-    // Computed states - Login is now mandatory
     isAuthenticated: isLogged, // Only logged users are authenticated
     userRole: mainUser?.job === 'farmer' ? 'farmer' : 'consumer',
     canAddData: isLogged, // Only logged users can add data
