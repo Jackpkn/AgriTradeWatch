@@ -4,12 +4,12 @@
     "slug": "Agritradewatch",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/logo1.png",
     "scheme": "myapp",
     "newArchEnabled": true,
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/logo.png",
+      "image": "./assets/images/logo1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
+        "foregroundImage": "./assets/images/logo1.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

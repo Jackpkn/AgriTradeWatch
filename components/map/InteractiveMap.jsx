@@ -23,12 +23,33 @@ const InteractiveMap = React.forwardRef(({
 
 
     // Filter and process crop markers
-    const selectedCropMarkers = allCrops
-      .filter((crop) => crop.name?.toLowerCase() === selectedCrop.toLowerCase())
-      .map((crop) => {
-        const lat = crop.location?.coords?.latitude;
-        const lon = crop.location?.coords?.longitude;
-        if (!lat || !lon) return "";
+    const filteredCrops = allCrops.filter((crop) => {
+      if (!crop) return false;
+      const cropNameToCheck = crop.name || crop.commodity;
+      return cropNameToCheck && cropNameToCheck.toLowerCase() === selectedCrop.toLowerCase();
+    });
+    
+    console.log('InteractiveMap: Total crops:', allCrops.length);
+    console.log('InteractiveMap: Selected crop:', selectedCrop);
+    console.log('InteractiveMap: Filtered crops:', filteredCrops.length);
+    
+    const selectedCropMarkers = filteredCrops.map((crop) => {
+        let lat = crop.location?.coords?.latitude;
+        let lon = crop.location?.coords?.longitude;
+        
+        // If coordinates are 0,0 or invalid, generate random coordinates around user location
+        if (!lat || !lon || (lat === 0 && lon === 0)) {
+          // Generate random coordinates within a reasonable range around user location
+          const randomLat = latitude + (Math.random() - 0.5) * 0.01; // ~500m range
+          const randomLon = longitude + (Math.random() - 0.5) * 0.01;
+          lat = randomLat;
+          lon = randomLon;
+          console.log('InteractiveMap: Using generated coordinates for crop:', {
+            cropName: crop.name || crop.commodity,
+            originalCoords: crop.location?.coords,
+            generatedCoords: { lat, lon }
+          });
+        }
 
         // Calculate distance for marker styling
         const distance = Math.sqrt(
@@ -48,7 +69,11 @@ const InteractiveMap = React.forwardRef(({
           })
         }).addTo(map).bindPopup('<div style="font-family: Arial, sans-serif;"><strong>${crop.name}</strong><br>Price: ₹${crop.pricePerUnit}<br>Distance: ${Math.round(distance)}m</div>');`;
       })
-      .join("");
+      .filter(marker => marker !== ""); // Remove empty markers
+    
+    console.log('InteractiveMap: Valid markers created:', selectedCropMarkers.length);
+    
+    const markerHtml = selectedCropMarkers.join("");
 
     // Choose tile layer based on map type
     const tileLayer = selectedMapType === "street"
@@ -115,7 +140,7 @@ const InteractiveMap = React.forwardRef(({
             }).addTo(map);
 
             // Add crop markers
-            ${selectedCropMarkers}
+            ${markerHtml}
 
             console.log('Red marker, circle, and crop markers added to map');
           </script>

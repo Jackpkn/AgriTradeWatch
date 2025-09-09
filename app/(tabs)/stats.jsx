@@ -32,8 +32,8 @@ const stats = () => {
   const { setIsLoading = () => {} } = contextValue || {};
   const [consumerCrops, setConsumerCrops] = useState([]);
   const [farmerCrops, setFarmerCrops] = useState([]);
-  const [consumerCropName, setConsumerCropName] = useState("onion"); // Default selection
-  const [farmerCropName, setFarmerCropName] = useState("onion"); // Default selection
+  const [consumerCropName, setConsumerCropName] = useState(""); // Will be set dynamically
+  const [farmerCropName, setFarmerCropName] = useState(""); // Will be set dynamically
   const [refreshing, setRefreshing] = useState(false);
   const [renderError, setRenderError] = useState(null);
   const [isComponentMounted, setIsComponentMounted] = useState(false);
@@ -70,16 +70,30 @@ const stats = () => {
     return () => subscription?.remove();
   }, []);
 
-  const cropOptions = [
-    { label: "Onion", value: "onion", icon: "🧅" },
-    { label: "Tomato", value: "tomato", icon: "🍅" },
-    { label: "Wheat", value: "wheat", icon: "🌾" },
-    { label: "Lemon", value: "lemon", icon: "🍋" },
-    { label: "Grapes", value: "grape", icon: "🍇" },
-    { label: "Coriander", value: "coriander", icon: "🌿" },
-    { label: "Drumstick", value: "drumstick", icon: "🥬" },
-    { label: "Garlic", value: "garlic", icon: "🧄" },
-  ];
+  // Dynamic crop options based on available data
+  const cropOptions = useMemo(() => {
+    const allCrops = [...consumerCrops, ...farmerCrops];
+    const uniqueCrops = [...new Set(allCrops.map(crop => crop?.name || crop?.commodity).filter(Boolean))];
+    
+    const cropIcons = {
+      'onion': '🧅',
+      'tomato': '🍅',
+      'wheat': '🌾',
+      'lemon': '🍋',
+      'grape': '🍇',
+      'grapes': '🍇',
+      'coriander': '🌿',
+      'drumstick': '🥬',
+      'garlic': '🧄',
+      'default': '🌾'
+    };
+    
+    return uniqueCrops.map(crop => ({
+      label: crop.charAt(0).toUpperCase() + crop.slice(1),
+      value: crop.toLowerCase(),
+      icon: cropIcons[crop.toLowerCase()] || cropIcons.default
+    }));
+  }, [consumerCrops, farmerCrops]);
 
   const CropChart = ({
     cropsArray,
@@ -121,9 +135,27 @@ const stats = () => {
     }
 
     const filteredCrops = cropsArray.filter(
-      (crop) =>
-        crop && crop.name && crop.name.toLowerCase() === cropName.toLowerCase()
+      (crop) => {
+        if (!crop) return false;
+        const cropNameToCheck = crop.name || crop.commodity;
+        return cropNameToCheck && cropNameToCheck.toLowerCase() === cropName.toLowerCase();
+      }
     );
+
+    // Debug logging
+    console.log(`Stats: Filtering ${cropName} from ${cropsArray.length} crops`);
+    console.log(`Stats: Found ${filteredCrops.length} matching crops`);
+    
+    // Show available crop names for debugging
+    const availableCrops = [...new Set(cropsArray.map(crop => crop?.name || crop?.commodity).filter(Boolean))];
+    console.log('Stats: Available crop names:', availableCrops);
+    console.log('Stats: Looking for crop name:', cropName);
+    
+    if (filteredCrops.length > 0) {
+      console.log('Stats: Sample filtered crop:', filteredCrops[0]);
+    } else {
+      console.log('Stats: No crops found. Sample crop data:', cropsArray[0]);
+    }
 
     if (filteredCrops.length === 0) {
       return (
@@ -139,10 +171,10 @@ const stats = () => {
       );
     }
 
-    // Sort by timestamp
+    // Sort by timestamp (handle null dates by using current time)
     filteredCrops.sort((a, b) => {
-      const timestampA = a.location?.timestamp || a.createdAt?.seconds * 1000;
-      const timestampB = b.location?.timestamp || b.createdAt?.seconds * 1000;
+      const timestampA = a.location?.timestamp || a.createdAt?.seconds * 1000 || Date.now();
+      const timestampB = b.location?.timestamp || b.createdAt?.seconds * 1000 || Date.now();
       return timestampA - timestampB;
     });
 
@@ -451,6 +483,18 @@ const stats = () => {
       // Ensure we always set arrays, even if the response is null/undefined
       setConsumerCrops(Array.isArray(consumerData) ? consumerData : []);
       setFarmerCrops(Array.isArray(farmerData) ? farmerData : []);
+      
+      // Debug logging
+      console.log('Stats: Consumer data received:', consumerData?.length || 0, 'items');
+      console.log('Stats: Farmer data received:', farmerData?.length || 0, 'items');
+      if (consumerData && consumerData.length > 0) {
+        console.log('Stats: Sample consumer data:', consumerData[0]);
+        console.log('Stats: Consumer data names:', consumerData.slice(0, 5).map(c => c?.name || c?.commodity));
+      }
+      if (farmerData && farmerData.length > 0) {
+        console.log('Stats: Sample farmer data:', farmerData[0]);
+        console.log('Stats: Farmer data names:', farmerData.slice(0, 5).map(c => c?.name || c?.commodity));
+      }
     } catch (error) {
       console.error("Error fetching crops:", error);
       // Set empty arrays on error to prevent iteration issues
@@ -475,6 +519,18 @@ const stats = () => {
       fetchAllCrops();
     }
   }, [isComponentMounted]);
+
+  // Set default crop names when data is loaded
+  useEffect(() => {
+    if (cropOptions.length > 0) {
+      if (!consumerCropName) {
+        setConsumerCropName(cropOptions[0].value);
+      }
+      if (!farmerCropName) {
+        setFarmerCropName(cropOptions[0].value);
+      }
+    }
+  }, [cropOptions, consumerCropName, farmerCropName]);
 
   const CropSelector = ({ selectedValue, onValueChange, crops, type }) => {
     try {
@@ -512,7 +568,7 @@ const stats = () => {
               </Text>
             </View>
             <Picker
-              selectedValue={selectedValue || "onion"}
+              selectedValue={selectedValue || (cropOptions.length > 0 ? cropOptions[0].value : "")}
               style={styles.picker}
               onValueChange={(value) => {
                 try {

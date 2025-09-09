@@ -1,6 +1,6 @@
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import React, { useContext, useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, Image, Alert } from "react-native";
+import React, { useContext, useState, useEffect, useRef, useMemo } from "react";
+import { View, Text, ScrollView, Image, Alert, TouchableOpacity, Dimensions } from "react-native";
 import { Linking, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppState } from "react-native";
@@ -8,32 +8,46 @@ import { Camera, CameraView } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import { TextInput } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import img from "@/assets/images/Group 2.png";
 import { GlobalContext } from "@/context/GlobalProvider";
 import { getMandatoryLocation } from "@/components/getLocation";
-// import api from "../components/GlobalApi";
 import { Picker } from "@react-native-picker/picker";
-// import { TouchableOpacity } from "react-native";
 import { Button } from "react-native-paper";
 import { addCrop } from "@/components/cropsController";
 import { auth } from "@/firebase";
 import * as ImageManipulator from "expo-image-manipulator";
 import { router } from "expo-router";
+import { useOrientation } from "@/utils/orientationUtils";
 
 const items = [
-  { label: "Wheat", value: "wheat" },
-  { label: "Onion", value: "onion" },
-  { label: "Coriander", value: "coriander" },
-  { label: "Lemon", value: "lemon" },
-  { label: "Grapes", value: "grape" },
-  { label: "Coriander", value: "coriander" },
-  { label: "Tomato", value: "tomato" },
-  { label: "Drumstick", value: "drumstick" },
-  { label: "Garlic", value: "garlic" },
+
+  { label: "Onion", value: "onion", icon: "🧅" },
+  { label: "Tomato", value: "tomato", icon: "🍅" },
+  { label: "Potato", value: "potato", icon: "🥔" },
+  { label: "Drumstick", value: "drumstick", icon: "🥬" },
+  { label: "Carrot", value: "carrot", icon: "🥕" },
+  { label: "Ginger", value: "ginger", icon: "🫚" },
+  { label: "Garlic", value: "garlic", icon: "🧄" },
+  { label: "Green Chilli", value: "green chilli", icon: "🌶️" },
+  { label: "Lemon", value: "lemon", icon: "🍋" },
+  { label: "Chana Dal", value: "chana dal", icon: "🥜" },
+  { label: "Tur Dal", value: "tur dal", icon: "🥜" },
+  { label: "Moong Dal", value: "moong dal", icon: "🥜" },
+  { label: "Banana", value: "banana", icon: "🍌" },
+  { label: "Guava", value: "guava", icon: "🍇" },
+  { label: "Pomegrante", value: "pomegrante", icon: "🍎" },
   // Add more crops as needed
 ];
 
 const crops = () => {
+  // Use orientation hook
+  const { screenData, isLandscape, width, breakpoints } = useOrientation();
+
+  // Create responsive styles
+  const styles = useMemo(() => createStyles(isLandscape, width), [isLandscape, width]);
+
   // Fetch location on mount and on app focus if needed
   useEffect(() => {
     const fetchAndSetLocation = async () => {
@@ -325,220 +339,400 @@ const crops = () => {
     }
   }, [crop, currentLocation, mainUser, photo, setIsLoading]);
   return (
-    <SafeAreaView style={{ backgroundColor: "#eafbe7", flex: 1 }}>
-      {isCameraOpen ? (
-        <View style={{ flex: 1, backgroundColor: "#eafbe7" }}>
-          <CameraView
-            style={{ flex: 1, borderRadius: 18, margin: 12 }}
-            ref={(ref) => setCameraRef(ref)}
-            useSystemSound={true}
-          />
-          <Button
-            mode="contained"
-            style={{
-              position: "absolute",
-              bottom: 32,
-              alignSelf: "center",
-              backgroundColor: "#1F4E3D",
-              borderRadius: 12,
-              paddingHorizontal: 32,
-              elevation: 4,
-            }}
-            textColor="white"
-            onPress={handleTakePicture}
-          >
-            Capture Photo
-          </Button>
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            alignItems: "center",
-            justifyContent: "flex-end",
-            paddingBottom: 32,
-          }}
-        >
-          <View style={{ width: "100%", alignItems: "center", marginTop: 24 }}>
-            <Image
-              source={img}
-              style={{
-                width: 190,
-                height: 190,
-                resizeMode: "contain",
-                marginBottom: 8,
-              }}
-            />
-          </View>
-          <View
-            style={{
-              width: "97%",
-              backgroundColor: "#fff",
-              borderRadius: 24,
-              padding: 18,
-              shadowColor: "#49A760",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.12,
-              shadowRadius: 12,
-              elevation: 6,
-              marginTop: 8,
-            }}
-          >
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 26,
-                marginTop: 8,
-                fontWeight: "bold",
-                color: "#1F4E3D",
-                marginBottom: 8,
-                letterSpacing: 1,
-              }}
-            >
-              Enter Crop Details
-            </Text>
-            <View
-              style={{
-                backgroundColor: "#eafbe7",
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: "#49A760",
-                paddingHorizontal: 8,
-                marginBottom: 16,
-                marginTop: 4,
-                shadowColor: "#49A760",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-            >
-              <Picker
-                selectedValue={crop.name}
-                style={{
-                  height: "auto",
-                  width: "100%",
-                  color: "#1F4E3D",
-                  fontSize: 16,
-                  fontWeight: "bold",
-                  backgroundColor: "#eafbe7",
-                  borderRadius: 8,
-                  paddingLeft: 8,
-                }}
-                dropdownIconColor="#1F4E3D"
-                mode="dropdown"
-                onValueChange={(itemValue) =>
-                  setCrop({ ...crop, name: itemValue })
-                }
+    <SafeAreaView style={styles.container}>
+      <LinearGradient colors={["#f8fffe", "#eafbe7"]} style={styles.gradient}>
+        {isCameraOpen ? (
+          <View style={styles.cameraContainer}>
+            <View style={styles.cameraHeader}>
+              <TouchableOpacity 
+                style={styles.cameraCloseButton}
+                onPress={() => setIsCameraOpen(false)}
               >
-                <Picker.Item label="Select Crop" value="" color="#888" />
-                {items.map((item, idx) => (
-                  <Picker.Item
-                    key={item.value}
-                    label={item.label}
-                    value={item.value}
-                  />
-                ))}
-              </Picker>
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.cameraTitle}>Capture Crop Photo</Text>
             </View>
-            <TextInput
-              style={{
-                marginBottom: 12,
-                backgroundColor: "#eafbe7",
-                borderRadius: 8,
-                fontSize: 16,
-                color: "#1F4E3D",
-              }}
-              mode="flat"
-              label="Price Per Kg"
-              value={crop.pricePerUnit.toString()}
-              onChangeText={(text) => setCrop({ ...crop, pricePerUnit: text })}
-              underlineColor="#49A760"
-              activeUnderlineColor="#49A760"
-              textColor="#1F4E3D"
+            <CameraView
+              style={styles.camera}
+              ref={(ref) => setCameraRef(ref)}
+              useSystemSound={true}
             />
-            <TextInput
-              style={{
-                marginBottom: 12,
-                backgroundColor: "#eafbe7",
-                borderRadius: 8,
-                fontSize: 16,
-                color: "#1F4E3D",
-              }}
-              mode="flat"
-              label="Quantity sold (in kg)"
-              value={crop.quantity.toString()}
-              onChangeText={(text) => setCrop({ ...crop, quantity: text })}
-              underlineColor="#49A760"
-              activeUnderlineColor="#49A760"
-              textColor="#1F4E3D"
-            />
-            <Button
-              mode="contained"
-              style={{
-                marginTop: 12,
-                marginBottom: 8,
-                backgroundColor: "#49A760",
-                width: "60%",
-                alignSelf: "center",
-                borderRadius: 12,
-                elevation: 2,
-              }}
-              textColor="white"
-              onPress={() => setIsCameraOpen(true)}
-            >
-              Open Camera
-            </Button>
-            <Button
-              mode="contained"
-              style={{
-                marginBottom: 8,
-                backgroundColor: "#49A760",
-                width: "60%",
-                alignSelf: "center",
-                borderRadius: 12,
-                elevation: 2,
-              }}
-              textColor="white"
-              onPress={handlePickImageFromGallery}
-            >
-              Add from Gallery
-            </Button>
-            {photo && (
-              <View style={{ alignItems: "center", marginTop: 16 }}>
-                <Image
-                  source={{ uri: photo.uri }}
-                  style={{
-                    width: 180,
-                    height: 180,
-                    borderRadius: 16,
-                    borderWidth: 2,
-                    borderColor: "#49A760",
-                  }}
-                />
-              </View>
-            )}
-            <Button
-              mode="contained"
-              style={{
-                marginTop: 18,
-                marginBottom: 4,
-                backgroundColor: "#1F4E3D",
-                width: "60%",
-                alignSelf: "center",
-                borderRadius: 12,
-                elevation: 2,
-              }}
-              textColor="white"
-              onPress={handleCropSubmit}
-            >
-              Submit
-            </Button>
+            <View style={styles.cameraControls}>
+              <TouchableOpacity 
+                style={styles.captureButton}
+                onPress={handleTakePicture}
+              >
+                <Ionicons name="camera" size={32} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
-        </ScrollView>
-      )}
+        ) : (
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header Section */}
+            <View style={styles.headerSection}>
+              <LinearGradient
+                colors={["#49A760", "#3d8b4f"]}
+                style={styles.headerGradient}
+              >
+                <View style={styles.headerContent}>
+                  <Ionicons name="leaf" size={32} color="#fff" />
+                  <Text style={styles.headerTitle}>Add Crop Data</Text>
+                  <Text style={styles.headerSubtitle}>
+                    Share your crop prices to help the farming community
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* Form Section */}
+            <View style={styles.formContainer}>
+              <View style={styles.formCard}>
+                <Text style={styles.formTitle}>Crop Information</Text>
+                
+                {/* Crop Selection */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Select Crop Commodity</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={crop.name}
+                      style={styles.picker}
+                      dropdownIconColor="#49A760"
+                      mode="dropdown"
+                      onValueChange={(itemValue) =>
+                        setCrop({ ...crop, name: itemValue })
+                      }
+                    >
+                      <Picker.Item label="Choose a crop..." value="" color="#888" />
+                      {items.map((item) => (
+                        <Picker.Item
+                          key={item.value}
+                          label={`${item.icon} ${item.label}`}
+                          value={item.value}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                {/* Price Input */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Price Per Kg (₹)</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    mode="outlined"
+                    placeholder="Enter price per kg"
+                    value={crop.pricePerUnit.toString()}
+                    onChangeText={(text) => setCrop({ ...crop, pricePerUnit: text })}
+                    keyboardType="numeric"
+                    outlineColor="#e0e0e0"
+                    activeOutlineColor="#49A760"
+                    textColor="#1F4E3D"
+                  />
+                </View>
+
+                {/* Quantity Input */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Quantity Sold (kg)</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    mode="outlined"
+                    placeholder="Enter quantity sold"
+                    value={crop.quantity.toString()}
+                    onChangeText={(text) => setCrop({ ...crop, quantity: text })}
+                    keyboardType="numeric"
+                    outlineColor="#e0e0e0"
+                    activeOutlineColor="#49A760"
+                    textColor="#1F4E3D"
+                  />
+                </View>
+
+                {/* Image Upload Section */}
+                <View style={styles.imageSection}>
+                  <Text style={styles.inputLabel}>Add Crop Photo (Optional)</Text>
+                  <Text style={styles.imageSubtext}>
+                    Help others identify the quality of your crop
+                  </Text>
+                  
+                  <View style={styles.imageButtons}>
+                    <TouchableOpacity 
+                      style={styles.imageButton}
+                      onPress={() => setIsCameraOpen(true)}
+                    >
+                      <Ionicons name="camera" size={24} color="#49A760" />
+                      <Text style={styles.imageButtonText}>Take Photo</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.imageButton}
+                      onPress={handlePickImageFromGallery}
+                    >
+                      <Ionicons name="images" size={24} color="#49A760" />
+                      <Text style={styles.imageButtonText}>From Gallery</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {photo && (
+                    <View style={styles.imagePreview}>
+                      <Image
+                        source={{ uri: photo.uri }}
+                        style={styles.previewImage}
+                      />
+                      <TouchableOpacity 
+                        style={styles.removeImageButton}
+                        onPress={() => setPhoto(null)}
+                      >
+                        <Ionicons name="close-circle" size={24} color="#ff6b6b" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* Submit Button */}
+                <TouchableOpacity 
+                  style={styles.submitButton}
+                  onPress={handleCropSubmit}
+                >
+                  <LinearGradient
+                    colors={["#49A760", "#3d8b4f"]}
+                    style={styles.submitGradient}
+                  >
+                    <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                    <Text style={styles.submitButtonText}>Submit Crop Data</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        )}
+      </LinearGradient>
     </SafeAreaView>
   );
 };
 
 export default crops;
+
+// Function to create responsive styles
+const createStyles = (isLandscape, screenWidth) => ({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8fffe",
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  headerSection: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  headerGradient: {
+    padding: isLandscape ? 20 : 24,
+    alignItems: "center",
+  },
+  headerContent: {
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: isLandscape ? 20 : 24,
+    fontWeight: "800",
+    color: "#fff",
+    marginTop: 12,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  headerSubtitle: {
+    fontSize: isLandscape ? 12 : 14,
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  formContainer: {
+    paddingHorizontal: 20,
+  },
+  formCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: isLandscape ? 20 : 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  formTitle: {
+    fontSize: isLandscape ? 18 : 20,
+    fontWeight: "700",
+    color: "#1F4E3D",
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F4E3D",
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    overflow: "hidden",
+  },
+  picker: {
+    height: 50,
+    color: "#1F4E3D",
+  },
+  textInput: {
+    backgroundColor: "#f8f9fa",
+    fontSize: 16,
+  },
+  imageSection: {
+    marginBottom: 24,
+  },
+  imageSubtext: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 16,
+    fontStyle: "italic",
+  },
+  imageButtons: {
+    flexDirection: isLandscape ? "row" : "column",
+    gap: 12,
+    marginBottom: 16,
+  },
+  imageButton: {
+    flex: isLandscape ? 1 : undefined,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f0f9f1",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#49A760",
+    borderStyle: "dashed",
+  },
+  imageButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#49A760",
+    marginLeft: 8,
+  },
+  imagePreview: {
+    alignItems: "center",
+    position: "relative",
+  },
+  previewImage: {
+    width: isLandscape ? 200 : 150,
+    height: isLandscape ? 200 : 150,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#49A760",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: -8,
+    right: isLandscape ? 20 : 10,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  submitButton: {
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  submitGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  // Camera styles
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  cameraHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
+  cameraCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "center",
+    marginRight: 40,
+  },
+  camera: {
+    flex: 1,
+    margin: 12,
+    borderRadius: 18,
+  },
+  cameraControls: {
+    position: "absolute",
+    bottom: 40,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  captureButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 4,
+    borderColor: "#fff",
+  },
+});

@@ -15,8 +15,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlobalContext } from "@/context/GlobalProvider";
 import { router } from "expo-router";
-import { auth } from "@/firebase";
-import { getUserData } from "@/components/crud";
+// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
+// import { auth } from "@/firebase";
+// import { getUserData } from "@/components/crud";
+
+// NEW API IMPORTS
+import { authService } from "@/services";
 import Icon from "react-native-vector-icons/Ionicons";
 import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
 import { useOrientation } from "@/utils/orientationUtils";
@@ -56,13 +60,19 @@ const profile = () => {
     const fetchUserData = async () => {
       try {
         setIsLoading(true);
-        const userData = await getUserData(auth.currentUser.uid);
-        setUser(userData);
         
-        // Set preferences from user data
-        if (userData.userType) setSelectedUserType(userData.userType);
-        if (userData.locationMethod) setSelectedLocation(userData.locationMethod);
-        // Language will be stored in app state/context later
+        // FIREBASE GET USER DATA - COMMENTED OUT FOR API MIGRATION
+        // const userData = await getUserData(auth.currentUser.uid);
+        
+        // NEW API GET USER DATA
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+          
+          // Set preferences from user data
+          if (currentUser.job) setSelectedUserType(currentUser.job);
+          if (currentUser.locationMethod) setSelectedLocation(currentUser.locationMethod);
+        }
       } catch (error) {
         console.error("Error fetching user data: ", error);
       } finally {
@@ -89,7 +99,13 @@ const profile = () => {
   const handleLogout = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      await auth.signOut();
+      
+      // FIREBASE LOGOUT - COMMENTED OUT FOR API MIGRATION
+      // await auth.signOut();
+      
+      // NEW API LOGOUT
+      await authService.logout();
+      
       router.replace("/");
       console.log("User has been logged out successfully");
     } catch (error) {

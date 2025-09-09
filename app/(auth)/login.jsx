@@ -14,9 +14,13 @@ import { Link, router } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
 import { loginStyles as styles } from "@/components/auth/LoginStyle"; 
 import { GlobalContext } from "@/context/GlobalProvider";
-import { auth } from "@/firebase";
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
-import { getUserData } from "@/components/crud";
+// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
+// import { auth } from "@/firebase";
+// import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+// import { getUserData } from "@/components/crud";
+
+// NEW API IMPORTS
+import { authService } from "@/services";
 import { FormInput } from "@/components/auth/FormComponents";
 
 import illustration from "@/assets/images/workers-farm-activity-illustration 2.png";
@@ -33,7 +37,18 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // FIREBASE AUTH STATE - COMMENTED OUT FOR API MIGRATION
+    // const unsubscribe = onAuthStateChanged(auth, (user) => {
+    //   if (user) {
+    //     console.log("User is authenticated, navigating to home.");
+    //     router.replace("/(tabs)/home");
+    //   } else {
+    //     console.log("No authenticated user found, staying on login page.");
+    //   }
+    // });
+
+    // NEW API AUTH STATE MONITORING
+    const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
         console.log("User is authenticated, navigating to home.");
         router.replace("/(tabs)/home");
@@ -62,37 +77,44 @@ const LoginScreen = () => {
         await logoutGuest();
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // FIREBASE LOGIN - COMMENTED OUT FOR API MIGRATION
+      // const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // const user = userCredential.user;
+      // const userData = await getUserData(user.uid);
+      // if (userData) {
+      //   setMainUser(userData);
+      //   setJwt(user.uid);
+      //   setIsLogged(true);
+      // } else {
+      //   throw new Error("Could not find user data.");
+      // }
 
+      // NEW API LOGIN
+      const result = await authService.login(email, password);
+      const { user, token } = result;
+      
       console.log("Login successful:", user.email);
-
-      const userData = await getUserData(user.uid);
-      if (userData) {
-        setMainUser(userData);
-        setJwt(user.uid);
-        setIsLogged(true);
-      } else {
-        throw new Error("Could not find user data.");
-      }
+      setMainUser(user);
+      setJwt(token);
+      setIsLogged(true);
+      
     } catch (error) {
       console.error("Login error:", error);
       let errorMessage = "An error occurred during login. Please try again.";
-      switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-          errorMessage = "Invalid email or password.";
-          break;
-        case 'auth/invalid-email':
-          errorMessage = "Please enter a valid email address.";
-          break;
-        case 'auth/user-disabled':
-          errorMessage = "This account has been disabled.";
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = "Too many failed login attempts. Please try again later.";
-          break;
+      
+      // Handle API errors
+      if (error.status === 401) {
+        errorMessage = "Invalid email or password.";
+      } else if (error.status === 400) {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.status === 403) {
+        errorMessage = "This account has been disabled.";
+      } else if (error.status === 429) {
+        errorMessage = "Too many failed login attempts. Please try again later.";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
       Alert.alert("Login Failed", errorMessage);
     } finally {
       setIsLoading(false);

@@ -16,9 +16,13 @@ import { Link, router } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
 
 import { GlobalContext } from "@/context/GlobalProvider";
-import { auth } from "@/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { registerUser } from "@/components/crud";
+// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
+// import { auth } from "@/firebase";
+// import { onAuthStateChanged } from "firebase/auth";
+// import { registerUser } from "@/components/crud";
+
+// NEW API IMPORTS
+import { authService } from "@/services";
 import { FormInput, SelectionButton, SelectionModal } from "@/components/auth/FormComponents"; 
 import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
 
@@ -46,12 +50,22 @@ const SignUp = () => {
   const [selectedLocation, setSelectedLocation] = useState("Auto-detect Current");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // FIREBASE AUTH STATE - COMMENTED OUT FOR API MIGRATION
+    // const unsubscribe = onAuthStateChanged(auth, (user) => {
+    //   if (user) {
+    //     console.log("User authenticated, navigating to home.");
+    //     router.replace("/(tabs)/home");
+    //   }
+    // });
+
+    // NEW API AUTH STATE MONITORING
+    const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
         console.log("User authenticated, navigating to home.");
         router.replace("/(tabs)/home");
       }
     });
+    
     return () => unsubscribe();
   }, []);
 
@@ -82,13 +96,30 @@ const SignUp = () => {
         locationMethod: selectedLocation,
       };
 
-      const newUser = await registerUser(email, password, userData);
-       
-      setMainUser(newUser); 
+      // FIREBASE REGISTRATION - COMMENTED OUT FOR API MIGRATION
+      // const newUser = await registerUser(email, password, userData);
+      // setMainUser(newUser);
+
+      // NEW API REGISTRATION
+      const result = await authService.register(userData);
+      const { user, token } = result;
+      
+      setMainUser(user);
       Alert.alert("Success", "Account created successfully!");
+      
     } catch (error) {
       console.error("Registration Error:", error);
-      Alert.alert("Registration Failed", error.message || "An unexpected error occurred.");
+      let errorMessage = "An unexpected error occurred.";
+      
+      if (error.status === 400) {
+        errorMessage = "Invalid registration data. Please check your input.";
+      } else if (error.status === 409) {
+        errorMessage = "An account with this email already exists.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert("Registration Failed", errorMessage);
     } finally {
       setIsLoading(false);
     }

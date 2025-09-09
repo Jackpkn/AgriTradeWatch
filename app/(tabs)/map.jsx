@@ -188,18 +188,43 @@ const Map = () => {
       "filterCrops",
       performance.now() - startTime
     );
+    
+    // Debug logging for map points
+    console.log('Map: Total crops available:', allCrops.length);
+    console.log('Map: Selected crop:', selectedCrop);
+    console.log('Map: Marker position:', markerPosition);
+    console.log('Map: Radius:', radius);
+    console.log('Map: Filtered crops in radius:', result.length);
+    
+    if (allCrops.length > 0) {
+      const sampleCrop = allCrops[0];
+      console.log('Map: Sample crop location:', sampleCrop.location);
+      console.log('Map: Sample crop coords:', sampleCrop.location?.coords);
+    }
+    
     return result;
   }, [allCrops, markerPosition, radius, selectedCrop, filterCropsInRadius]);
 
   // Filter consumers within radius
   const consumersInRadius = useMemo(
-    () =>
-      filterCropsInRadius(
+    () => {
+      const result = filterCropsInRadius(
         allConsumerCrops,
         markerPosition,
         radius,
         selectedCrop
-      ),
+      );
+      
+      console.log('Map: Consumers in radius calculation:', {
+        totalConsumerCrops: allConsumerCrops.length,
+        markerPosition,
+        radius,
+        selectedCrop,
+        consumersInRadius: result.length
+      });
+      
+      return result;
+    },
     [
       allConsumerCrops,
       markerPosition,
@@ -247,9 +272,11 @@ const Map = () => {
       setPriceLoading(true);
       
       // Filter crops by the selected crop type
-      const relevantCrops = allCrops.filter(crop => 
-        crop.name?.toLowerCase() === selectedCrop.toLowerCase()
-      );
+      const relevantCrops = allCrops.filter(crop => {
+        if (!crop) return false;
+        const cropNameToCheck = crop.name || crop.commodity;
+        return cropNameToCheck && cropNameToCheck.toLowerCase() === selectedCrop.toLowerCase();
+      });
       
       if (relevantCrops.length === 0) {
         setPriceData(prev => ({
@@ -264,7 +291,7 @@ const Map = () => {
       // Filter by date range if needed
       if (dateRange === 'custom' && startDate && endDate) {
         filteredCrops = relevantCrops.filter(crop => {
-          if (!crop.createdAt) return false;
+          if (!crop.createdAt || !crop.createdAt.seconds) return false;
           
           const cropDate = new Date(crop.createdAt.seconds * 1000);
           return cropDate >= startDate && cropDate <= endDate;
@@ -275,7 +302,7 @@ const Map = () => {
         const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
         
         filteredCrops = relevantCrops.filter(crop => {
-          if (!crop.createdAt) return false;
+          if (!crop.createdAt || !crop.createdAt.seconds) return false;
           const cropDate = new Date(crop.createdAt.seconds * 1000);
           return cropDate >= startOfDay && cropDate < endOfDay;
         });
@@ -286,7 +313,7 @@ const Map = () => {
         const endOfYesterday = new Date(startOfYesterday.getTime() + 24 * 60 * 60 * 1000);
         
         filteredCrops = relevantCrops.filter(crop => {
-          if (!crop.createdAt) return false;
+          if (!crop.createdAt || !crop.createdAt.seconds) return false;
           const cropDate = new Date(crop.createdAt.seconds * 1000);
           return cropDate >= startOfYesterday && cropDate < endOfYesterday;
         });
