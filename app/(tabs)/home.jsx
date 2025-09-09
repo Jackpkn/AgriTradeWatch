@@ -2,10 +2,8 @@ import React, { useContext, useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,8 +14,7 @@ import { auth } from "../../firebase";
 import { getUserData } from "../../components/crud";
 import OfflineIndicator from "../../components/OfflineIndicator";
 import { useOrientation } from "../../utils/orientationUtils";
-import { createHomeStyles } from "../../utils/responsiveStyles";
-import { colors, typography, spacing, shadows } from "../../theme";   
+import { createHomeStyles } from "../../utils/responsiveStyles";   
 
 const home = () => {
   // Safely get context with error handling

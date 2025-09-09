@@ -8,7 +8,6 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
-  Dimensions
 } from "react-native";
 import React, { useContext, useEffect, useState, useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";

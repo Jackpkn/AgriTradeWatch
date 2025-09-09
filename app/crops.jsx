@@ -1,6 +1,6 @@
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import React, { useContext, useState, useEffect, useRef, useMemo } from "react";
-import { View, Text, ScrollView, Image, Alert, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, ScrollView, Image, Alert, TouchableOpacity } from "react-native";
 import { Linking, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppState } from "react-native";
