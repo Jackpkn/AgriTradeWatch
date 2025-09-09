@@ -15,11 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlobalContext } from "@/context/GlobalProvider";
 import { router } from "expo-router";
-// FIREBASE IMPORTS - COMMENTED OUT FOR API MIGRATION
-// import { auth } from "@/firebase";
-// import { getUserData } from "@/components/crud";
-
-// NEW API IMPORTS
+// API IMPORTS
 import { authService } from "@/services";
 import Icon from "react-native-vector-icons/Ionicons";
 import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
@@ -61,10 +57,7 @@ const profile = () => {
       try {
         setIsLoading(true);
         
-        // FIREBASE GET USER DATA - COMMENTED OUT FOR API MIGRATION
-        // const userData = await getUserData(auth.currentUser.uid);
-        
-        // NEW API GET USER DATA
+        // API GET USER DATA
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
@@ -100,10 +93,7 @@ const profile = () => {
     try {
       setIsLoading(true);
       
-      // FIREBASE LOGOUT - COMMENTED OUT FOR API MIGRATION
-      // await auth.signOut();
-      
-      // NEW API LOGOUT
+      // API LOGOUT
       await authService.logout();
       
       router.replace("/");
