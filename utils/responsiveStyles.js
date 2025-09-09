@@ -448,15 +448,18 @@ export const createProfileStyles = createOrientationStyles(({ isLandscape, scree
 export const createCropsStyles = createOrientationStyles(({ isLandscape, screenWidth }) => ({
   container: {
     flex: 1,
-    backgroundColor: '#F8FFFE',
+    backgroundColor: '#f8fffe',
   },
   gradient: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: 40,
   },
-  header: {
+  headerSection: {
     marginHorizontal: 20,
     marginTop: 20,
     marginBottom: 24,
@@ -466,7 +469,28 @@ export const createCropsStyles = createOrientationStyles(({ isLandscape, screenW
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 6,
+    elevation: 8,
+  },
+  headerGradient: {
+    padding: isLandscape ? 20 : 24,
+    alignItems: 'center',
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: isLandscape ? 20 : 24,
+    fontWeight: '800',
+    color: '#fff',
+    marginTop: 12,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    fontSize: isLandscape ? 12 : 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   formContainer: {
     paddingHorizontal: 20,
@@ -488,6 +512,178 @@ export const createCropsStyles = createOrientationStyles(({ isLandscape, screenW
   buttonHalf: {
     flex: isLandscape ? 1 : undefined,
     width: isLandscape ? '48%' : '100%',
+  },
+  cameraContainer: {
+    height: isLandscape ? 200 : 250,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+  },
+  cameraView: {
+    flex: 1,
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  submitButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 20,
+  },
+  submitButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  formCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#fff',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    height: 50,
+  },
+  imageSection: {
+    marginBottom: 20,
+  },
+  imageSubtext: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+  },
+  imageButtons: {
+    flexDirection: isLandscape ? 'row' : 'column',
+    gap: 12,
+    marginBottom: 16,
+  },
+  imageButton: {
+    flex: isLandscape ? 1 : undefined,
+    backgroundColor: '#f0f9f1',
+    borderWidth: 2,
+    borderColor: '#49A760',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 60,
+  },
+  imageButtonText: {
+    color: '#49A760',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  imagePreview: {
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 12,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+  },
+  submitGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cameraHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 1,
+  },
+  cameraCloseButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  cameraTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 20,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  captureButton: {
+    backgroundColor: '#49A760',
+    borderRadius: 40,
+    width: 80,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 }));
 
