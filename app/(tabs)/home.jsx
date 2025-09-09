@@ -47,7 +47,7 @@ const home = () => {
   // Redirect to login if not authenticated (mandatory login)
   React.useEffect(() => {
     if (!isLogged && !isLoading) {
-      console.log("Home: User not logged in, redirecting to login (mandatory login)");
+      // User not logged in, redirecting to login
       router.replace("/(auth)/login");
     }
   }, [isLogged, isLoading]);

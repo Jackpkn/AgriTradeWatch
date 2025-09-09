@@ -25,7 +25,7 @@ export default function Index() {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        console.log("Cannot open URL:", url);
+        // Cannot open URL
       }
     } catch (error) {
       console.error("Error opening About Us URL:", error);
@@ -33,14 +33,14 @@ export default function Index() {
   };
 
   const handleRetry = async () => {
-    console.log("Retrying authentication setup...");
+    // Retrying authentication setup
     setAuthError(null);
 
     try {
       if (networkManager) {
         const status = await networkManager.getNetworkStatus();
         if (!status.isConnected) {
-          console.log("Still offline, showing offline message");
+          // Still offline, showing offline message
           return;
         }
       }
@@ -68,10 +68,10 @@ export default function Index() {
   // Handle authentication state changes using API-based auth
   useEffect(() => {
     if (isLogged) {
-      console.log("User authenticated, navigating to home");
+      // User authenticated, navigating to home
       router.replace("/(tabs)/home");
     } else if (!isLoading) {
-      console.log("No user found, staying on landing page");
+      // No user found, staying on landing page
     }
   }, [isLogged, isLoading]);
 

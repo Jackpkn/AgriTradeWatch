@@ -157,11 +157,11 @@ const crops = () => {
         allowsEditing: true,
         quality: 1,
       });
-      console.log("ImagePicker result:", result); // Debug log
+      // Image picker result received
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setPhoto({ uri: result.assets[0].uri });
       } else if (result.canceled) {
-        console.log("Image selection was canceled"); // Debug log
+        // Image selection was canceled
       } else {
         Alert.alert(
           "No images found",
@@ -169,7 +169,7 @@ const crops = () => {
         );
       }
     } catch (error) {
-      console.log("ImagePicker error:", error); // Debug log
+      // Image picker error occurred
       // Alert.alert("Error", "Could not pick image from gallery.");
     }
   }, [hasMediaLibraryPermission]);
