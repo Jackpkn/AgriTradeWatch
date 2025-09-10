@@ -79,7 +79,7 @@ export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWi
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 28,
   },
   headerSection: {
     paddingHorizontal: 20,
@@ -113,61 +113,83 @@ export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWi
     marginBottom: 24,
     lineHeight: 22,
   },
+  statsContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginTop: 20,
+    // marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    // shadowRadius: 12,
+    // elevation: 6,
+  },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
   },
   statItem: {
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginBottom: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
   statLabel: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 13,
+    color: '#ffffff',
     textAlign: 'center',
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 10,
+    width: 2,
+    height: 45,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    marginHorizontal: 8,
+    borderRadius: 1,
   },
   quickActionsSection: {
     paddingHorizontal: 20,
-    marginTop: 32,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#2E7D32',
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
   },
   quickActionsContainer: {
-    flexDirection: isLandscape ? 'row' : 'column',
-    flexWrap: isLandscape ? 'wrap' : 'nowrap',
-    justifyContent: isLandscape ? 'space-around' : 'center',
-    gap: isLandscape ? 16 : 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    columnGap: 12,
+    rowGap: 12,
   },
   quickActionCard: {
-    flex: isLandscape ? 1 : undefined,
-    width: isLandscape ? '45%' : '100%',
+    width: isLandscape || screenWidth >= 768 ? '32%' : '48%',
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
-    minHeight: isLandscape ? 100 : 120,
     alignItems: 'center',
   },
   quickActionIcon: {
@@ -176,60 +198,56 @@ export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWi
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   quickActionText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#2E7D32',
-    marginBottom: 4,
     textAlign: 'center',
   },
   consumerDashboardSection: {
     paddingHorizontal: 20,
-    marginTop: 32,
+    marginTop: 20,
   },
   roleQuickActionsContainer: {
-    flexDirection: isLandscape ? 'row' : 'column',
-    flexWrap: isLandscape ? 'wrap' : 'nowrap',
-    justifyContent: isLandscape ? 'space-around' : 'center',
-    gap: isLandscape ? 16 : 20,
-    marginBottom: 24,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    columnGap: 12,
+    rowGap: 12,
+    marginBottom: 16,
   },
   roleQuickActionCard: {
-    flex: isLandscape ? 1 : undefined,
-    width: isLandscape ? '45%' : '100%',
+    width: isLandscape || screenWidth >= 768 ? '32%' : '48%',
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
-    minHeight: isLandscape ? 100 : 120,
     alignItems: 'center',
   },
   roleQuickActionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   roleQuickActionText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#2E7D32',
-    marginBottom: 4,
     textAlign: 'center',
   },
   recentActivityContainer: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -240,22 +258,22 @@ export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWi
     fontSize: 18,
     fontWeight: '600',
     color: '#2E7D32',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
   activityIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   activityContent: {
     flex: 1,
@@ -271,12 +289,12 @@ export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWi
   },
   noActivityContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: 36,
   },
   noActivityText: {
     fontSize: 16,
     color: '#666',
-    marginTop: 12,
+    marginTop: 10,
     marginBottom: 4,
   },
   noActivitySubtext: {
@@ -286,86 +304,86 @@ export const createHomeStyles = createOrientationStyles(({ isLandscape, screenWi
   },
   featuresSection: {
     paddingHorizontal: 20,
-    marginTop: 32,
+    marginTop: 20,
   },
   sectionTitleMain: {
     fontSize: 24,
     fontWeight: '700',
     color: '#2E7D32',
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
   },
   featuresGrid: {
-    flexDirection: isLandscape ? 'row' : 'column',
-    flexWrap: isLandscape ? 'wrap' : 'nowrap',
-    justifyContent: isLandscape ? 'space-around' : 'center',
-    gap: isLandscape ? 16 : 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    columnGap: 12,
+    rowGap: 12,
   },
   featureCard: {
-    width: isLandscape ? (screenWidth >= 992 ? '30%' : '45%') : '100%',
+    width: isLandscape || screenWidth >= 992 ? '32%' : '48%',
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
-    minHeight: isLandscape ? 120 : 140,
     alignItems: 'center',
   },
   comingSoonCard: {
     opacity: 0.7,
   },
   featureIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   featureTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#2E7D32',
-    marginBottom: 8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   featureDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 16,
+    lineHeight: 18,
+    marginBottom: 12,
   },
   featureButton: {
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
+    width: '100%',
   },
   featureButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    gap: 6,
   },
   featureButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   comingSoonButton: {
     backgroundColor: '#f0f0f0',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
   },
   comingSoonText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -981,512 +999,577 @@ export const createStatsStyles = createOrientationStyles(({ isLandscape, screenW
   },
 }));
 
-export const createProfileStyles = createOrientationStyles(({ isLandscape, screenWidth }) => ({
+export const createProfileStyles = createOrientationStyles(({ isLandscape, screenWidth, isTablet }) => ({
   container: {
-    flex: 1,
-    backgroundColor: '#f8fffe',
-  },
-  gradientBackground: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  headerSection: {
-    alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
-  },
-  avatarContainer: {
-    marginBottom: 20,
-  },
-  avatarGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  avatarText: {
-    fontSize: 40,
-    color: '#fff',
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F4E3D',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  userRole: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
-    textTransform: 'capitalize',
-  },
-  profileCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
-    overflow: 'hidden',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F4E3D',
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '400',
-  },
-  editButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#49A760',
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  fieldsContainer: {
-    padding: 24,
-  },
-  fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8f9fa',
-  },
-  fieldIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f8fffe',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  iconText: {
-    fontSize: 20,
-  },
-  fieldContent: {
-    flex: 1,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  fieldValue: {
-    fontSize: 16,
-    color: '#1F4E3D',
-    fontWeight: '600',
-  },
-  actionsContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    gap: 16,
-  },
-  secondaryButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#49A760',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  secondaryButtonText: {
-    color: '#49A760',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  logoutGradient: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8fffe',
-    paddingHorizontal: 20,
-  },
-  errorCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 40,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-    width: '100%',
-    maxWidth: 320,
-  },
-  errorIcon: {
-    fontSize: 60,
-    marginBottom: 20,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F4E3D',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 30,
-  },
-  loginButton: {
-    backgroundColor: '#49A760',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#666',
-    marginTop: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    width: isLandscape ? '80%' : '90%',
-    maxHeight: isLandscape ? '80%' : '70%',
-    padding: isLandscape ? 24 : 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  modalList: {
-    maxHeight: 300,
-  },
-  modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  selectedModalItem: {
-    backgroundColor: '#e8f5e8',
-  },
-  modalItemFlag: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  modalItemIcon: {
-    fontSize: 24,
-    marginRight: 16,
-  },
-  modalItemContent: {
-    flex: 1,
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  selectedModalItemText: {
-    color: '#49A760',
-    fontWeight: '600',
-  },
-  modalItemDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  toggleSwitch: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    padding: 2,
-    justifyContent: 'center',
-  },
-  toggleCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  comingSoonText: {
-    fontSize: 12,
-    color: '#999',
-    fontStyle: 'italic',
-  },
-  statsContainer: {
-    flexDirection: isLandscape ? 'row' : 'row',
-    flexWrap: isLandscape ? 'nowrap' : 'wrap',
-    justifyContent: isLandscape ? 'space-around' : 'space-between',
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    gap: isLandscape ? 20 : 16,
-  },
-  statItem: {
-    alignItems: 'center',
-    width: isLandscape ? '22%' : '45%',
-  },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#f0f9f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F4E3D',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  bottomSheetStyle: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
-  },
-  aboutSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  aboutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  aboutButtonText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F4E3D',
-    marginLeft: 12,
-  },
-  settingsSection: {
-    marginBottom: 24,
-  },
-  settingsSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F4E3D',
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  settingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f9f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  settingContent: {
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: '#666',
-  },
-  aboutContent: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  aboutLogo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f0f9f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  aboutLogoText: {
-    fontSize: 40,
-  },
-  aboutTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F4E3D',
-    marginBottom: 8,
-  },
-  aboutSubtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  aboutDescription: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  aboutFeatures: {
-    alignSelf: 'stretch',
-    marginBottom: 24,
-  },
-  aboutFeaturesTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F4E3D',
-    marginBottom: 12,
-  },
-  aboutFeature: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 6,
-  },
-  aboutProject: {
-    alignSelf: 'stretch',
-    marginBottom: 24,
-  },
-  aboutProjectTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F4E3D',
-    marginBottom: 12,
-  },
-  aboutProjectText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  aboutVersion: {
-    fontSize: 14,
-    color: '#999',
-    fontStyle: 'italic',
-  },
+      flex: 1,
+      backgroundColor: '#f8fffe',
+    },
+    
+    gradientBackground: {
+      flex: 1,
+    },
+    
+    scrollView: {
+      flex: 1,
+    },
+    
+    scrollContent: {
+      paddingBottom: 30,
+    },
+    
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+    },
+    
+    loadingText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#49A760',
+      marginBottom: 8,
+    },
+    
+    loadingSubText: {
+      fontSize: 14,
+      color: '#666',
+      textAlign: 'center',
+    },
+    
+    // Header Section
+    headerSection: {
+      alignItems: 'center',
+      paddingTop: 20,
+      paddingBottom: 30,
+      paddingHorizontal: 20,
+    },
+    
+    avatarContainer: {
+      position: 'relative',
+      marginBottom: 16,
+    },
+    
+    avatarGradient: {
+      width:  isLandscape || screenWidth >= 768 ? 120 : 100,
+      height: isTablet ? 120 : 100,
+      borderRadius: isTablet ? 60 : 50,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#49A760',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    
+    avatarText: {
+      fontSize: isLandscape || screenWidth >= 768 ? 42 : 36,
+      fontWeight: 'bold',
+      color: 'white',
+    },
+    
+    onlineIndicator: {
+      position: 'absolute',
+      bottom: 5,
+      right: 5,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: '#4CAF50',
+      borderWidth: 3,
+      borderColor: 'white',
+    },
+    
+    userName: {
+      fontSize: isLandscape || screenWidth >= 768 ? 28 : 24,
+      fontWeight: 'bold',
+      color: '#2C3E50',
+      marginBottom: 4,
+      textAlign: 'center',
+    },
+    
+    userRole: {
+      fontSize: isLandscape || screenWidth >= 768 ? 18 : 16,
+      color: '#7F8C8D',
+      marginBottom: 12,
+    },
+    
+    badgeContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    
+    verifiedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#E8F5E8',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    
+    badgeText: {
+      fontSize: 12,
+      color: '#49A760',
+      fontWeight: '600',
+      marginLeft: 4,
+    },
+    
+    // Profile Cards
+    profileCard: {
+      backgroundColor: 'white',
+      marginHorizontal: isLandscape || screenWidth >= 768 ? 30 : 20,
+      marginBottom: 20,
+      borderRadius: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+      overflow: 'hidden',
+    },
+    
+    cardHeader: {
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F5F5F5',
+    },
+    
+    cardTitle: {
+      fontSize: isLandscape || screenWidth >= 768 ? 20 : 18,
+      fontWeight: 'bold',
+      color: '#2C3E50',
+      marginBottom: 4,
+    },
+    
+    cardSubtitle: {
+      fontSize: 14,
+      color: '#7F8C8D',
+    },
+    
+    editButton: {
+      position: 'absolute',
+      right: 20,
+      top: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F0F9F0',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    
+    editButtonText: {
+      fontSize: 14,
+      color: '#49A760',
+      fontWeight: '600',
+      marginLeft: 4,
+    },
+    
+    fieldsContainer: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    
+    fieldRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F8F9FA',
+    },
+    
+    fieldIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#F8F9FA',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    
+    iconText: {
+      fontSize: 18,
+    },
+    
+    fieldContent: {
+      flex: 1,
+    },
+    
+    fieldLabel: {
+      fontSize: 14,
+      color: '#7F8C8D',
+      marginBottom: 4,
+    },
+    
+    fieldValue: {
+      fontSize: 16,
+      color: '#2C3E50',
+      fontWeight: '500',
+    },
+    
+    comingSoonBadge: {
+      backgroundColor: '#FFF3CD',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    
+    comingSoonText: {
+      fontSize: 12,
+      color: '#856404',
+      fontWeight: '500',
+    },
+    
+    // Statistics
+    statsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+      justifyContent: 'space-between',
+    },
+    
+    statItem: {
+      width: isLandscape ? '22%' : '45%',
+      alignItems: 'center',
+      backgroundColor: '#FAFBFC',
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 12,
+    },
+    
+    statIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    
+    statNumber: {
+      fontSize: isLandscape || screenWidth >= 768 ? 24 : 20,
+      fontWeight: 'bold',
+      color: '#2C3E50',
+      marginBottom: 4,
+    },
+    
+    statLabel: {
+      fontSize: 12,
+      color: '#7F8C8D',
+      textAlign: 'center',
+    },
+    
+    // Action Buttons
+    actionsContainer: {
+      flexDirection: isLandscape ? 'row' : 'column',
+      paddingHorizontal: isLandscape || screenWidth >= 768 ? 30 : 20,
+      marginBottom: 20,
+      gap: 12,
+    },
+    
+    secondaryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'white',
+      paddingVertical: 16,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: '#49A760',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    
+    secondaryButtonText: {
+      fontSize: 16,
+      color: '#49A760',
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+    
+    logoutButton: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    
+    logoutGradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+    },
+    
+    logoutButtonText: {
+      fontSize: 16,
+      color: 'white',
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+    
+    // About Section
+    aboutSection: {
+    paddingHorizontal: isLandscape || screenWidth >= 768 ? 30 : 20,
+      alignItems: 'center',
+    },
+    
+    aboutButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'white',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderRadius: 25,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    
+    aboutButtonText: {
+      fontSize: 14,
+      color: '#49A760',
+      fontWeight: '500',
+      marginLeft: 8,
+      marginRight: 8,
+    },
+    
+    versionText: {
+      fontSize: 12,
+      color: '#BDC3C7',
+    },
+    
+    // Modal Styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    
+    modalContent: {
+      backgroundColor: 'white',
+      maxHeight: screenHeight * 0.9,
+      minHeight: screenHeight * 0.5,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingBottom: 16,
+    },
+    
+    bottomSheetStyle: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 20,
+    },
+    
+    modalHandle: {
+      width: 40,
+      height: 4,
+      backgroundColor: '#E0E0E0',
+      borderRadius: 2,
+      alignSelf: 'center',
+      marginTop: 12,
+      marginBottom: 20,
+    },
+    
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      paddingBottom: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F5F5F5',
+    },
+    
+    modalTitle: {
+      fontSize: isLandscape || screenWidth >= 768 ? 22 : 20,
+      fontWeight: 'bold',
+      color: '#2C3E50',
+    },
+    
+    closeButton: {
+      padding: 4,
+      borderRadius: 20,
+      backgroundColor: '#F5F5F5',
+    },
+    
+    modalList: {
+      flex: 1,
+      paddingHorizontal: 24,
+      maxHeight: screenHeight * 0.7,
+    },
+    
+    modalItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginVertical: 4,
+      backgroundColor: '#FAFBFC',
+    },
+    
+    selectedModalItem: {
+      backgroundColor: '#E8F5E8',
+      borderWidth: 2,
+      borderColor: '#49A760',
+    },
+    
+    modalItemIcon: {
+      fontSize: 24,
+      marginRight: 16,
+    },
+    
+    modalItemContent: {
+      flex: 1,
+    },
+    
+    modalItemText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#2C3E50',
+      marginBottom: 4,
+    },
+    
+    selectedModalItemText: {
+      color: '#49A760',
+    },
+    
+    modalItemDescription: {
+      fontSize: 14,
+      color: '#7F8C8D',
+      lineHeight: 20,
+    },
+    
+    // Error Screens
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      backgroundColor: '#f8fffe',
+    },
+    
+    errorCard: {
+      backgroundColor: 'white',
+      padding: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+      maxWidth: 400,
+      width: '100%',
+    },
+    
+    errorIcon: {
+      fontSize: 64,
+      marginBottom: 20,
+    },
+    
+    errorTitle: {
+      fontSize: isLandscape || screenWidth >= 768 ? 24 : 20,
+      fontWeight: 'bold',
+      color: '#2C3E50',
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    
+    errorMessage: {
+      fontSize: 16,
+      color: '#7F8C8D',
+      textAlign: 'center',
+      lineHeight: 24,
+      marginBottom: 32,
+    },
+    
+    loginButton: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      width: '100%',
+    },
+    
+    loginButtonGradient: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    
+    loginButtonText: {
+      fontSize: 16,
+      color: 'white',
+      fontWeight: '600',
+    },
+    
+    // Responsive adjustments
+    ...(isLandscape || screenWidth >= 768 && {
+      scrollContent: {
+        paddingHorizontal: 40,
+        paddingBottom: 50,
+      },
+      
+      headerSection: {
+        paddingTop: 40,
+        paddingBottom: 50,
+      },
+      
+      profileCard: {
+        marginHorizontal: 0,
+        marginBottom: 30,
+      },
+      
+      actionsContainer: {
+        paddingHorizontal: 0,
+        marginBottom: 30,
+      },
+      
+      aboutSection: {
+        paddingHorizontal: 0,
+      },
+    }),
+    
+    // Landscape specific styles
+    ...(isLandscape && {
+      headerSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 40,
+      },
+      
+      avatarContainer: {
+        marginRight: 30,
+        marginBottom: 0,
+      },
+      
+      userInfo: {
+        flex: 1,
+        alignItems: 'flex-start',
+      },
+      
+      statsContainer: {
+        justifyContent: 'space-around',
+      },
+      
+      statItem: {
+        width: '22%',
+      }
+    })
 }));
 
 export default {

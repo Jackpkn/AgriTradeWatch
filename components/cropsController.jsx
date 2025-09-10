@@ -34,12 +34,7 @@ export const addCrop = async (crop, job = "farmers", userID, imageUri = "") => {
 
 export const getAllCrops = async (job) => {
   try {
-    // FIREBASE GET ALL CROPS - COMMENTED OUT FOR API MIGRATION
-    // const querySnapshot = await getDocs(collection(db, job));
-    // const crops = querySnapshot.docs.map(doc => doc.data());
-    // return crops;
-
-    // NEW API GET ALL CROPS
+ 
     let crops = [];
     if (job === 'consumer') {
       crops = await consumersService.getAllConsumers();
@@ -66,8 +61,6 @@ export const getAllCrops = async (job) => {
 
 export const getCropById = async (userId, job = 'farmers') => {
   try {
-    // FIREBASE GET CROP BY ID - COMMENTED OUT FOR API MIGRATION
-    // Implementation was empty in Firebase version
 
     // NEW API GET CROP BY ID
     if (job === 'consumer') {

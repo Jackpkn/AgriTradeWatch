@@ -8,15 +8,14 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { GlobalContext } from "../../context/GlobalProvider";
-import { router } from "expo-router";
-// Firebase dependencies removed - using API-based authentication
-import OfflineIndicator from "../../components/OfflineIndicator";
-import { useOrientation } from "../../utils/orientationUtils";
-import { createHomeStyles } from "../../utils/responsiveStyles";   
+import { GlobalContext } from "@/context/GlobalProvider";
+import { router } from "expo-router"; 
+import OfflineIndicator from "@/components/OfflineIndicator";
+import { useOrientation } from "@/utils/orientationUtils";
+import { createHomeStyles } from "@/utils/responsiveStyles";   
 
 const home = () => {
-  // Safely get context with error handling
+ 
   let contextValue;
   try {
     contextValue = useContext(GlobalContext);
@@ -27,12 +26,19 @@ const home = () => {
 
   const {
     setMainUser = () => {},
+    setIsLoading = () => {},
     isLogged = false,
     isGuest = false,
     guestRole = null,
     userRole = null,
     mainUser = {},
-    isLoading = true
+    isLoading = true,
+    setIsLogged = () => {},
+    setJwt = () => {},
+    setGuestRole = () => {},
+    setGuestUser = () => {},
+    setGuestToken = () => {},
+    setGuestData = () => {},
   } = contextValue || {};
 
   // State for user activities
@@ -246,20 +252,23 @@ const home = () => {
                     : "Please login to access your account"
                   }
                 </Text>
-                <View style={styles.statsRow}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>3</Text>
-                    <Text style={styles.statLabel}>Core Features</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>24/7</Text>
-                    <Text style={styles.statLabel}>Price Updates</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>Coming</Text>
-                    <Text style={styles.statLabel}>Digital Thela</Text>
+                {/* Stats Container */}
+                <View style={styles.statsContainer}>
+                  <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>3</Text>
+                      <Text style={styles.statLabel}>Core Features</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>24/7</Text>
+                      <Text style={styles.statLabel}>Price Updates</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>Coming</Text>
+                      <Text style={styles.statLabel}>Digital Thela</Text>
+                    </View>
                   </View>
                 </View>
               </LinearGradient>
@@ -268,6 +277,59 @@ const home = () => {
 
           {/* Offline Indicator */}
           <OfflineIndicator />
+
+          {/* Main Features (moved above) */}
+          <View style={styles.featuresSection}>
+            <Text style={styles.sectionTitleMain}>Core Features</Text>
+            <View style={styles.featuresGrid}>
+              {features.map((feature) => (
+                <TouchableOpacity
+                  key={feature.id}
+                  style={[
+                    styles.featureCard,
+                    feature.title === "Digital Thela" && styles.comingSoonCard
+                  ]}
+                  onPress={feature.title === "Digital Thela" ? null : () => router.push(feature.route)}
+                  disabled={feature.title === "Digital Thela"}
+                >
+                  <View
+                    style={[
+                      styles.featureIconContainer,
+                      { backgroundColor: feature.bgColor },
+                    ]}
+                  >
+                    <Ionicons
+                      name={feature.icon}
+                      size={32}
+                      color={feature.gradient[0]}
+                    />
+                  </View>
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureDescription}>
+                    {feature.description}
+                  </Text>
+                  {feature.title === "Digital Thela" ? (
+                    <View style={styles.comingSoonButton}>
+                      <Text style={styles.comingSoonText}>Coming Soon</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.featureButton}
+                      onPress={() => router.push(feature.route)}
+                    >
+                      <LinearGradient
+                        colors={feature.gradient}
+                        style={styles.featureButtonGradient}
+                      >
+                        <Text style={styles.featureButtonText}>Explore</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#fff" />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {/* Quick Actions */}
           <View style={styles.quickActionsSection}>
@@ -347,58 +409,6 @@ const home = () => {
             </View>
           )}
 
-          {/* Main Features */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitleMain}>Core Features</Text>
-            <View style={styles.featuresGrid}>
-              {features.map((feature) => (
-                <TouchableOpacity
-                  key={feature.id}
-                  style={[
-                    styles.featureCard,
-                    feature.title === "Digital Thela" && styles.comingSoonCard
-                  ]}
-                  onPress={feature.title === "Digital Thela" ? null : () => router.push(feature.route)}
-                  disabled={feature.title === "Digital Thela"}
-                >
-                  <View
-                    style={[
-                      styles.featureIconContainer,
-                      { backgroundColor: feature.bgColor },
-                    ]}
-                  >
-                    <Ionicons
-                      name={feature.icon}
-                      size={32}
-                      color={feature.gradient[0]}
-                    />
-                  </View>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>
-                    {feature.description}
-                  </Text>
-                  {feature.title === "Digital Thela" ? (
-                    <View style={styles.comingSoonButton}>
-                      <Text style={styles.comingSoonText}>Coming Soon</Text>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.featureButton}
-                      onPress={() => router.push(feature.route)}
-                    >
-                      <LinearGradient
-                        colors={feature.gradient}
-                        style={styles.featureButtonGradient}
-                      >
-                        <Text style={styles.featureButtonText}>Explore</Text>
-                        <Ionicons name="arrow-forward" size={16} color="#fff" />
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>

@@ -9,9 +9,11 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
       if (!crops.length) return [];
 
       const cropData = crops.filter(
-        (crop) =>
-          selectedCrop &&
-          crop.name?.toLowerCase() === selectedCrop.toLowerCase()
+        (crop) => {
+          if (!crop || !selectedCrop) return false;
+          const cropNameToCheck = crop.name || crop.commodity;
+          return cropNameToCheck && cropNameToCheck.toLowerCase() === selectedCrop.toLowerCase();
+        }
       );
 
       if (!cropData.length) return [];
@@ -86,7 +88,14 @@ export const calculateConsumerStats = (
     "calculateConsumerStats",
     consumersInRadius.length,
     () => {
+      console.log('calculateConsumerStats: Input data:', {
+        consumersInRadius: consumersInRadius.length,
+        priceUnit,
+        selectedCrop
+      });
+      
       if (!consumersInRadius.length) {
+        console.log('calculateConsumerStats: No consumers in radius');
         return { count: 0, averagePrice: 0, averagePricePerKg: 0 };
       }
 
@@ -104,11 +113,19 @@ export const calculateConsumerStats = (
       const conversionRate = 1.0; // Always 1:1 ratio
       const averagePricePerKg = averagePrice * conversionRate; // Same as averagePrice
 
-      return {
+      const result = {
         count: consumersInRadius.length,
         averagePrice: Math.round(averagePrice),
         averagePricePerKg: Math.round(averagePricePerKg),
       };
+      
+      console.log('calculateConsumerStats: Calculated stats:', {
+        prices: prices.length,
+        validPrices: prices,
+        result
+      });
+      
+      return result;
     }
   );
 };

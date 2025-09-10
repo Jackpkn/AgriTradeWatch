@@ -19,8 +19,7 @@ import { authService } from "@/services";
 import { FormInput } from "@/components/auth/FormComponents";
 
 import illustration from "@/assets/images/workers-farm-activity-illustration 2.png";
-
-// --- Main LoginScreen Component ---
+ 
 const LoginScreen = () => {
   const context = useContext(GlobalContext);
   if (!context) {
@@ -35,10 +34,9 @@ const LoginScreen = () => {
     // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
-        console.log("User is authenticated, navigating to home.");
         router.replace("/(tabs)/home");
-      } else {
-        console.log("No authenticated user found, staying on login page.");
+      } else { 
+        setIsLoading(false);
       }
     });
 
@@ -67,11 +65,13 @@ const LoginScreen = () => {
       const { user, token } = result;
       
       console.log("Login successful:", user.email);
+      setIsLoading(false);
       setMainUser(user);
       setJwt(token);
       setIsLogged(true);
       
     } catch (error) {
+      setIsLoading(false);
       console.error("Login error:", error);
       let errorMessage = "An error occurred during login. Please try again.";
       

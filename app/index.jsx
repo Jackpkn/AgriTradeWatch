@@ -14,7 +14,7 @@ export default function Index() {
   enableScreens();
   const [authError, setAuthError] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true); // Use isLoading from GlobalContext instead
 
   // Handle opening About Us URL
   const handleAboutUsPress = async () => {
@@ -62,7 +62,9 @@ export default function Index() {
   }
 
   const {
-    isOnline = true
+    isOnline = true,
+    isLogged = false,
+    isLoading = true,
   } = contextValue || {};
 
   // Handle authentication state changes using API-based auth

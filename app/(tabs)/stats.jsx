@@ -54,23 +54,7 @@ const stats = () => {
     };
   }, []);
 
-  // Handle orientation changes
-  useEffect(() => {
-    const onChange = (result) => {
-      setScreenData(result.window);
-      setIsLandscape(result.window.width > result.window.height);
-    };
-
-    const subscription = Dimensions.addEventListener("change", onChange);
-
-    // Set initial orientation
-    const initialDimensions = Dimensions.get("window");
-    setScreenData(initialDimensions);
-    setIsLandscape(initialDimensions.width > initialDimensions.height);
-
-    return () => subscription?.remove();
-  }, []);
-
+  
   // Dynamic crop options based on available data
   const cropOptions = useMemo(() => {
     const allCrops = [...consumerCrops, ...farmerCrops];
@@ -143,14 +127,10 @@ const stats = () => {
       }
     );
 
-    // Debug logging
-    console.log(`Stats: Filtering ${cropName} from ${cropsArray.length} crops`);
-    console.log(`Stats: Found ${filteredCrops.length} matching crops`);
+
     
     // Show available crop names for debugging
     const availableCrops = [...new Set(cropsArray.map(crop => crop?.name || crop?.commodity).filter(Boolean))];
-    console.log('Stats: Available crop names:', availableCrops);
-    console.log('Stats: Looking for crop name:', cropName);
     
     if (filteredCrops.length > 0) {
       console.log('Stats: Sample filtered crop:', filteredCrops[0]);
