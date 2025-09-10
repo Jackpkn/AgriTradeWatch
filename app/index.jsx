@@ -6,7 +6,6 @@ import logo from "@/assets/images/logo.png";
 import { indexStyles as styles } from "@/components/IndexCss";
 import { GlobalContext } from "@/context/GlobalProvider";
 import { useContext, useEffect, useCallback, useState } from "react";
-// Firebase dependencies removed - using API-based authentication
 import { enableScreens } from "react-native-screens";
 import { networkManager } from "@/utils/networkUtils";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -14,8 +13,6 @@ export default function Index() {
   enableScreens();
   const [authError, setAuthError] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
-  // const [isLoading, setIsLoading] = useState(true); // Use isLoading from GlobalContext instead
-
   // Handle opening About Us URL
   const handleAboutUsPress = async () => {
     try {
@@ -77,8 +74,6 @@ export default function Index() {
     }
   }, [isLogged, isLoading]);
 
-  // Remove the duplicate navigation effect that was causing conflicts
-  // The Firebase auth state listener above handles navigation properly
 
   // Safely get network status
   const isOffline = !isOnline;

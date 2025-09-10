@@ -1,18 +1,29 @@
 import { View, Text, Image } from "react-native";
 import { Tabs, Redirect } from "expo-router";
-// import {home} from 'react-native-vector-icons/FontAwesome5';
 import Icon from "react-native-vector-icons/Ionicons";
 
 const TabIcon = ({ icon, color, name, focused }) => {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center" }}>
+    <View style={{ 
+      alignItems: "center", 
+      justifyContent: "center",
+      height: 50, 
+      paddingVertical: 5,
+    }}>
       <Icon
         name={icon}
-        size={focused ? 35 : 30}
+        size={focused ? 28 : 24} 
         color={color}
         style={{ fontWeight: "bold" }}
       />
-      {/* <Text>{name}</Text> */}
+      <Text style={{ 
+        fontSize: 10, 
+        color: color, 
+        marginTop: 4,
+        fontWeight: focused ? '600' : '400'
+      }}>
+        {name}
+      </Text>
     </View>
   );
 };
@@ -25,6 +36,19 @@ const TabLayout = () => {
           tabBarShowLabel: false,
           tabBarActiveTintColor: "#49A760",
           tabBarInactiveTintColor: "#BDBDBD",
+          tabBarStyle: {
+            height: 80, // Set explicit height
+            paddingBottom: 10, // Add padding for better spacing
+            paddingTop: 10,
+            backgroundColor: '#FFFFFF', // Ensure background color
+            borderTopWidth: 1,
+            borderTopColor: '#E5E5E5',
+          },
+          tabBarItemStyle: {
+            height: 60, // Set item height
+            justifyContent: 'center',
+            alignItems: 'center',
+          }
         }}
       >
         <Tabs.Screen
@@ -50,7 +74,7 @@ const TabLayout = () => {
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 icon="stats-chart"
-                name="Statistics"
+                name="Stats"
                 color={color}
                 focused={focused}
               />
@@ -63,7 +87,12 @@ const TabLayout = () => {
             title: "Map",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon icon="map" name="Map" color={color} focused={focused} />
+              <TabIcon 
+                icon="map" 
+                name="Map" 
+                color={color} 
+                focused={focused} 
+              />
             ),
           }}
         />
