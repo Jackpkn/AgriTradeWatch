@@ -80,8 +80,7 @@ const Home = React.memo(() => {
   }
 
   const {
-    isLogged = false,
-    isGuest = false,
+    isLogged = false, 
     mainUser = {},
     isLoading = true,
   } = contextValue;
@@ -154,14 +153,14 @@ const Home = React.memo(() => {
   // Authentication check
   useFocusEffect(
     useCallback(() => {
-      if (!isLoading && !isLogged && !isGuest) {
+      if (!isLoading && !isLogged ) {
         const timer = setTimeout(() => {
           router.replace("/(auth)/login");
         }, 100);
         
         return () => clearTimeout(timer);
       }
-    }, [isLogged, isLoading, isGuest])
+    }, [isLogged, isLoading])
   );
 
   // App state listener

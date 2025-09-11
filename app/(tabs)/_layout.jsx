@@ -37,15 +37,15 @@ const TabLayout = () => {
           tabBarActiveTintColor: "#49A760",
           tabBarInactiveTintColor: "#BDBDBD",
           tabBarStyle: {
-            height: 80, // Set explicit height
-            paddingBottom: 10, // Add padding for better spacing
+            height: 80,  
+            paddingBottom: 10, 
             paddingTop: 10,
-            backgroundColor: '#FFFFFF', // Ensure background color
+            backgroundColor: '#FFFFFF',  
             borderTopWidth: 1,
             borderTopColor: '#E5E5E5',
           },
           tabBarItemStyle: {
-            height: 60, // Set item height
+            height: 60,  
             justifyContent: 'center',
             alignItems: 'center',
           }

@@ -1,92 +1,140 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Image, ImageBackground, ScrollView, Text, View, TouchableOpacity, Linking } from "react-native";
+import {
+  Image,
+  ScrollView,
+  Text,
+  View,
+  TouchableOpacity,
+  Linking,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import logo from "@/assets/images/logo.png";
-import { indexStyles as styles } from "@/components/IndexCss";
-import { GlobalContext } from "@/context/GlobalProvider";
-import { useContext, useEffect, useCallback, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { enableScreens } from "react-native-screens";
+import Ionicons from "@expo/vector-icons/Ionicons";
+
+// Local assets & styles
+import logo from "@/assets/images/logo1.png";
+import { indexStyles as styles } from "@/components/IndexCss";
+
+// Context & Utils
+import { GlobalContext, } from "@/context/GlobalProvider";
 import { networkManager } from "@/utils/networkUtils";
-import Icon from "react-native-vector-icons/Ionicons";
+
+// Enable screens for performance
+enableScreens();
+
+// Define props/state types explicitly
+interface AuthErrorState {
+  hasError: boolean;
+  message: string;
+}
+
 export default function Index() {
-  enableScreens();
-  const [authError, setAuthError] = useState(null);
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
-  // Handle opening About Us URL
-  const handleAboutUsPress = async () => {
+  const [authError, setAuthError] = useState<AuthErrorState>({
+    hasError: false,
+    message: "",
+  });
+  const [selectedLanguage] = useState<string>("English");
+
+  // Safely consume context with fallback
+  const contextValue = useContext(GlobalContext) || {
+    isOnline: true,
+    isLogged: false,
+    isLoading: true,
+  };
+
+  const { isOnline = true, isLogged = false, isLoading = true } = contextValue;
+
+  // Memoized handler for About Us
+  const handleAboutUsPress = useCallback(async () => {
+    const url = "https://mandigo.in/page/aboutus/"; // Fixed: removed trailing space
     try {
-      const url = 'https://mandigo.in/page/aboutus/';
       const supported = await Linking.canOpenURL(url);
-      
       if (supported) {
         await Linking.openURL(url);
       } else {
-        // Cannot open URL
+        Alert.alert("Error", "Cannot open link. Please check the URL.");
       }
     } catch (error) {
       console.error("Error opening About Us URL:", error);
+      Alert.alert("Error", "Failed to open About Us page.");
     }
-  };
+  }, []);
 
-  const handleRetry = async () => {
-    // Retrying authentication setup
-    setAuthError(null);
+  // Retry handler — avoid window.location.reload() in React Native
+  const handleRetry = useCallback(async () => {
+    setAuthError({ hasError: false, message: "" });
 
     try {
       if (networkManager) {
         const status = await networkManager.getNetworkStatus();
         if (!status.isConnected) {
-          // Still offline, showing offline message
+          // Still offline — do nothing, UI already reflects this
           return;
         }
       }
-      window.location.reload?.() || router.replace("/");
+
+      // Instead of window.location.reload(), use router.replace for SPA behavior
+      router.replace("/");
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      setAuthError({ hasError: true, message: errorMessage });
       console.error("Error during retry:", error);
-      setAuthError(error);
     }
-  };
+  }, []);
 
-  // Safely get context with error handling
-  let contextValue;
-  try {
-    contextValue = useContext(GlobalContext);
-  } catch (error) {
-    console.error("Error accessing GlobalContext in Index:", error);
-    setAuthError(error);
-    contextValue = {};
-  }
-
-  const {
-    isOnline = true,
-    isLogged = false,
-    isLoading = true,
-  } = contextValue || {};
-
-  // Handle authentication state changes using API-based auth
+  // Handle auth state — navigate if logged in
   useEffect(() => {
-    if (isLogged) {
-      // User authenticated, navigating to home
+    if (isLogged && !isLoading) {
       router.replace("/(tabs)/home");
-    } else if (!isLoading) {
-      // No user found, staying on landing page
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLogged, isLoading]);
 
+  // ======================
+  // RENDER STATES
+  // ======================
 
-  // Safely get network status
-  const isOffline = !isOnline;
-
-  // Show offline state
-  if (isOffline) {
+  // OFFLINE STATE
+  if (!isOnline) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff3cd", justifyContent: "center", alignItems: "center", padding: 20 }}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: "#fff3cd",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
         <View style={{ alignItems: "center", maxWidth: 300 }}>
-          <Text style={{ fontSize: 24, color: "#856404", marginBottom: 8, fontWeight: "bold" }}>📶</Text>
-          <Text style={{ fontSize: 18, color: "#856404", marginBottom: 8, fontWeight: "bold" }}>No Internet Connection</Text>
-          <Text style={{ fontSize: 14, color: "#856404", textAlign: "center", marginBottom: 20, lineHeight: 20 }}>
-            Please turn on your internet connection to use MandiGo. The app needs internet to sync data and authenticate users.
+          <Text style={{ fontSize: 24, color: "#856404", marginBottom: 8, fontWeight: "bold" }}>
+            📶
+          </Text>
+          <Text
+            style={{
+              fontSize: 18,
+              color: "#856404",
+              marginBottom: 8,
+              fontWeight: "bold",
+            }}
+          >
+            No Internet Connection
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: "#856404",
+              textAlign: "center",
+              marginBottom: 20,
+              lineHeight: 20,
+            }}
+          >
+            Please turn on your internet connection to use MandiGo. The app needs internet to sync
+            data and authenticate users.
           </Text>
           <TouchableOpacity
             style={{
@@ -96,11 +144,13 @@ export default function Index() {
               borderRadius: 8,
               marginBottom: 15,
               flexDirection: "row",
-              alignItems: "center"
+              alignItems: "center",
             }}
             onPress={handleRetry}
           >
-            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", marginRight: 8 }}>Check Connection</Text>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", marginRight: 8 }}>
+              Check Connection
+            </Text>
             <Text style={{ color: "#fff", fontSize: 16 }}>🔄</Text>
           </TouchableOpacity>
           <Text style={{ fontSize: 12, color: "#856404", textAlign: "center" }}>
@@ -111,12 +161,24 @@ export default function Index() {
     );
   }
 
-  // Show error state if there's an authentication error (but not offline)
-  if (authError && !isOffline) {
+  // AUTH ERROR STATE
+  if (authError.hasError && isOnline) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#ffe6e6", justifyContent: "center", alignItems: "center", padding: 20 }}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: "#ffe6e6",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 20,
+        }}
+      >
         <View style={{ alignItems: "center", maxWidth: 300 }}>
-          <Text style={{ fontSize: 18, color: "#d32f2f", marginBottom: 8, fontWeight: "bold" }}>Authentication Error</Text>
+          <Text
+            style={{ fontSize: 18, color: "#d32f2f", marginBottom: 8, fontWeight: "bold" }}
+          >
+            Authentication Error
+          </Text>
           <Text style={{ fontSize: 14, color: "#666", textAlign: "center", marginBottom: 20 }}>
             There was a problem setting up your session. You can try again or restart the app.
           </Text>
@@ -126,7 +188,7 @@ export default function Index() {
               paddingHorizontal: 20,
               paddingVertical: 10,
               borderRadius: 8,
-              marginBottom: 15
+              marginBottom: 15,
             }}
             onPress={handleRetry}
           >
@@ -140,20 +202,29 @@ export default function Index() {
     );
   }
 
-  // Show loading while initializing
+  // LOADING STATE
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7", justifyContent: "center", alignItems: "center" }}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: "#eafbe7",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <View style={{ alignItems: "center" }}>
           <Image source={logo} style={{ width: 120, height: 120, marginBottom: 20 }} />
-          <Text style={{ fontSize: 24, color: "#49A760", marginBottom: 8, fontWeight: "bold" }}>MandiGo</Text>
+          <Text style={{ fontSize: 24, color: "#49A760", marginBottom: 8, fontWeight: "bold" }}>
+            MandiGo
+          </Text>
           <Text style={{ fontSize: 16, color: "#666" }}>Setting up your experience...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // Show landing page
+  // LANDING PAGE
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7" }}>
       <StatusBar style="dark" />
@@ -173,9 +244,9 @@ export default function Index() {
               style={[styles.languageButton, styles.languageButtonDisabled]}
               disabled={true}
             >
-              <Text style={styles.languageFlag}>{selectedLanguage === "English" ? "🇮🇳" : "🇮🇳"}</Text>
+              <Text style={styles.languageFlag}>🇮🇳</Text>
               <Text style={styles.languageText}>{selectedLanguage}</Text>
-              <Icon name="chevron-down" size={20} color="#ccc" />
+              <Ionicons name="chevron-down" size={20} color="#ccc" />
             </TouchableOpacity>
             <Text style={styles.comingSoon}>🌱 Coming Soon - More languages will be available</Text>
           </View>
@@ -186,7 +257,7 @@ export default function Index() {
               style={[styles.optionButton, styles.loginButton]}
               onPress={() => router.push("/(auth)/login")}
             >
-              <Icon name="log-in" size={24} color="#fff" />
+              <Ionicons name="log-in" size={24} color="#fff" />
               <Text style={styles.optionButtonText}>Login</Text>
             </TouchableOpacity>
 
@@ -194,7 +265,7 @@ export default function Index() {
               style={[styles.optionButton, styles.registerButton]}
               onPress={() => router.push("/(auth)/signup")}
             >
-              <Icon name="person-add" size={24} color="#fff" />
+              <Ionicons name="person-add" size={24} color="#fff" />
               <Text style={styles.optionButtonText}>Register</Text>
             </TouchableOpacity>
           </View>
@@ -202,12 +273,13 @@ export default function Index() {
           {/* Quick Links */}
           <View style={styles.quickLinksSection}>
             <Text style={styles.sectionTitle}>Quick Links</Text>
-            
+
             <TouchableOpacity style={styles.quickLinkButton} onPress={handleAboutUsPress}>
-              <Icon name="information-circle" size={20} color="#49A760" />
+              <Ionicons name="information-circle" size={20} color="#49A760" />
               <Text style={styles.quickLinkText}>About Us</Text>
             </TouchableOpacity>
 
+            {/* Placeholder for future links */}
             {/* <TouchableOpacity style={styles.quickLinkButton}>
               <Icon name="document-text" size={20} color="#49A760" />
               <Text style={styles.quickLinkText}>Disclaimer</Text>
@@ -223,4 +295,3 @@ export default function Index() {
     </SafeAreaView>
   );
 }
-
