@@ -10,34 +10,28 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
-import { loginStyles as styles } from "@/components/auth/LoginStyle"; 
+import { loginStyles as styles } from "@/components/auth/LoginStyle";
 import { GlobalContext } from "@/context/GlobalProvider";
-// API IMPORTS
 import { authService } from "@/services";
 import { FormInput } from "@/components/auth/FormComponents";
-
 import illustration from "@/assets/images/workers-farm-activity-illustration 2.png";
- 
+
 const LoginScreen = () => {
   const context = useContext(GlobalContext);
   if (!context) {
     throw new Error("LoginScreen must be used within a GlobalProvider");
   }
-  const { setJwt, setMainUser, setIsLogged, setIsLoading, isGuest, logoutGuest } = context;
 
+  const { setJwt, setMainUser, setIsLogged, setIsLoading } = context;
   const [form, setForm] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
-        // Navigation will be handled by the main index page
         console.log("User authenticated, navigation will be handled by index page");
-      } else { 
-        setIsLoading(false);
       }
     });
 
@@ -50,34 +44,28 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     const { username, password } = form;
-    if (!username || !password) {
+
+    if (!username.trim() || !password.trim()) {
       Alert.alert("Error", "Please enter your username and password.");
       return;
     }
 
     setIsLoading(true);
-    try {
-      if (isGuest) {
-        await logoutGuest();
-      }
 
-      // API LOGIN
+    try {
       const result = await authService.login(username, password);
       const { user, token, message } = result;
-      
+
       console.log("Login successful:", user.username);
       setMainUser(user);
       setJwt(token);
       setIsLogged(true);
-      
-      // Show success message
+
       Alert.alert("Success", message || "Login successful!");
-      
     } catch (error) {
       console.error("Login error:", error);
       let errorMessage = "An error occurred during login. Please try again.";
-      
-      // Handle API errors
+
       if (error.status === 401) {
         errorMessage = "Invalid username or password.";
       } else if (error.status === 400) {
@@ -89,7 +77,7 @@ const LoginScreen = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       Alert.alert("Login Failed", errorMessage);
     } finally {
       setIsLoading(false);
@@ -98,9 +86,16 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.container}>
-          <Image source={illustration} style={styles.illustration} />
+          <Image
+            source={illustration}
+            style={styles.illustration}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>Welcome Back!</Text>
           <Text style={styles.subtitle}>Please enter your details to continue.</Text>
 
@@ -110,6 +105,7 @@ const LoginScreen = () => {
             value={form.username}
             onChangeText={(text) => handleInputChange("username", text)}
             autoCapitalize="none"
+            autoCorrect={false}
           />
 
           <View style={styles.inputContainer}>
@@ -121,13 +117,26 @@ const LoginScreen = () => {
               value={form.password}
               onChangeText={(text) => handleInputChange("password", text)}
               secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-              <Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#666" />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Icon
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="#666"
+              />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleLogin}>
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleLogin}
+            disabled={!form.username || !form.password}
+          >
             <Text style={styles.submitButtonText}>Log In</Text>
           </TouchableOpacity>
 
@@ -146,4 +155,3 @@ const LoginScreen = () => {
 };
 
 export default LoginScreen;
-

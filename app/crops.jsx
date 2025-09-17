@@ -1,4 +1,4 @@
-// Firebase storage removed - using API-based image handling
+
 import React, { useContext, useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, ScrollView, Image, Alert, TouchableOpacity } from "react-native";
 import { Linking, Platform } from "react-native";
@@ -16,7 +16,6 @@ import { getMandatoryLocation } from "@/components/getLocation";
 import { Picker } from "@react-native-picker/picker";
 import { Button } from "react-native-paper";
 import { addCrop } from "@/components/cropsController";
-// Firebase auth removed - using API-based authentication
 import * as ImageManipulator from "expo-image-manipulator";
 import { router } from "expo-router";
 import { useOrientation } from "@/utils/orientationUtils";
@@ -95,10 +94,10 @@ const crops = () => {
     jwt = "",
     mainUser = {},
     currentLocation = null,
-    setIsLoading = () => {},
-    setCurrentLocation = () => {},
+    setIsLoading = () => { },
+    setCurrentLocation = () => { },
     canAddData = false,
-    requireAuthentication = () => {},
+    requireAuthentication = () => { },
     isAuthenticated = false,
     isLogged = false
   } = contextValue || {};
@@ -341,7 +340,7 @@ const crops = () => {
         {isCameraOpen ? (
           <View style={styles.cameraContainer}>
             <View style={styles.cameraHeader}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.cameraCloseButton}
                 onPress={() => setIsCameraOpen(false)}
               >
@@ -355,7 +354,7 @@ const crops = () => {
               useSystemSound={true}
             />
             <View style={styles.cameraControls}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.captureButton}
                 onPress={handleTakePicture}
               >
@@ -364,7 +363,7 @@ const crops = () => {
             </View>
           </View>
         ) : (
-          <ScrollView 
+          <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -389,7 +388,7 @@ const crops = () => {
             <View style={styles.formContainer}>
               <View style={styles.formCard}>
                 <Text style={styles.formTitle}>Crop Information</Text>
-                
+
                 {/* Crop Selection */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Select Crop Commodity</Text>
@@ -453,17 +452,17 @@ const crops = () => {
                   <Text style={styles.imageSubtext}>
                     Help others identify the quality of your crop
                   </Text>
-                  
+
                   <View style={styles.imageButtons}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.imageButton}
                       onPress={() => setIsCameraOpen(true)}
                     >
                       <Ionicons name="camera" size={24} color="#49A760" />
                       <Text style={styles.imageButtonText}>Take Photo</Text>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                       style={styles.imageButton}
                       onPress={handlePickImageFromGallery}
                     >
@@ -478,7 +477,7 @@ const crops = () => {
                         source={{ uri: photo.uri }}
                         style={styles.previewImage}
                       />
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.removeImageButton}
                         onPress={() => setPhoto(null)}
                       >
@@ -489,7 +488,7 @@ const crops = () => {
                 </View>
 
                 {/* Submit Button */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.submitButton}
                   onPress={handleCropSubmit}
                 >
