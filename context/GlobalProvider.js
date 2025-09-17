@@ -50,10 +50,15 @@ export const GlobalProvider = ({ children }) => {
         if (user) {
           setIsLogged(true);
           setMainUser(user);
-          setJwt(user.id);
+          setJwt(user.token || user.id);
+          console.log('✅ Auto-login successful:', user.username);
+        } else {
+          console.log('ℹ️ No valid token found, user needs to login');
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        // Clear any invalid tokens
+        await authService.logout();
       }
     };
 

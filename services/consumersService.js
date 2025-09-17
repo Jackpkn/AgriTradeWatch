@@ -31,6 +31,36 @@ const transformConsumerData = (apiConsumer) => ({
   }
 });
 
+// Transform GeoJSON feature to consumer data format
+const transformGeoJSONFeature = (feature) => {
+  const props = feature.properties;
+  const coords = feature.geometry.coordinates; // [longitude, latitude]
+  
+  return {
+    id: props.id,
+    commodity: props.commodity,
+    buyingPrice: parseFloat(props.buyingprice) || 0,
+    quantityBought: parseFloat(props.quantitybought) || 0,
+    unit: props.unit,
+    date: props.date,
+    latitude: parseFloat(coords[1]) || 0, // GeoJSON uses [lng, lat] format
+    longitude: parseFloat(coords[0]) || 0,
+    userId: props.userid,
+    // Compatibility fields for existing components
+    name: props.commodity || '', // Map commodity to name for compatibility
+    pricePerUnit: parseFloat(props.buyingprice) || 0, // Map buyingprice to pricePerUnit
+    quantity: parseFloat(props.quantitybought) || 0, // Map quantitybought to quantity
+    createdAt: props.date ? { seconds: Math.floor(new Date(props.date).getTime() / 1000) } : { seconds: Math.floor(Date.now() / 1000) },
+    location: {
+      coords: {
+        latitude: parseFloat(coords[1]) || 0,
+        longitude: parseFloat(coords[0]) || 0,
+      },
+      timestamp: props.date ? new Date(props.date).getTime() : Date.now()
+    }
+  };
+};
+
 const transformConsumerForAPI = (consumerData) => ({
   commodity: consumerData.commodity,
   buyingprice: consumerData.buyingPrice,
@@ -104,26 +134,32 @@ class ConsumersService {
         return cachedData;
       }
 
-      const queryParams = new URLSearchParams();
+      // Use the GeoJSON endpoint that works with authentication
+      const response = await apiWithRetry.get('/consumers_geojson/');
       
-      // Add query parameters
-      Object.entries(options).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          queryParams.append(key, value);
-        }
-      });
-
-      const queryString = queryParams.toString();
-      const url = queryString ? `/consumers/?${queryString}` : '/consumers/';
+      let consumers = [];
       
-      const response = await apiWithRetry.get(url);
-      const consumers = Array.isArray(response.data) ? response.data.map(transformConsumerData) : [];
+      // Handle GeoJSON response format
+      if (response.data && response.data.type === 'FeatureCollection' && Array.isArray(response.data.features)) {
+        consumers = response.data.features.map(transformGeoJSONFeature);
+        console.log('🛒 Retrieved consumers data from GeoJSON:', consumers.length);
+      } else if (Array.isArray(response.data)) {
+        // Fallback to regular array format
+        consumers = response.data.map(transformConsumerData);
+        console.log('🛒 Retrieved consumers data from array:', consumers.length);
+      } else {
+        console.warn('Unexpected response format:', response.data);
+        consumers = [];
+      }
       
       // Cache the results
       consumersCache.set(cacheKey, consumers);
       
       if (__DEV__) {
         console.log('🛒 Retrieved consumers data:', consumers.length);
+        if (consumers.length > 0) {
+          console.log('Sample consumer data:', consumers[0]);
+        }
       }
       
       return consumers;
@@ -458,4 +494,4 @@ export default consumersService;
 export { ConsumersService };
 
 // Export utility functions for external use
-export { transformConsumerData, transformConsumerForAPI };
+export { transformConsumerData, transformConsumerForAPI, transformGeoJSONFeature };

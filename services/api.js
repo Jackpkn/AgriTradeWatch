@@ -46,6 +46,13 @@ const requestInterceptor = async (config) => {
       ...config.headers,
       'Authorization': `Bearer ${token}`,
     };
+    if (__DEV__) {
+      console.log(`🔑 Using token: ${token.substring(0, 20)}...`);
+    }
+  } else {
+    if (__DEV__) {
+      console.log(`⚠️ No token found for request: ${config.url}`);
+    }
   }
 
   // Add common headers
@@ -98,6 +105,17 @@ const errorInterceptor = (error) => {
     const { status, data } = response;
     const errorMessage = data?.message || data?.error || getDefaultErrorMessage(status);
     
+    // Handle authentication errors
+    if (status === HTTP_STATUS.UNAUTHORIZED) {
+      // Clear invalid token
+      clearAuthToken().catch(console.error);
+      
+      // Check if this is a token validation error
+      if (data?.code === 'token_not_valid' || data?.detail?.includes('token')) {
+        throw new APIError('Your session has expired. Please login again.', status, data);
+      }
+    }
+    
     throw new APIError(errorMessage, status, data);
   } else if (request) {
     // Request was made but no response received
@@ -141,12 +159,24 @@ export const setAuthToken = async (token) => {
 };
 
 export const getStoredToken = async () => {
-  if (authToken) return authToken;
+  if (authToken) {
+    if (__DEV__) {
+      console.log(`🔑 Using cached token: ${authToken.substring(0, 20)}...`);
+    }
+    return authToken;
+  }
   try {
     const token = await AsyncStorage.getItem('auth_token');
     if (token) {
       authToken = token;
+      if (__DEV__) {
+        console.log(`🔑 Retrieved token from storage: ${token.substring(0, 20)}...`);
+      }
       return token;
+    } else {
+      if (__DEV__) {
+        console.log(`⚠️ No token found in AsyncStorage`);
+      }
     }
   } catch (error) {
     console.error('Error retrieving auth token:', error);
@@ -160,6 +190,65 @@ export const clearAuthToken = async () => {
     await AsyncStorage.removeItem('auth_token');
   } catch (error) {
     console.error('Error clearing auth token:', error);
+  }
+};
+
+// Debug function to check token status
+export const debugTokenStatus = async () => {
+  try {
+    const token = await AsyncStorage.getItem('auth_token');
+    console.log('🔍 Token Debug Info:');
+    console.log('- Cached token:', authToken ? `${authToken.substring(0, 20)}...` : 'null');
+    console.log('- Stored token:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('- Token length:', token ? token.length : 0);
+    
+    // Try to decode the JWT token to see if it's valid
+    if (token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          console.log('- Token payload:', payload);
+          console.log('- Token expires:', new Date(payload.exp * 1000));
+          console.log('- Token is expired:', Date.now() > payload.exp * 1000);
+        }
+      } catch (e) {
+        console.log('- Token decode error:', e.message);
+      }
+    }
+    
+    return { cached: authToken, stored: token };
+  } catch (error) {
+    console.error('Error debugging token:', error);
+    return { cached: null, stored: null, error };
+  }
+};
+
+// Test function to verify API connectivity
+export const testAPIConnection = async () => {
+  try {
+    const token = await getStoredToken();
+    console.log('🧪 Testing API connection...');
+    
+    const response = await fetch(`${API_CONFIG.BASE_URL}/farmers/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : undefined,
+      },
+    });
+    
+    console.log('🧪 Test response status:', response.status);
+    console.log('🧪 Test response headers:', Object.fromEntries(response.headers.entries()));
+    
+    const responseText = await response.text();
+    console.log('🧪 Test response body:', responseText.substring(0, 200));
+    
+    return { status: response.status, headers: response.headers, body: responseText };
+  } catch (error) {
+    console.error('🧪 Test API connection error:', error);
+    return { error: error.message };
   }
 };
 
@@ -194,6 +283,12 @@ const httpClient = async (config) => {
   });
 
   try {
+    // Debug: Log the actual headers being sent
+    if (__DEV__) {
+      console.log(`📤 Sending request to: ${API_CONFIG.BASE_URL}${config.url}`);
+      console.log(`📤 Headers:`, requestConfig.headers);
+    }
+
     const response = await fetch(`${API_CONFIG.BASE_URL}${config.url}`, {
       method: config.method || 'GET',
       headers: requestConfig.headers,

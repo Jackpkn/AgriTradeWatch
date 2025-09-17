@@ -6,12 +6,13 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, Modal, PanResponder } from "react-native";
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, Modal, PanResponder, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GlobalContext } from "@/context/GlobalProvider"; 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 // Custom hooks
 import { useMapData } from "@/hooks/useMapData";
@@ -39,7 +40,7 @@ import { performanceMonitor } from "@/utils/performance";
 import { useOrientation } from "@/utils/orientationUtils";
 
 const Map = () => {
-  const { currentLocation } = useContext(GlobalContext);
+  const { currentLocation, isLogged } = useContext(GlobalContext);
 
   // Use orientation hook
   const { screenData, isLandscape, width, breakpoints } = useOrientation();
@@ -80,6 +81,7 @@ const Map = () => {
     allCrops,
     loading: dataLoading,
     error: dataError,
+    authError,
   } = useMapData();
   const { filterCropsInRadius } = useGeolocation();
 
@@ -407,6 +409,13 @@ const Map = () => {
     setPriceUnit(unit);
   }, []);
 
+  // Refetch data when authentication status changes
+  useEffect(() => {
+    if (isLogged && !dataLoading && !authError) {
+      console.log("Map: Authentication status changed, data should be available");
+    }
+  }, [isLogged, dataLoading, authError]);
+
   // Debug logging (only in development)
   useEffect(() => {
     if (__DEV__) {
@@ -416,9 +425,11 @@ const Map = () => {
         allCropsCount: allCrops.length,
         dataLoading,
         dataError: !!dataError,
+        authError,
+        isLogged,
       });
     }
-  }, [currentLocation, markerPosition, allCrops, dataLoading, dataError]);
+  }, [currentLocation, markerPosition, allCrops, dataLoading, dataError, authError, isLogged]);
 
   // Loading state
   if (dataLoading) {
@@ -432,14 +443,68 @@ const Map = () => {
     );
   }
 
+  // Authentication error screen component
+  const AuthErrorScreen = () => (
+    <SafeAreaView style={mapStyles.container}>
+      <View style={mapStyles.mapLoading}>
+        <Ionicons name="lock-closed" size={64} color="#ff6b6b" style={{ marginBottom: 16 }} />
+        <Text style={[mapStyles.mapLoadingText, { fontSize: 18, fontWeight: 'bold', marginBottom: 8 }]}>
+          Authentication Required
+        </Text>
+        <Text style={[mapStyles.mapLoadingText, { fontSize: 14, textAlign: 'center', marginBottom: 24 }]}>
+          You need to be logged in to view map data. Please login to continue.
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#49A760',
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 8,
+          }}
+          onPress={() => router.replace('/(auth)/login')}
+        >
+          <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+            Go to Login
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+
+  // Authentication error state
+  if (!isLogged || authError) {
+    return <AuthErrorScreen />;
+  }
+
   // Error state
   if (dataError) {
     return (
       <SafeAreaView style={mapStyles.container}>
         <View style={mapStyles.mapLoading}>
-          <Text style={mapStyles.mapLoadingText}>
-            Error loading data. Please try again.
+          <Ionicons name="warning" size={64} color="#ff6b6b" style={{ marginBottom: 16 }} />
+          <Text style={[mapStyles.mapLoadingText, { fontSize: 18, fontWeight: 'bold', marginBottom: 8 }]}>
+            Error Loading Data
           </Text>
+          <Text style={[mapStyles.mapLoadingText, { fontSize: 14, textAlign: 'center', marginBottom: 24 }]}>
+            {dataError.message || 'Unable to load map data. Please check your connection and try again.'}
+          </Text>
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#49A760',
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 8,
+            }}
+            onPress={() => {
+              // Trigger a re-render by updating a state
+              setPriceLoading(true);
+              setTimeout(() => setPriceLoading(false), 100);
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+              Retry
+            </Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );

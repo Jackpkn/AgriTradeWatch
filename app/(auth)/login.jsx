@@ -27,14 +27,15 @@ const LoginScreen = () => {
   }
   const { setJwt, setMainUser, setIsLogged, setIsLoading, isGuest, logoutGuest } = context;
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
-        router.replace("/(tabs)/home");
+        // Navigation will be handled by the main index page
+        console.log("User authenticated, navigation will be handled by index page");
       } else { 
         setIsLoading(false);
       }
@@ -48,9 +49,9 @@ const LoginScreen = () => {
   };
 
   const handleLogin = async () => {
-    const { email, password } = form;
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter your email and password.");
+    const { username, password } = form;
+    if (!username || !password) {
+      Alert.alert("Error", "Please enter your username and password.");
       return;
     }
 
@@ -61,25 +62,26 @@ const LoginScreen = () => {
       }
 
       // API LOGIN
-      const result = await authService.login(email, password);
-      const { user, token } = result;
+      const result = await authService.login(username, password);
+      const { user, token, message } = result;
       
-      console.log("Login successful:", user.email);
-      setIsLoading(false);
+      console.log("Login successful:", user.username);
       setMainUser(user);
       setJwt(token);
       setIsLogged(true);
       
+      // Show success message
+      Alert.alert("Success", message || "Login successful!");
+      
     } catch (error) {
-      setIsLoading(false);
       console.error("Login error:", error);
       let errorMessage = "An error occurred during login. Please try again.";
       
       // Handle API errors
       if (error.status === 401) {
-        errorMessage = "Invalid email or password.";
+        errorMessage = "Invalid username or password.";
       } else if (error.status === 400) {
-        errorMessage = "Please enter a valid email address.";
+        errorMessage = "Please enter valid credentials.";
       } else if (error.status === 403) {
         errorMessage = "This account has been disabled.";
       } else if (error.status === 429) {
@@ -103,11 +105,10 @@ const LoginScreen = () => {
           <Text style={styles.subtitle}>Please enter your details to continue.</Text>
 
           <FormInput
-            icon="mail-outline"
-            placeholder="Email Address"
-            value={form.email}
-            onChangeText={(text) => handleInputChange("email", text)}
-            keyboardType="email-address"
+            icon="person-outline"
+            placeholder="Username"
+            value={form.username}
+            onChangeText={(text) => handleInputChange("username", text)}
             autoCapitalize="none"
           />
 

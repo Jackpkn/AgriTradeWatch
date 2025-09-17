@@ -13,6 +13,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchCrops } from "@/components/crud";
 import { GlobalContext } from "@/context/GlobalProvider";
+import { authService } from "@/services";
+import { debugTokenStatus, testAPIConnection } from "@/services/api";
 import { Picker } from "@react-native-picker/picker";
 import { useOrientation } from "@/utils/orientationUtils";
 import { createStatsStyles } from "@/utils/responsiveStyles";
@@ -29,7 +31,7 @@ const stats = () => {
     contextValue = {};
   }
 
-  const { setIsLoading = () => {} } = contextValue || {};
+  const { setIsLoading = () => {}, isLogged = false } = contextValue || {};
   const [consumerCrops, setConsumerCrops] = useState([]);
   const [farmerCrops, setFarmerCrops] = useState([]);
   const [consumerCropName, setConsumerCropName] = useState(""); // Will be set dynamically
@@ -39,6 +41,7 @@ const stats = () => {
   const [isComponentMounted, setIsComponentMounted] = useState(false);
   const [showConsumerAnalytics, setShowConsumerAnalytics] = useState(true);
   const [showFarmerAnalytics, setShowFarmerAnalytics] = useState(true);
+  const [authError, setAuthError] = useState(null);
   
   // Use orientation hook
   const { screenData, isLandscape, width, breakpoints } = useOrientation();
@@ -455,7 +458,32 @@ const stats = () => {
 
   const fetchAllCrops = async () => {
     try {
+      // Check if user is logged in
+      if (!isLogged) {
+        setAuthError("Please login to view market analytics");
+        setConsumerCrops([]);
+        setFarmerCrops([]);
+        return;
+      }
+
+      // Check if we have a valid token
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) {
+        setAuthError("Authentication required. Please login again.");
+        setConsumerCrops([]);
+        setFarmerCrops([]);
+        return;
+      }
+
+      // Debug token status
+      await debugTokenStatus();
+      
+      // Test API connection
+      await testAPIConnection();
+
+      setAuthError(null);
       setIsLoading(true);
+      
       const [consumerData, farmerData] = await Promise.all([
         fetchCrops("consumers"),
         fetchCrops("farmers"),
@@ -476,12 +504,32 @@ const stats = () => {
         console.log('Stats: Sample farmer data:', farmerData[0]);
         console.log('Stats: Farmer data names:', farmerData.slice(0, 5).map(c => c?.name || c?.commodity));
       }
+
+      // Show success message if we got data
+      const totalData = (consumerData?.length || 0) + (farmerData?.length || 0);
+      if (totalData > 0) {
+        console.log(`✅ Successfully loaded ${totalData} market data points`);
+      } else {
+        console.log('ℹ️ No market data available yet');
+      }
     } catch (error) {
       console.error("Error fetching crops:", error);
+      
+      // Handle authentication errors specifically
+      if (error.status === 401 || error.status === 403) {
+        setAuthError("Server authentication issue detected. The API server may not be properly configured for JWT authentication. Please contact the administrator.");
+        Alert.alert(
+          "Authentication Error", 
+          "The server is not accepting authentication tokens. This appears to be a server configuration issue. Please contact the administrator or try again later."
+        );
+      } else {
+        setAuthError("Failed to fetch market data. Please try again.");
+        Alert.alert("Error", "Failed to fetch crop data. Please try again.");
+      }
+      
       // Set empty arrays on error to prevent iteration issues
       setConsumerCrops([]);
       setFarmerCrops([]);
-      Alert.alert("Error", "Failed to fetch crop data. Please try again.");
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -500,6 +548,14 @@ const stats = () => {
       fetchAllCrops();
     }
   }, [isComponentMounted]);
+
+  // Listen for auth state changes to refetch data when user logs in
+  useEffect(() => {
+    if (isComponentMounted && isLogged) {
+      console.log("User logged in, refetching stats data");
+      fetchAllCrops();
+    }
+  }, [isLogged, isComponentMounted]);
 
   // Set default crop names when data is loaded
   useEffect(() => {
@@ -595,6 +651,57 @@ const stats = () => {
     }
   };
 
+  // Authentication error screen
+  const AuthErrorScreen = () => (
+    <SafeAreaView style={styles.container}>
+      <LinearGradient colors={["#f8fffe", "#eafbe7"]} style={styles.gradient}>
+        <View style={styles.noDataContainer}>
+          <Ionicons name="lock-closed-outline" size={64} color="#ff6b6b" />
+          <Text style={styles.noDataText}>Authentication Required</Text>
+          <Text style={styles.noDataSubtext}>
+            {authError || "Please login to view market analytics"}
+          </Text>
+          <TouchableOpacity
+            style={{
+              marginTop: 20,
+              borderRadius: 12,
+              overflow: 'hidden',
+              elevation: 3,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+            }}
+            onPress={() => {
+              // Navigate to login screen
+              const { router } = require('expo-router');
+              router.replace('/');
+            }}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={["#49A760", "#3d8b4f"]}
+              style={{
+                paddingVertical: 15,
+                paddingHorizontal: 30,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="log-in-outline" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text style={{
+                color: 'white',
+                fontSize: 16,
+                fontWeight: '600',
+              }}>Go to Login</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
+  );
+
   // Safety check for component mounting
   if (!isComponentMounted) {
     return (
@@ -605,6 +712,11 @@ const stats = () => {
         </View>
       </SafeAreaView>
     );
+  }
+
+  // Show auth error screen if not logged in or auth error
+  if (!isLogged || authError) {
+    return <AuthErrorScreen />;
   }
 
   // Error boundary for the entire component

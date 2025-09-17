@@ -33,6 +33,7 @@ const transformFarmerData = (apiFarmer) => ({
 });
 
 const transformFarmerForAPI = (farmerData) => ({
+  id: farmerData.id,
   commodity: farmerData.commodity,
   sellingprice: farmerData.sellingPrice,
   receipt: farmerData.receipt,

@@ -6,6 +6,7 @@
 
 import { apiWithRetry, setAuthToken, clearAuthToken, getStoredToken, APIError, HTTP_STATUS } from './api';
 import userService from './userService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Authentication state management
 let currentUser = null;
@@ -33,68 +34,87 @@ const notifyAuthStateChange = (user) => {
 // Authentication Service Class
 class AuthService {
   /**
-   * Register a new user
-   * @param {Object} userData - User registration data
-   * @returns {Promise<Object>} User object and auth token
+   * Register a new user against backend POST /api/register/
+   * Expects: username (required), password (required), email (optional), mobile (optional),
+   * job (required: 'consumer' | 'farmer'), latitude/longitude (optional)
+   * Returns a simple success response for UI to prompt login.
+   * @param {Object} userData
+   * @returns {Promise<{success:boolean,message:string,data?:any}>}
    */
   async register(userData) {
     try {
-      if (!userData || !userData.email || !userData.password) {
-        throw new APIError('Email and password are required', HTTP_STATUS.BAD_REQUEST);
+      if (!userData) {
+        throw new APIError('Registration data is required', HTTP_STATUS.BAD_REQUEST);
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(userData.email)) {
-        throw new APIError('Please enter a valid email address', HTTP_STATUS.BAD_REQUEST);
+      const username = userData.username || userData.email; // allow using email as username from UI
+      const password = userData.password;
+      const job = userData.job || userData.role; // must be 'consumer' | 'farmer'
+
+      if (!username || !password) {
+        throw new APIError('Username and password are required', HTTP_STATUS.BAD_REQUEST);
       }
 
-      // Validate password strength
-      if (userData.password.length < 6) {
+      if (!job) {
+        throw new APIError('Job is required (consumer or farmer)', HTTP_STATUS.BAD_REQUEST);
+      }
+
+      if (password.length < 6) {
         throw new APIError('Password must be at least 6 characters long', HTTP_STATUS.BAD_REQUEST);
       }
 
-      // Prepare user data for API
-      const registrationData = {
-        name: userData.name,
-        username: userData.email, // API uses username field for email
-        mobile: userData.phoneNumber || userData.mobile,
-        job: userData.job || userData.role || 'consumer',
-        password: userData.password,
+      // Optional email validation if provided separately from username
+      const email = userData.email;
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          throw new APIError('Please enter a valid email address', HTTP_STATUS.BAD_REQUEST);
+        }
+      }
+
+      const payload = {
+        username,
+        password,
+        email: email || undefined,
+        mobile: userData.mobile || userData.phoneNumber || undefined,
+        job,
         latitude: userData.latitude,
         longitude: userData.longitude,
       };
 
-      // TODO: When JWT is implemented, this will be the registration endpoint
-      // For now, we'll create the user directly
-      const user = await userService.createUser(registrationData);
-      
-      // TODO: When JWT is implemented, handle token response
-      // const token = response.data.token;
-      // await setAuthToken(token);
-      
-      // For now, simulate successful registration
-      const mockToken = `mock_token_${user.id}_${Date.now()}`;
-      await setAuthToken(mockToken);
-      
-      notifyAuthStateChange(user);
-      
-      if (__DEV__) {
-        console.log('✅ User registered successfully:', user.name);
+      // Hit backend register endpoint (BASE_URL already includes /api)
+      const res = await apiWithRetry.post('/register/', payload);
+
+      // Store job information for later use during login
+      if (job) {
+        try {
+          await AsyncStorage.setItem('user_job', job);
+        } catch (error) {
+          console.error('Error storing user job:', error);
+        }
       }
-      
-      return { user, token: mockToken };
+
+      // Do NOT log the user in here; just confirm success so UI can prompt to login
+      if (__DEV__) {
+        console.log('✅ Registration successful:', res?.data);
+      }
+
+      return {
+        success: true,
+        message: 'Registration successful. Now login with the same credentials.',
+        data: res?.data,
+      };
     } catch (error) {
       console.error('Registration error:', error);
-      
-      if (error.status === HTTP_STATUS.BAD_REQUEST) {
-        throw new APIError(
-          'Invalid registration data',
-          HTTP_STATUS.BAD_REQUEST,
-          error.data
-        );
+
+      if (error instanceof APIError) {
+        throw error;
       }
-      
+
+      if (error.status === HTTP_STATUS.BAD_REQUEST) {
+        throw new APIError('Invalid registration data', HTTP_STATUS.BAD_REQUEST, error.data);
+      }
+
       throw new APIError(
         'Registration failed',
         error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
@@ -104,58 +124,89 @@ class AuthService {
   }
 
   /**
-   * Login user with email and password
-   * @param {string} email - User email
+   * Login user with username and password
+   * @param {string} username - User username
    * @param {string} password - User password
-   * @returns {Promise<Object>} User object and auth token
+   * @returns {Promise<Object>} User object and auth tokens
    */
-  async login(email, password) {
+  async login(username, password) {
     try {
-      if (!email || !password) {
-        throw new APIError('Email and password are required', HTTP_STATUS.BAD_REQUEST);
+      if (!username || !password) {
+        throw new APIError('Username and password are required', HTTP_STATUS.BAD_REQUEST);
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new APIError('Please enter a valid email address', HTTP_STATUS.BAD_REQUEST);
+      // Call backend token endpoint
+      const response = await apiWithRetry.post('/token/', {
+        username,
+        password,
+      });
+
+      const { access, refresh } = response.data;
+
+      if (!access) {
+        throw new APIError('Login failed - no access token received', HTTP_STATUS.UNAUTHORIZED);
       }
 
-      // TODO: When JWT is implemented, this will be the login endpoint
-      // For now, we'll search for the user by email/username
-      const users = await userService.searchUsers({ username: email });
-      
-      if (users.length === 0) {
-        throw new APIError('Invalid email or password', HTTP_STATUS.UNAUTHORIZED);
+      // Store the access token
+      if (access) {
+        await setAuthToken(access);
       }
 
-      const user = users[0];
-      
-      // TODO: When JWT is implemented, verify password on server
-      // For now, we'll simulate successful login
-      // In production, password verification should happen on the server
-      
-      // TODO: When JWT is implemented, handle token response
-      // const response = await apiWithRetry.post('/auth/login/', { email, password });
-      // const token = response.data.token;
-      // await setAuthToken(token);
-      
-      // For now, simulate successful login
-      const mockToken = `mock_token_${user.id}_${Date.now()}`;
-      await setAuthToken(mockToken);
-      
-      notifyAuthStateChange(user);
-      
-      if (__DEV__) {
-        console.log('✅ User logged in successfully:', user.name);
+      // Decode the token to get user info
+      const tokenParts = access.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        
+        // Try to get job information from local storage (from registration)
+        let job = 'farmer'; // Default to farmer
+        try {
+          const storedJob = await AsyncStorage.getItem('user_job');
+          if (storedJob) {
+            job = storedJob;
+          }
+        } catch (error) {
+          console.log('Could not retrieve job from storage, using default');
+        }
+        
+        const user = {
+          id: payload.user_id,
+          username: username, // Use the username from login
+          job: job, // Add job information
+        };
+
+      // Store refresh token for future use (if needed)
+      if (refresh) {
+        try {
+          await AsyncStorage.setItem('refresh_token', refresh);
+        } catch (error) {
+          console.error('Error storing refresh token:', error);
+        }
       }
-      
-      return { user, token: mockToken };
+
+        notifyAuthStateChange(user);
+        
+        if (__DEV__) {
+          console.log('✅ User logged in successfully:', username);
+        }
+        
+        return { 
+          user, 
+          token: access,
+          refreshToken: refresh,
+          message: 'Login successful'
+        };
+      } else {
+        throw new APIError('Invalid token format received', HTTP_STATUS.UNAUTHORIZED);
+      }
     } catch (error) {
       console.error('Login error:', error);
       
+      if (error instanceof APIError) {
+        throw error;
+      }
+
       if (error.status === HTTP_STATUS.UNAUTHORIZED) {
-        throw new APIError('Invalid email or password', HTTP_STATUS.UNAUTHORIZED);
+        throw new APIError('Invalid username or password', HTTP_STATUS.UNAUTHORIZED);
       }
       
       throw new APIError(
@@ -176,6 +227,14 @@ class AuthService {
       // await apiWithRetry.post('/auth/logout/');
       
       await clearAuthToken();
+      
+      // Clear stored job information
+      try {
+        await AsyncStorage.removeItem('user_job');
+      } catch (error) {
+        console.error('Error clearing user job:', error);
+      }
+      
       notifyAuthStateChange(null);
       
       if (__DEV__) {
@@ -185,6 +244,14 @@ class AuthService {
       console.error('Logout error:', error);
       // Even if logout fails on server, clear local state
       await clearAuthToken();
+      
+      // Clear stored job information
+      try {
+        await AsyncStorage.removeItem('user_job');
+      } catch (clearError) {
+        console.error('Error clearing user job:', clearError);
+      }
+      
       notifyAuthStateChange(null);
     }
   }
@@ -243,14 +310,45 @@ class AuthService {
         return null;
       }
 
-      // TODO: When JWT is implemented, validate token with server
-      // For now, we'll extract user ID from mock token and fetch user data
-      const tokenParts = token.split('_');
-      if (tokenParts.length >= 3 && tokenParts[0] === 'mock' && tokenParts[1] === 'token') {
-        const userId = tokenParts[2];
-        const user = await userService.getUserById(userId);
-        notifyAuthStateChange(user);
-        return user;
+      // For JWT tokens, we can decode the token to get user info
+      // or make a simple API call to validate the token
+      try {
+        // Try to decode JWT token to get user info
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          // This is a JWT token, decode the payload
+          const payload = JSON.parse(atob(tokenParts[1]));
+          
+          // Try to get job information from local storage
+          let job = 'farmer'; // Default to farmer
+          try {
+            const storedJob = await AsyncStorage.getItem('user_job');
+            if (storedJob) {
+              job = storedJob;
+            }
+          } catch (error) {
+            console.log('Could not retrieve job from storage during auto-login, using default');
+          }
+          
+          const user = {
+            id: payload.user_id,
+            username: payload.username || 'User',
+            job: job, // Add job information
+            token: token,
+          };
+          
+          // Set current user and notify listeners
+          currentUser = user;
+          notifyAuthStateChange(user);
+          
+          if (__DEV__) {
+            console.log('✅ Token validated, user auto-logged in:', user.username);
+          }
+          
+          return user;
+        }
+      } catch (decodeError) {
+        console.error('Error decoding token:', decodeError);
       }
 
       // If token is invalid, clear it

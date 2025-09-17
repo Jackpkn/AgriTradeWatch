@@ -29,7 +29,7 @@ const SignUp = () => {
   if (!context) {
     throw new Error("SignUp must be used within a GlobalProvider");
   }
-  const { setMainUser, setIsLoading } = context;
+  const { setIsLoading, currentLocation } = context;
 
   const [form, setForm] = useState({
     name: "",
@@ -48,8 +48,7 @@ const SignUp = () => {
     // API AUTH STATE MONITORING
     const unsubscribe = authService.addAuthStateListener((user) => {
       if (user) {
-        console.log("User authenticated, navigating to home.");
-        router.replace("/(tabs)/home");
+        console.log("User authenticated, navigation will be handled by index page");
       }
     });
     
@@ -62,47 +61,51 @@ const SignUp = () => {
 
   const handleFormSubmit = async () => {
     const { name, email, password, username, phoneNumber } = form;
-    if (!name || !email || !password || !username || !phoneNumber) {
-      Alert.alert("Error", "Please fill in all required fields.");
+    // Basic validations (username + password required by backend)
+    if (!username || !password) {
+      Alert.alert("Error", "Username and password are required.");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        Alert.alert("Error", "Please enter a valid email address.");
-        return;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
     }
     if (password.length < 6) {
-        Alert.alert("Error", "Password must be at least 6 characters long.");
-        return;
+      Alert.alert("Error", "Password must be at least 6 characters long.");
+      return;
+    }
+
+    // Map selected user type to backend expected job ('consumer' | 'farmer')
+    const job = (form.job || selectedUserType || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+    if (!job || (job !== 'farmer' && job !== 'consumer')) {
+      Alert.alert("Error", "Please select your role (Farmer or Consumer).");
+      return;
     }
 
     setIsLoading(true);
     try {
-      const userData = {
-        ...form,
-        userType: selectedUserType,
-        locationMethod: selectedLocation,
+      // Prepare payload for backend
+      const payload = {
+        username: username || email,
+        email,
+        password,
+        mobile: phoneNumber,
+        job,
+        // include auto-detected location when selected and available
+        latitude: currentLocation?.latitude,
+        longitude: currentLocation?.longitude,
       };
 
-      // API REGISTRATION
-      const result = await authService.register(userData);
-      const { user, token } = result;
-      
-      setMainUser(user);
-      Alert.alert("Success", "Account created successfully!");
-      
+      const result = await authService.register(payload);
+      Alert.alert('Success', result?.message || 'Registration successful. Now login with the same credentials.');
+      // Optionally navigate to login
+      // router.replace('/(auth)/login');
     } catch (error) {
-      console.error("Registration Error:", error);
-      let errorMessage = "An unexpected error occurred.";
-      
-      if (error.status === 400) {
-        errorMessage = "Invalid registration data. Please check your input.";
-      } else if (error.status === 409) {
-        errorMessage = "An account with this email already exists.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      Alert.alert("Registration Failed", errorMessage);
+      console.error('Registration Error:', error);
+      Alert.alert('Registration Failed', error?.message || 'Please try again.');
     } finally {
       setIsLoading(false);
     }
