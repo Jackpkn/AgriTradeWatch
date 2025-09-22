@@ -124,6 +124,8 @@ class ConsumersService {
    */
   async getAllConsumers(options = {}) {
     try {
+      console.log('🛒 ConsumersService: getAllConsumers called');
+      
       const cacheKey = `consumers_${JSON.stringify(options)}`;
       const cachedData = consumersCache.get(cacheKey);
       
@@ -134,8 +136,10 @@ class ConsumersService {
         return cachedData;
       }
 
+      console.log('🛒 ConsumersService: Making API call to /consumers_geojson/');
       // Use the GeoJSON endpoint that works with authentication
       const response = await apiWithRetry.get('/consumers_geojson/');
+      console.log('🛒 ConsumersService: API response received:', response?.data?.features?.length || 0, 'features');
       
       let consumers = [];
       
@@ -164,7 +168,12 @@ class ConsumersService {
       
       return consumers;
     } catch (error) {
-      console.error('Error fetching consumers data:', error);
+      console.error('🛒 ConsumersService: Error fetching consumers data:', error);
+      console.error('🛒 ConsumersService: Error details:', {
+        message: error.message,
+        status: error.status,
+        data: error.data
+      });
       
       // Return cached data if available, even if expired
       const cacheKey = `consumers_${JSON.stringify(options)}`;

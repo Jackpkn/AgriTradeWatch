@@ -39,19 +39,18 @@ class APIError extends Error {
 
 // Request interceptor for adding auth headers, logging, etc.
 const requestInterceptor = async (config) => {
-  // Add authentication token if available
-  const token = await getStoredToken();
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      'Authorization': `Bearer ${token}`,
-    };
-    if (__DEV__) {
-      console.log(`🔑 Using token: ${token.substring(0, 20)}...`);
-    }
-  } else {
-    if (__DEV__) {
-      console.log(`⚠️ No token found for request: ${config.url}`);
+  // Add authentication token if available, but skip for auth endpoints
+  const isAuthEndpoint = config.url?.includes('/login/') || 
+                        config.url?.includes('/register/') || 
+                        config.url?.includes('/token/');
+  
+  if (!isAuthEndpoint) {
+    const token = await getStoredToken();
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        'Authorization': `Bearer ${token}`,
+      };
     }
   }
 
@@ -160,23 +159,13 @@ export const setAuthToken = async (token) => {
 
 export const getStoredToken = async () => {
   if (authToken) {
-    if (__DEV__) {
-      console.log(`🔑 Using cached token: ${authToken.substring(0, 20)}...`);
-    }
     return authToken;
   }
   try {
     const token = await AsyncStorage.getItem('auth_token');
     if (token) {
       authToken = token;
-      if (__DEV__) {
-        console.log(`🔑 Retrieved token from storage: ${token.substring(0, 20)}...`);
-      }
       return token;
-    } else {
-      if (__DEV__) {
-        console.log(`⚠️ No token found in AsyncStorage`);
-      }
     }
   } catch (error) {
     console.error('Error retrieving auth token:', error);
@@ -193,64 +182,7 @@ export const clearAuthToken = async () => {
   }
 };
 
-// Debug function to check token status
-export const debugTokenStatus = async () => {
-  try {
-    const token = await AsyncStorage.getItem('auth_token');
-    console.log('🔍 Token Debug Info:');
-    console.log('- Cached token:', authToken ? `${authToken.substring(0, 20)}...` : 'null');
-    console.log('- Stored token:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('- Token length:', token ? token.length : 0);
-    
-    // Try to decode the JWT token to see if it's valid
-    if (token) {
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          console.log('- Token payload:', payload);
-          console.log('- Token expires:', new Date(payload.exp * 1000));
-          console.log('- Token is expired:', Date.now() > payload.exp * 1000);
-        }
-      } catch (e) {
-        console.log('- Token decode error:', e.message);
-      }
-    }
-    
-    return { cached: authToken, stored: token };
-  } catch (error) {
-    console.error('Error debugging token:', error);
-    return { cached: null, stored: null, error };
-  }
-};
-
-// Test function to verify API connectivity
-export const testAPIConnection = async () => {
-  try {
-    const token = await getStoredToken();
-    console.log('🧪 Testing API connection...');
-    
-    const response = await fetch(`${API_CONFIG.BASE_URL}/farmers/`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : undefined,
-      },
-    });
-    
-    console.log('🧪 Test response status:', response.status);
-    console.log('🧪 Test response headers:', Object.fromEntries(response.headers.entries()));
-    
-    const responseText = await response.text();
-    console.log('🧪 Test response body:', responseText.substring(0, 200));
-    
-    return { status: response.status, headers: response.headers, body: responseText };
-  } catch (error) {
-    console.error('🧪 Test API connection error:', error);
-    return { error: error.message };
-  }
-};
+// Debug functions removed to prevent auto-login issues
 
 // Retry mechanism for failed requests
 const retryRequest = async (requestFn, attempt = 1) => {
