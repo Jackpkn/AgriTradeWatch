@@ -178,12 +178,12 @@ const Home: React.FC = React.memo(() => {
         action: () => handleNavigation("map"),
         testID: "quick-action-nearby-markets",
       },
-      {
-        title: "Check Notifications",
-        icon: "notifications",
-        action: () => handleNavigation("profile"),
-        testID: "quick-action-notifications",
-      },
+      // {
+      //   title: "Check Notifications",
+      //   icon: "notifications",
+      //   action: () => handleNavigation("profile"),
+      //   testID: "quick-action-notifications",
+      // },
     ],
     [handleNavigation]
   );

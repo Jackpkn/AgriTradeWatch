@@ -22,6 +22,26 @@ function TabNavigator() {
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 headerShown: false, // This hides the top header
+                tabBarStyle: {
+                    backgroundColor: '#fff',
+                    borderTopWidth: 1,
+                    borderTopColor: '#e0e0e0',
+                    paddingBottom: 0,
+                    paddingTop: 0,
+                    height: 75,
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                },
+                tabBarItemStyle: {
+                    paddingVertical: 5,
+                },
+                tabBarLabelStyle: {
+                    fontSize: 12,
+                    marginTop: 0,
+                    marginBottom: 5,
+                },
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: keyof typeof Ionicons.glyphMap;
 

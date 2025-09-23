@@ -34,7 +34,7 @@ import { useOrientation } from "@/utils/orientationUtils";
 // NOTE: Styles are included here to make the component self-contained and fix all errors.
 // In a real project, this would be in a separate `mapStyles.ts` file.
 const createMapStyles = (isLandscape: boolean, width: number) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: '#f8fffe' },
   headerContainer: {
     paddingHorizontal: 16,
     paddingTop: 10,
@@ -1053,7 +1053,7 @@ const MapScreen = () => {
             onMapTypeChange={handleMapTypeChange}
           />
           <View style={mapStyles.autoRefreshContainer}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 mapStyles.autoRefreshButton,
                 state.autoRefresh && mapStyles.autoRefreshButtonActive
@@ -1077,7 +1077,7 @@ const MapScreen = () => {
               onPress={handleSaveFavoriteLocation}
             >
               <Ionicons name="heart-outline" size={20} color="#49A760" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
         <ScrollView
@@ -1389,14 +1389,14 @@ const MapScreen = () => {
                 onPress={() => {
                   Alert.alert(
                     'Export Data',
-                    'Export current view data to CSV?',
+                    'Export current view data to CSV feature comming soon',
                     [
-                      { text: 'Cancel', style: 'cancel' },
-                      {
-                        text: 'Export', onPress: () => {
-                          Alert.alert('Success', 'Data exported successfully!');
-                        }
-                      }
+                      { text: 'OK' }
+                      // {
+                      //   text: 'Export', onPress: () => {
+                      //     Alert.alert('Success', 'Data exported successfully!');
+                      //   }
+                      // }
                     ]
                   );
                 }}
