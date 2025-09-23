@@ -149,7 +149,7 @@ const Profile = () => {
   const [modal, setModal] = useState<'userType' | 'location' | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { isLandscape, width } = useOrientation() as {
+  const { isLandscape, width } = useOrientation() as unknown as {
     isLandscape: boolean;
     width: number;
     height: number;
