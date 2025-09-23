@@ -10,9 +10,9 @@ export const useGeolocation = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
   }, []);
@@ -33,19 +33,14 @@ export const useGeolocation = () => {
 
         let cropLat = crop.location?.coords?.latitude;
         let cropLon = crop.location?.coords?.longitude;
-        
-        // If coordinates are 0,0 or invalid, generate random coordinates around marker position
+
+        // If coordinates are 0,0 or invalid, skip this crop or use fallback
         if (!cropLat || !cropLon || (cropLat === 0 && cropLon === 0)) {
-          // Generate random coordinates within a reasonable range around marker position
-          const randomLat = markerPosition.latitude + (Math.random() - 0.5) * 0.01; // ~500m range
-          const randomLon = markerPosition.longitude + (Math.random() - 0.5) * 0.01;
-          cropLat = randomLat;
-          cropLon = randomLon;
-          console.log('useGeolocation: Using generated coordinates for filtering:', {
+          console.warn('useGeolocation: Crop has invalid coordinates, skipping:', {
             cropName: crop.name || crop.commodity,
-            originalCoords: crop.location?.coords,
-            generatedCoords: { cropLat, cropLon }
+            originalCoords: crop.location?.coords
           });
+          return false; // Skip crops with invalid coordinates
         }
 
         const distance = calculateDistance(

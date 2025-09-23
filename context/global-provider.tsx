@@ -147,13 +147,34 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
 
     // Effect 3: Request mandatory location permission once on app start.
     useEffect(() => {
+        let hasRequestedLocation = false;
+
         const requestLocation = async () => {
+            if (hasRequestedLocation) return; // Prevent multiple requests
+            hasRequestedLocation = true;
+
             try {
                 // Assumes getMandatoryLocation is promise-based for cleaner async/await
+                console.log('GlobalProvider: Requesting location...');
                 const location = await getMandatoryLocation();
-                setCurrentLocation(location as any);
+                console.log('GlobalProvider: Raw location received:', location);
+
+                if (location && location.coords) {
+                    // Convert to the format expected by global context
+                    const contextLocation = {
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
+                        accuracy: location.coords.accuracy,
+                        timestamp: location.timestamp || Date.now()
+                    };
+                    console.log('GlobalProvider: Setting location in context:', contextLocation);
+                    setCurrentLocation(contextLocation);
+                } else {
+                    console.warn('GlobalProvider: Invalid location structure received');
+                }
             } catch (error) {
                 console.warn("Location permission was denied or failed to retrieve.", error);
+                hasRequestedLocation = false; // Allow retry on error
                 // You could show a custom alert here guiding the user to settings.
             }
         };

@@ -77,18 +77,13 @@ const InteractiveMap = React.forwardRef((
       let lat = crop.location?.coords?.latitude;
       let lon = crop.location?.coords?.longitude;
 
-      // If coordinates are 0,0 or invalid, generate random coordinates around user location
+      // If coordinates are 0,0 or invalid, skip this crop
       if (!lat || !lon || (lat === 0 && lon === 0)) {
-        // Generate random coordinates within a reasonable range around user location
-        const randomLat = latitude + (Math.random() - 0.5) * 0.01; // ~500m range
-        const randomLon = longitude + (Math.random() - 0.5) * 0.01;
-        lat = randomLat;
-        lon = randomLon;
-        console.log('InteractiveMap: Using generated coordinates for crop:', {
+        console.warn('InteractiveMap: Crop has invalid coordinates, skipping:', {
           cropName: crop.name || crop.commodity,
-          originalCoords: crop.location?.coords,
-          generatedCoords: { lat, lon }
+          originalCoords: crop.location?.coords
         });
+        return ""; // Return empty string to filter out invalid markers
       }
 
       // Calculate distance for marker styling
@@ -225,16 +220,27 @@ const InteractiveMap = React.forwardRef((
     selectedCrop
   });
 
-  if (!markerPosition || !mapHtml) {
-    console.log('InteractiveMap: Showing loading because:', {
-      noMarkerPosition: !markerPosition,
-      noMapHtml: !mapHtml
-    });
+  if (!markerPosition) {
+    console.log('InteractiveMap: No marker position, using default location');
+    // Use default location (Delhi, India) if no position is available
+    const defaultPosition = { latitude: 28.6139, longitude: 77.2090 };
     return (
       <View style={mapStyles.mapLoading}>
         <Text style={mapStyles.mapLoadingText}>Loading Map...</Text>
         <Text style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
-          Debug: Position={!!markerPosition ? 'OK' : 'Missing'}, HTML={!!mapHtml ? 'OK' : 'Missing'}
+          Using default location. Please enable location services for better experience.
+        </Text>
+      </View>
+    );
+  }
+
+  if (!mapHtml) {
+    console.log('InteractiveMap: No map HTML generated');
+    return (
+      <View style={mapStyles.mapLoading}>
+        <Text style={mapStyles.mapLoadingText}>Preparing Map...</Text>
+        <Text style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
+          Generating map content...
         </Text>
       </View>
     );
@@ -252,12 +258,21 @@ const InteractiveMap = React.forwardRef((
       onMessage={handleWebViewMessage}
       onError={(syntheticEvent) => {
         const { nativeEvent } = syntheticEvent;
-        console.warn("WebView error: ", nativeEvent);
+        console.error("WebView error: ", nativeEvent);
+        // You could set an error state here to show a retry button
       }}
       onHttpError={(syntheticEvent) => {
         const { nativeEvent } = syntheticEvent;
-        console.warn("WebView HTTP error: ", nativeEvent.statusCode);
+        console.error("WebView HTTP error: ", nativeEvent.statusCode);
       }}
+      onLoadStart={() => console.log('Map loading started...')}
+      onLoadEnd={() => console.log('Map loading completed')}
+      startInLoadingState={true}
+      renderLoading={() => (
+        <View style={mapStyles.mapLoading}>
+          <Text style={mapStyles.mapLoadingText}>Loading Map...</Text>
+        </View>
+      )}
     />
   );
 });

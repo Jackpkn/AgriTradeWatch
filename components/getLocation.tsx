@@ -90,7 +90,14 @@ export const getMandatoryLocation = async (
   setCurrentLocation?: SetCurrentLocation
 ): Promise<Location.LocationObject | null> => {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    // First check if we already have permission
+    let { status } = await Location.getForegroundPermissionsAsync();
+
+    // Only request if we don't have permission
+    if (status !== "granted") {
+      const result = await Location.requestForegroundPermissionsAsync();
+      status = result.status;
+    }
 
     if (status !== "granted") {
       Alert.alert(

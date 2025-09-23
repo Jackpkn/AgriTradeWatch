@@ -2,9 +2,9 @@
 export const USER_TYPES = [
   { id: "farmer", name: "Farmer", icon: "🌾", description: "Grow and sell crops" },
   { id: "consumer", name: "Consumer", icon: "🛒", description: "Buy for personal use" },
-  { id: "retailer", name: "Retailer", icon: "🏪", description: "Small scale business" },
-  { id: "wholesaler", name: "Wholesaler", icon: "📦", description: "Large scale distribution" },
-  { id: "bulk_buyer", name: "Bulk Buyer", icon: "🏭", description: "Industrial procurement" },
+  // { id: "retailer", name: "Retailer", icon: "🏪", description: "Small scale business" },
+  // { id: "wholesaler", name: "Wholesaler", icon: "📦", description: "Large scale distribution" },
+  // { id: "bulk_buyer", name: "Bulk Buyer", icon: "🏭", description: "Industrial procurement" },
 ];
 
 // Location Options for Registration

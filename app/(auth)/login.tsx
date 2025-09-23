@@ -8,9 +8,11 @@ import {
   Image,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Local imports
@@ -92,77 +94,84 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={styles.container}>
-          <Image
-            source={illustration}
-            style={styles.illustration}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>Please enter your details to continue.</Text>
-
-          <FormInput
-            icon="person-outline"
-            placeholder="Username"
-            value={form.username}
-            onChangeText={(text: string) => handleInputChange("username", text)}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#9A9A9A"
-              value={form.password}
-              onChangeText={(text) => handleInputChange("password", text)}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <Image
+              source={illustration}
+              style={styles.illustration}
+              resizeMode="contain"
             />
-            <TouchableOpacity
-              onPress={() => setShowPassword((prev) => !prev)}
-              style={styles.eyeIcon}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-                size={22}
-                color="#666"
+            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.subtitle}>Please enter your details to continue.</Text>
+
+            <FormInput
+              icon="person-outline"
+              placeholder="Username"
+              value={form.username}
+              onChangeText={(text: string) => handleInputChange("username", text)}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#9A9A9A"
+                value={form.password}
+                onChangeText={(text) => handleInputChange("password", text)}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
               />
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                onPress={() => setShowPassword((prev) => !prev)}
+                style={styles.eyeIcon}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
 
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              (isLoggingIn || !form.username || !form.password) && styles.submitButtonDisabled
-            ]}
-            onPress={handleLogin}
-            disabled={isLoggingIn || !form.username || !form.password}
-          >
-            <Text style={styles.submitButtonText}>
-              {isLoggingIn ? "Logging In..." : "Log In"}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
             <TouchableOpacity
-              disabled={isLoggingIn}
-              onPress={() => navigation.navigate('Signup' as never)}
+              style={[
+                styles.submitButton,
+                (isLoggingIn || !form.username || !form.password) && styles.submitButtonDisabled
+              ]}
+              onPress={handleLogin}
+              disabled={isLoggingIn || !form.username || !form.password}
             >
-              <Text style={[styles.signUpLink, isLoggingIn && { opacity: 0.5 }]}>
-                Sign Up
+              <Text style={styles.submitButtonText}>
+                {isLoggingIn ? "Logging In..." : "Log In"}
               </Text>
             </TouchableOpacity>
+
+            <View style={styles.signUpContainer}>
+              <Text style={styles.signUpText}>Don't have an account? </Text>
+              <TouchableOpacity
+                disabled={isLoggingIn}
+                onPress={() => navigation.navigate('Signup' as never)}
+              >
+                <Text style={[styles.signUpLink, isLoggingIn && { opacity: 0.5 }]}>
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <GlobalLoader
         visible={isLoggingIn}
