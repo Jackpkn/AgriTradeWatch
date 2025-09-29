@@ -81,6 +81,29 @@ const createMapStyles = (isLandscape: boolean, width: number) => StyleSheet.crea
   mapContainer: {
     height: isLandscape ? width * 0.4 : 300,
     backgroundColor: '#EFEFEF',
+    position: 'relative',
+  },
+  mapInstructions: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000,
+  },
+  mapInstructionsText: {
+    fontSize: 12,
+    color: '#49A760',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   priceDisplaySection: {
     padding: 16,
@@ -1094,6 +1117,11 @@ const MapScreen = () => {
               selectedMapType={state.selectedMapType}
               onMarkerMove={handleMarkerMove}
             />
+            <View style={mapStyles.mapInstructions}>
+              <Text style={mapStyles.mapInstructionsText}>
+                💡 Drag the red pin to explore different areas
+              </Text>
+            </View>
           </View>
           <OfflineIndicator />
           <MapLegend selectedCrop={state.selectedCrop} radius={state.radius} />
@@ -1431,11 +1459,14 @@ const MapScreen = () => {
                         longitude: currentLocation.longitude
                       }
                     });
+                    Alert.alert('Location Updated', 'Search pin moved to your current location');
+                  } else {
+                    Alert.alert('Location Unavailable', 'Please enable location services to use this feature');
                   }
                 }}
               >
                 <Ionicons name="locate" size={20} color="#49A760" />
-                <Text style={mapStyles.quickActionText}>My Location</Text>
+                <Text style={mapStyles.quickActionText}>Reset to My Location</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

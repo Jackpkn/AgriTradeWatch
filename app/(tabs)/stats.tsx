@@ -123,23 +123,23 @@ const Stats: React.FC = () => {
   };
   const styles = useMemo(() => createStatsStyles(isLandscape, width), [isLandscape, width]);
 
+  // FIXED: Create separate crop options for consumer and farmer (no duplicates)
+  const consumerCropOptions = useMemo((): CropOption[] => {
+    // Extract crop names with better handling
+    const cropNames = state.consumerCrops
+      .map(crop => {
+        const name = crop?.name || crop?.commodity;
+        return name ? name.trim().toLowerCase() : null;
+      })
+      .filter((name): name is string => Boolean(name) && name !== '');
 
+    // Remove duplicates using Set
+    const uniqueCrops = [...new Set(cropNames)];
 
-  // Dynamic crop options calculation
-  const cropOptions = useMemo((): CropOption[] => {
-    const allCrops = [...state.consumerCrops, ...state.farmerCrops];
-    const uniqueCrops = [...new Set(
-      allCrops
-        .map(crop => crop?.name || crop?.commodity)
-        .filter((name): name is string => Boolean(name))
-    )];
-
-    console.log('Stats: Calculating crop options:', {
-      consumerCrops: state.consumerCrops.length,
-      farmerCrops: state.farmerCrops.length,
-      allCrops: allCrops.length,
-      uniqueCrops: uniqueCrops.length,
-      uniqueCropsList: uniqueCrops,
+    console.log('Consumer crops data:', {
+      totalCrops: state.consumerCrops.length,
+      extractedNames: cropNames,
+      uniqueNames: uniqueCrops
     });
 
     return uniqueCrops.map(crop => ({
@@ -147,7 +147,32 @@ const Stats: React.FC = () => {
       value: crop.toLowerCase(),
       icon: CROP_ICONS[crop.toLowerCase()] || CROP_ICONS['default'] || '🌾',
     }));
-  }, [state.consumerCrops, state.farmerCrops]);
+  }, [state.consumerCrops]);
+
+  const farmerCropOptions = useMemo((): CropOption[] => {
+    // Extract crop names with better handling
+    const cropNames = state.farmerCrops
+      .map(crop => {
+        const name = crop?.name || crop?.commodity;
+        return name ? name.trim().toLowerCase() : null;
+      })
+      .filter((name): name is string => Boolean(name) && name !== '');
+
+    // Remove duplicates using Set
+    const uniqueCrops = [...new Set(cropNames)];
+
+    console.log('Farmer crops data:', {
+      totalCrops: state.farmerCrops.length,
+      extractedNames: cropNames,
+      uniqueNames: uniqueCrops
+    });
+
+    return uniqueCrops.map(crop => ({
+      label: crop.charAt(0).toUpperCase() + crop.slice(1),
+      value: crop.toLowerCase(),
+      icon: CROP_ICONS[crop.toLowerCase()] || CROP_ICONS['default'] || '🌾',
+    }));
+  }, [state.farmerCrops]);
 
   // Utility functions
   const isValidCrop = (crop: any): crop is CropData => {
@@ -236,11 +261,27 @@ const Stats: React.FC = () => {
         );
       }
 
-      // Filter crops by name
+      // Filter crops by name with more flexible matching
       const filteredCrops = cropsArray.filter(crop => {
         if (!isValidCrop(crop)) return false;
+
         const cropNameToCheck = crop.name || crop.commodity;
-        return cropNameToCheck?.toLowerCase() === cropName.toLowerCase();
+        if (!cropNameToCheck) return false;
+
+        const normalizedCropName = cropNameToCheck.trim().toLowerCase();
+        const normalizedSearchName = cropName.trim().toLowerCase();
+
+        // Exact match or contains match
+        return normalizedCropName === normalizedSearchName ||
+          normalizedCropName.includes(normalizedSearchName) ||
+          normalizedSearchName.includes(normalizedCropName);
+      });
+
+      console.log(`${type} filtering:`, {
+        searchCrop: cropName,
+        totalCrops: cropsArray.length,
+        filteredCount: filteredCrops.length,
+        sampleFiltered: filteredCrops.slice(0, 2).map(c => c.name || c.commodity)
       });
 
       if (filteredCrops.length === 0) {
@@ -480,7 +521,7 @@ const Stats: React.FC = () => {
     }
   };
 
-  // Crop selector component
+  // FIXED: Crop selector component now uses the correct crop options based on type
   const CropSelector: React.FC<CropSelectorProps> = ({
     selectedValue,
     onValueChange,
@@ -495,6 +536,8 @@ const Stats: React.FC = () => {
         );
       }
 
+      // Use the correct crop options based on type
+      const cropOptions = type === 'consumer' ? consumerCropOptions : farmerCropOptions;
       const selectedCrop = cropOptions.find(crop => crop.value === selectedValue);
 
       return (
@@ -554,8 +597,6 @@ const Stats: React.FC = () => {
     }
   };
 
-
-
   // Data fetching function
   const fetchAllCrops = useCallback(async (): Promise<void> => {
     try {
@@ -566,14 +607,33 @@ const Stats: React.FC = () => {
         fetchCrops('farmers'),
       ]);
 
+      const consumerCrops = Array.isArray(consumerData) ? consumerData : [];
+      const farmerCrops = Array.isArray(farmerData) ? farmerData : [];
+
+      // Debug logging
+      console.log('📊 Data fetching results:', {
+        consumerCount: consumerCrops.length,
+        farmerCount: farmerCrops.length,
+        consumerSample: consumerCrops.slice(0, 3).map(c => ({
+          name: c?.name,
+          commodity: c?.commodity,
+          price: c?.pricePerUnit || c?.buyingPrice
+        })),
+        farmerSample: farmerCrops.slice(0, 3).map(c => ({
+          name: c?.name,
+          commodity: c?.commodity,
+          price: c?.pricePerUnit || c?.buyingPrice
+        }))
+      });
+
       setState(prev => ({
         ...prev,
-        consumerCrops: Array.isArray(consumerData) ? consumerData : [],
-        farmerCrops: Array.isArray(farmerData) ? farmerData : [],
+        consumerCrops,
+        farmerCrops,
         refreshing: false,
       }));
 
-      const totalData = (consumerData?.length || 0) + (farmerData?.length || 0);
+      const totalData = consumerCrops.length + farmerCrops.length;
       if (totalData > 0) {
         console.log(`✅ Successfully loaded ${totalData} market data points`);
       } else {
@@ -606,19 +666,30 @@ const Stats: React.FC = () => {
     fetchAllCrops();
   }, [fetchAllCrops]);
 
-  // Set default crop names when data is loaded
+  // FIXED: Set default crop names separately for consumer and farmer
   useEffect(() => {
-    if (cropOptions.length > 0) {
-      const firstCropValue = cropOptions[0]?.value;
-      if (firstCropValue) {
+    if (consumerCropOptions.length > 0 && !state.consumerCropName) {
+      const firstConsumerCrop = consumerCropOptions[0]?.value;
+      if (firstConsumerCrop) {
         setState(prev => ({
           ...prev,
-          consumerCropName: prev.consumerCropName || firstCropValue,
-          farmerCropName: prev.farmerCropName || firstCropValue,
+          consumerCropName: firstConsumerCrop,
         }));
       }
     }
-  }, [cropOptions]);
+  }, [consumerCropOptions, state.consumerCropName]);
+
+  useEffect(() => {
+    if (farmerCropOptions.length > 0 && !state.farmerCropName) {
+      const firstFarmerCrop = farmerCropOptions[0]?.value;
+      if (firstFarmerCrop) {
+        setState(prev => ({
+          ...prev,
+          farmerCropName: firstFarmerCrop,
+        }));
+      }
+    }
+  }, [farmerCropOptions, state.farmerCropName]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -648,6 +719,23 @@ const Stats: React.FC = () => {
               </Text>
             </LinearGradient>
           </View>
+
+          {/* DEBUG INFO - Remove this in production */}
+          {/* {__DEV__ && (
+            <View style={{ backgroundColor: '#f0f0f0', padding: 10, margin: 10, borderRadius: 5 }}>
+              <Text style={{ fontSize: 12, fontWeight: 'bold' }}>Debug Info:</Text>
+              <Text style={{ fontSize: 10 }}>Consumer crops: {state.consumerCrops.length}</Text>
+              <Text style={{ fontSize: 10 }}>Farmer crops: {state.farmerCrops.length}</Text>
+              <Text style={{ fontSize: 10 }}>Consumer options: {consumerCropOptions.length}</Text>
+              <Text style={{ fontSize: 10 }}>Farmer options: {farmerCropOptions.length}</Text>
+              <Text style={{ fontSize: 10 }}>
+                Consumer options: {consumerCropOptions.map(o => o.label).join(', ')}
+              </Text>
+              <Text style={{ fontSize: 10 }}>
+                Farmer options: {farmerCropOptions.map(o => o.label).join(', ')}
+              </Text>
+            </View>
+          )} */}
 
           {/* Consumer Section */}
           <View style={styles.sectionCard}>

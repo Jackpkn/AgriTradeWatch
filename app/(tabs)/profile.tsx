@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
 
 // Local Imports
 import { useGlobal } from "@/context/global-provider";
@@ -142,6 +143,7 @@ const SelectionModal: React.FC<SelectionModalProps> = React.memo(({ visible, onC
 // ========================================================================
 
 const Profile = () => {
+  const navigation = useNavigation();
   const { setIsLoading } = useGlobal();
   const { user, refetch } = useUserData();
   const { selectedUserType, selectedLocation } = useUserPreferences(user);
@@ -164,9 +166,18 @@ const Profile = () => {
       {
         text: "Sign Out", style: "destructive", onPress: async () => {
           setIsLoading(true);
-          await authService.logout();
-          // The root layout will handle navigation
-          setIsLoading(false);
+          try {
+            await authService.logout();
+            // The global provider will handle auth state change
+            // Navigate back to the root index screen
+            navigation.navigate('index' as never);
+            console.log('✅ Logout successful, navigated to index');
+          } catch (error) {
+            console.error('❌ Logout error:', error);
+            Alert.alert('Error', 'Failed to sign out. Please try again.');
+          } finally {
+            setIsLoading(false);
+          }
         }
       },
     ]);

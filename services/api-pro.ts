@@ -104,12 +104,25 @@ const requestInterceptor = async (
     }
   }
 
-  // Add common headers
-  config.headers = {
-    "Content-Type": "application/json",
+  // Add common headers (but don't override Content-Type if it's explicitly set to undefined for FormData)
+  const defaultHeaders: Record<string, string> = {
     Accept: "application/json",
+  };
+
+  // Only add Content-Type if it's not explicitly set to undefined (for FormData)
+  if (!config.headers || config.headers["Content-Type"] !== undefined) {
+    defaultHeaders["Content-Type"] = "application/json";
+  }
+
+  config.headers = {
+    ...defaultHeaders,
     ...config.headers,
   };
+
+  // Remove undefined headers (for FormData support)
+  if (config.headers["Content-Type"] === undefined) {
+    delete config.headers["Content-Type"];
+  }
 
   if (__DEV__) {
     console.log(
@@ -292,7 +305,12 @@ const httpClient = async <T>(
 
     // Only add body if we have data (avoid undefined)
     if (config.data) {
-      fetchOptions.body = JSON.stringify(config.data);
+      // Check if data is FormData - if so, don't stringify it
+      if (config.data instanceof FormData) {
+        fetchOptions.body = config.data;
+      } else {
+        fetchOptions.body = JSON.stringify(config.data);
+      }
     }
 
     const response = await fetch(

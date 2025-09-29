@@ -143,22 +143,36 @@ const InteractiveMap = React.forwardRef((
             ${tileLayer}.addTo(map);
             console.log('Map initialized successfully');
 
-            // Add draggable red marker (user location)
-            var redMarker = L.marker([${latitude}, ${longitude}], {
+            // Add draggable search location marker (red pin)
+            var searchMarker = L.marker([${latitude}, ${longitude}], {
               draggable: true,
               icon: L.divIcon({
                 className: 'user-location-marker',
-                html: '<div style="background-color: red; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.5);"></div>',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
+                html: '<div style="background: linear-gradient(45deg, #ff4444, #cc0000); width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.6); position: relative;"><div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 8px solid #ff4444;"></div></div>',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
               })
             }).addTo(map);
 
-            redMarker.bindPopup('Your Location - Drag me to change search area');
+            searchMarker.bindPopup('<div style="font-family: Arial, sans-serif; text-align: center;"><strong>🔍 Search Location</strong><br><small>Drag this pin to explore different areas</small></div>');
 
             // Handle marker drag events
-            redMarker.on('dragend', function(event) {
-              var position = redMarker.getLatLng();
+            searchMarker.on('dragstart', function(event) {
+              searchMarker.closePopup();
+            });
+
+            searchMarker.on('drag', function(event) {
+              var position = searchMarker.getLatLng();
+              // Update circle position during drag for real-time feedback
+              if (window.radiusCircle) {
+                window.radiusCircle.setLatLng(position);
+              }
+            });
+
+            searchMarker.on('dragend', function(event) {
+              var position = searchMarker.getLatLng();
+              searchMarker.bindPopup('<div style="font-family: Arial, sans-serif; text-align: center;"><strong>📍 New Search Location</strong><br><small>Lat: ' + position.lat.toFixed(4) + '</small><br><small>Lng: ' + position.lng.toFixed(4) + '</small></div>').openPopup();
+              
               window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'markerMoved',
                 latitude: position.lat,
@@ -166,12 +180,24 @@ const InteractiveMap = React.forwardRef((
               }));
             });
 
-            // Add circle for radius
-            L.circle([${latitude}, ${longitude}], {
+            // Add circle for radius (store reference for drag updates)
+            window.radiusCircle = L.circle([${latitude}, ${longitude}], {
               color: '#49A760',
               fillColor: '#49A760',
-              fillOpacity: 0.1,
-              radius: ${radius * 1000}
+              fillOpacity: 0.15,
+              radius: ${radius * 1000},
+              weight: 2,
+              dashArray: '5, 5'
+            }).addTo(map);
+
+            // Add radius label
+            var radiusLabel = L.marker([${latitude}, ${longitude}], {
+              icon: L.divIcon({
+                className: 'radius-label',
+                html: '<div style="background: rgba(73, 167, 96, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${radius <= 0.5 ? Math.round(radius * 1000) + 'm' : radius + 'km'} radius</div>',
+                iconSize: [0, 0],
+                iconAnchor: [0, -20]
+              })
             }).addTo(map);
 
             // Add crop markers

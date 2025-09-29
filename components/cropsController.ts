@@ -1,149 +1,104 @@
-/**
- * Crops Controller (TypeScript)
- * This service module handles all API operations related to crop data,
- * including adding new crops and fetching existing ones.
- */
+import axios from "axios";
+import { getStoredToken } from "@/services";
 
-import { apiWithRetry, APIError } from '@/services';
-
-// ========================================================================
-// Type Definitions
-// ========================================================================
-
-/**
- * The exact data structure required by the POST /crops/add/ endpoint.
- * Note: `latitude` and `longitude` are explicitly required as numbers.
- */
-export interface AddCropPayload {
+// --- Interfaces ---
+interface AddCropPayload {
   commodity: string;
   buyingprice: number;
   quantitybought: number;
   unit: string;
   latitude: number;
   longitude: number;
+  date?: string;
+  image?: {
+    uri: string;
+    name: string;
+    type: string;
+  };
 }
 
-/**
- * The data structure returned by the API after a crop is successfully added.
- */
-export interface CropApiResponse {
-  id: string; // UUID
+interface CropApiResponse {
+  id: string;
   commodity: string;
-  date: string; // ISO date string
-  image: string | null;
+  buyingprice: number;
+  quantitybought: number;
+  unit: string;
+  date: string;
   latitude: number;
   longitude: number;
-  quantitysold: number | null;
-  receipt: string | null;
-  sellingprice: number | null;
-  unit: string;
+  userid: string;
+  image?: string;
 }
 
-/**
- * A generic representation of crop data fetched from list endpoints.
- * This should be updated to match the actual structure from your services.
- */
-export interface CropData {
-  id: string;
-  commodity?: string;
-  name?: string; // Some sources might use 'name'
-  // ... other relevant fields
-}
+// --- Main function ---
+export const addCrop = async (
+  cropData: AddCropPayload
+): Promise<CropApiResponse> => {
+  const API_URL = "https://mandigo.in/api/crops/add/";
 
-// ========================================================================
-// MOCK SERVICES (as consumersService/farmersService were not provided)
-// ========================================================================
-// TODO: Replace these mocks with your actual service imports.
-const consumersService = {
-  getAllConsumers: async (): Promise<CropData[]> => {
-    console.warn("Using MOCK consumersService.getAllConsumers");
-    return [];
-  },
-  getConsumersDataByUserId: async (userId: string): Promise<CropData[]> => {
-    console.warn("Using MOCK consumersService.getConsumersDataByUserId");
-    return [];
-  }
-};
-const farmersService = {
-  getAllFarmers: async (): Promise<CropData[]> => {
-    console.warn("Using MOCK farmersService.getAllFarmers");
-    return [];
-  }
-};
-// ========================================================================
-
-/**
- * Submits new crop data to the API.
- * @param cropData The data for the new crop, conforming to the AddCropPayload interface.
- * @returns A promise that resolves with the newly created crop data from the API.
- */
-export const addCrop = async (cropData: AddCropPayload): Promise<CropApiResponse> => {
   try {
-    console.log('🌾 Adding crop data:', cropData);
+    console.log("🌾 Preparing Axios request");
 
-    // Make the API call
-    const response = await apiWithRetry.post('/crops/add/', cropData);
+    const token = await getStoredToken();
+    if (!token) throw new Error("Authentication token not found.");
 
-    console.log('✅ Crop added successfully:', response.data);
+    // --- Create FormData ---
+    const formData = new FormData();
+
+    // Append fields exactly as your Consumer1 model expects
+    formData.append("commodity", cropData.commodity);
+    formData.append("buyingprice", cropData.buyingprice.toString());
+    formData.append("quantitybought", cropData.quantitybought.toString());
+    formData.append("unit", cropData.unit);
+    formData.append("latitude", cropData.latitude.toString());
+    formData.append("longitude", cropData.longitude.toString());
+
+    if (cropData.date) {
+      formData.append("date", cropData.date);
+    }
+
+    // --- SIMPLE Image Handling ---
+    if (cropData.image?.uri) {
+      console.log("📸 Adding image file");
+
+      // Simple approach - just append the file directly
+      formData.append("image", {
+        uri: cropData.image.uri,
+        type: "image/jpeg",
+        name: "photo.jpg",
+      } as any);
+    }
+
+    // --- Axios config ---
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 30000,
+    };
+
+    console.log(`📤 Sending POST to: ${API_URL}`);
+
+    // --- API Call ---
+    const response = await axios.post(API_URL, formData, config);
+
+    console.log("✅ Crop added successfully:", response.data);
     return response.data as CropApiResponse;
+  } catch (error: any) {
+    console.error("❌ Crop submission error:", error);
 
-  } catch (error: unknown) {
-    console.error('❌ Error adding crop:', error);
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
 
-    if (error instanceof APIError) {
-      // Use the structured error from our API service
-      throw new Error(error.message || 'Failed to add crop due to an API error.');
-    }
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-
-    throw new Error('An unknown error occurred while adding the crop.');
-  }
-};
-
-/**
- * Fetches all crop data, optionally filtered by job type.
- * @param job The role to filter by ('consumer' or 'farmers').
- * @returns A promise that resolves with an array of crop data.
- */
-export const getAllCrops = async (job?: 'consumer' | 'farmers'): Promise<CropData[]> => {
-  try {
-    let crops: CropData[] = [];
-    if (job === 'consumer') {
-      crops = await consumersService.getAllConsumers();
-    } else if (job === 'farmers') {
-      crops = await farmersService.getAllFarmers();
+      throw new Error(
+        `Server error: ${error.response.status} - ${JSON.stringify(
+          error.response.data
+        )}`
+      );
     } else {
-      const [farmersData, consumersData] = await Promise.all([
-        farmersService.getAllFarmers(),
-        consumersService.getAllConsumers()
-      ]);
-      crops = [...farmersData, ...consumersData];
+      throw new Error(error.message || "Failed to submit crop data.");
     }
-    return crops;
-  } catch (error) {
-    console.error('Error getting all crops:', error);
-    throw error; // Re-throw to be handled by the calling component
-  }
-};
-
-/**
- * Fetches crop data associated with a specific user ID.
- * @param userId The ID of the user.
- * @param job The role of the user, defaults to 'farmers'.
- * @returns A promise that resolves with an array of crop data for that user.
- */
-export const getCropById = async (userId: string, job: 'consumer' | 'farmers' = 'farmers'): Promise<CropData[]> => {
-  try {
-    if (job === 'consumer') {
-      return await consumersService.getConsumersDataByUserId(userId);
-    } else {
-      // As noted in the original code, this may need a different implementation
-      return await farmersService.getAllFarmers();
-    }
-  } catch (error) {
-    console.error(`Error getting crop by ID for user ${userId}:`, error);
-    throw error;
   }
 };
