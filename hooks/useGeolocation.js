@@ -10,9 +10,9 @@ export const useGeolocation = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
   }, []);
@@ -24,16 +24,24 @@ export const useGeolocation = () => {
 
       return crops.filter((crop) => {
         // Check crop name matching (case insensitive)
-        if (
-          selectedCrop &&
-          crop.name?.toLowerCase() !== selectedCrop.toLowerCase()
-        ) {
-          return false;
+        if (selectedCrop) {
+          const cropNameToCheck = crop.name || crop.commodity;
+          if (!cropNameToCheck || cropNameToCheck.toLowerCase() !== selectedCrop.toLowerCase()) {
+            return false;
+          }
         }
 
-        const cropLat = crop.location?.coords?.latitude;
-        const cropLon = crop.location?.coords?.longitude;
-        if (!cropLat || !cropLon) return false;
+        let cropLat = crop.location?.coords?.latitude;
+        let cropLon = crop.location?.coords?.longitude;
+
+        // If coordinates are 0,0 or invalid, skip this crop or use fallback
+        if (!cropLat || !cropLon || (cropLat === 0 && cropLon === 0)) {
+          console.warn('useGeolocation: Crop has invalid coordinates, skipping:', {
+            cropName: crop.name || crop.commodity,
+            originalCoords: crop.location?.coords
+          });
+          return false; // Skip crops with invalid coordinates
+        }
 
         const distance = calculateDistance(
           markerPosition.latitude,

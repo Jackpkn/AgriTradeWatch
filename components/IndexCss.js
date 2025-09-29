@@ -1,0 +1,196 @@
+export const indexStyles = {
+    container: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+    },
+    header: {
+      alignItems: "center",
+      marginBottom: 40,
+      marginTop: 20,
+    },
+    logo: {
+      width: 100,
+      height: 100,
+      marginBottom: 16,
+    },
+    appName: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: "#49A760",
+      marginBottom: 8,
+    },
+    tagline: {
+      fontSize: 16,
+      color: "#666",
+      textAlign: "center",
+    },
+    languageSection: {
+      marginBottom: 40,
+      alignItems: "center",
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: "#333",
+      marginBottom: 16,
+    },
+    languageButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#fff",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#ddd",
+      minWidth: 200,
+      justifyContent: "space-between",
+    },
+    languageButtonDisabled: {
+      backgroundColor: "#f5f5f5",
+      borderColor: "#e0e0e0",
+      opacity: 0.7,
+    },
+    languageFlag: {
+      fontSize: 20,
+      marginRight: 12,
+    },
+    languageText: {
+      fontSize: 16,
+      color: "#333",
+      flex: 1,
+    },
+    comingSoon: {
+      fontSize: 12,
+      color: "#999",
+      marginTop: 8,
+      textAlign: "center",
+    },
+    optionsSection: {
+      marginBottom: 40,
+    },
+    optionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      marginBottom: 16,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    loginButton: {
+      backgroundColor: "#49A760",
+    },
+    registerButton: {
+      backgroundColor: "#2196F3",
+    },
+    optionButtonText: {
+      color: "#fff",
+      fontSize: 18,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    quickLinksSection: {
+      marginBottom: 40,
+    },
+    quickLinkButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#fff",
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: "#eee",
+    },
+    quickLinkText: {
+      fontSize: 16,
+      color: "#333",
+      marginLeft: 12,
+    },
+    footer: {
+      alignItems: "center",
+      marginTop: "auto",
+      paddingTop: 20,
+    },
+    footerText: {
+      fontSize: 12,
+      color: "#999",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContent: {
+      backgroundColor: "#fff",
+      borderRadius: 16,
+      width: "90%",
+      maxHeight: "70%",
+      padding: 20,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: "#eee",
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: "#333",
+    },
+    languageList: {
+      maxHeight: 300,
+    },
+    languageItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      marginBottom: 4,
+    },
+    selectedLanguageItem: {
+      backgroundColor: "#e8f5e8",
+    },
+    languageItemFlag: {
+      fontSize: 20,
+      marginRight: 12,
+    },
+    languageItemText: {
+      fontSize: 16,
+      color: "#333",
+      flex: 1,
+    },
+    selectedLanguageText: {
+      color: "#49A760",
+      fontWeight: "600",
+    },
+    modalFooter: {
+      marginTop: 20,
+      paddingTop: 16,
+      borderTopWidth: 1,
+      borderTopColor: "#eee",
+    },
+    comingSoonModal: {
+      fontSize: 12,
+      color: "#999",
+      textAlign: "center",
+    },
+  };
+  
