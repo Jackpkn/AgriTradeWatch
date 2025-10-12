@@ -3,6 +3,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useGlobal } from '@/context/global-provider';
+import { useEffect } from 'react';
+import { BackHandler, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 // Import your screens
 import HomeScreen from '../app/(tabs)/home';
@@ -18,6 +22,34 @@ const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
+    const navigation = useNavigation();
+
+    // Handle hardware back button for Android
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            // Show alert asking user if they want to exit the app
+            Alert.alert(
+                'Exit App',
+                'Are you sure you want to exit?',
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => null,
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Exit',
+                        onPress: () => BackHandler.exitApp(),
+                    },
+                ],
+                { cancelable: false }
+            );
+            return true; // Prevent default back behavior
+        });
+
+        return () => backHandler.remove();
+    }, []);
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -75,29 +107,46 @@ function TabNavigator() {
 }
 
 export default function AppNavigator() {
+    const { isLogged, isLoading } = useGlobal();
+
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="Index">
-                <Stack.Screen
-                    name="Index"
-                    component={IndexScreen}
-                    options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                    name="Login"
-                    component={LoginScreen}
-                    options={{ title: 'Login' }}
-                />
-                <Stack.Screen
-                    name="Signup"
-                    component={SignupScreen}
-                    options={{ title: 'Sign Up' }}
-                />
-                <Stack.Screen
-                    name="Main"
-                    component={TabNavigator}
-                    options={{ headerShown: false }}
-                />
+            <Stack.Navigator>
+                {isLogged ? (
+                    // Authenticated user - only show Main screen
+                    <Stack.Screen
+                        name="Main"
+                        component={TabNavigator}
+                        options={{
+                            headerShown: false,
+                            // Prevent going back to auth screens
+                            gestureEnabled: false
+                        }}
+                    />
+                ) : (
+                    // Not authenticated - show auth flow
+                    <>
+                        <Stack.Screen
+                            name="Index"
+                            component={IndexScreen}
+                            options={{
+                                headerShown: false,
+                                // Prevent going back when on Index
+                                gestureEnabled: false
+                            }}
+                        />
+                        <Stack.Screen
+                            name="Login"
+                            component={LoginScreen}
+                            options={{ title: 'Login' }}
+                        />
+                        <Stack.Screen
+                            name="Signup"
+                            component={SignupScreen}
+                            options={{ title: 'Sign Up' }}
+                        />
+                    </>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );

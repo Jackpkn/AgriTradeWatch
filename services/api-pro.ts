@@ -214,6 +214,9 @@ export const setAuthToken = async (token: string): Promise<void> => {
   authToken = token;
   try {
     await AsyncStorage.setItem("auth_token", token);
+    // Store timestamp when token was saved (for 1-day expiry)
+    const expiryTimestamp = Date.now() + (24 * 60 * 60 * 1000); // 1 day from now
+    await AsyncStorage.setItem("auth_token_expiry", expiryTimestamp.toString());
     console.log("Auth token stored successfully", token);
   } catch (error) {
     console.error("Error storing auth token:", error);
@@ -226,7 +229,18 @@ export const getStoredToken = async (): Promise<string | null> => {
   }
   try {
     const token = await AsyncStorage.getItem("auth_token");
-    if (token) {
+    const expiryStr = await AsyncStorage.getItem("auth_token_expiry");
+
+    if (token && expiryStr) {
+      const expiry = parseInt(expiryStr, 10);
+
+      // Check if token has expired (1 day)
+      if (Date.now() > expiry) {
+        console.log("Token expired, clearing...");
+        await clearAuthToken();
+        return null;
+      }
+
       authToken = token;
       return token;
     }
@@ -240,6 +254,7 @@ export const clearAuthToken = async (): Promise<void> => {
   authToken = null;
   try {
     await AsyncStorage.removeItem("auth_token");
+    await AsyncStorage.removeItem("auth_token_expiry");
   } catch (error) {
     console.error("Error clearing auth token:", error);
   }
