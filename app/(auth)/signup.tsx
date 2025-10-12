@@ -268,7 +268,7 @@ const SignUp = () => {
             />
             <FormInput
               icon="mail-outline"
-              placeholder="Email Address (Optional)"
+              placeholder="Email Address"
               value={form.email}
               onChangeText={(text: string) => handleInputChange("email", text)}
               keyboardType="email-address"
