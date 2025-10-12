@@ -97,7 +97,11 @@ const SignUp = () => {
       Alert.alert("Validation Error", "Username and password are required.");
       return;
     }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim()) {
+      Alert.alert("Validation Error", "Email address is required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       Alert.alert("Validation Error", "Please enter a valid email address.");
       return;
     }
