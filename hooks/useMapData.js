@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { fetchCrops } from "../components/crud";
 import { MAP_CONFIG } from "../constants/mapConfig";
 import { authService } from "../services";
+import { networkManager } from "../utils/networkUtils";
 
 export const useMapData = () => {
   const [allConsumerCrops, setAllConsumerCrops] = useState([]);
@@ -40,7 +41,6 @@ export const useMapData = () => {
         console.log("useMapData: User authenticated:", currentUser.username);
 
         // Test network connectivity first
-        const { networkManager } = await import("../utils/networkUtils");
         const networkStatus = await networkManager.getNetworkStatus();
         console.log("useMapData: Network status:", networkStatus);
 
