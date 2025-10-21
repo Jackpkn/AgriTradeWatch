@@ -1,0 +1,333 @@
+import { TranslationKeys } from "./en";
+
+export const mr: TranslationKeys = {
+  // Common
+  common: {
+    loading: "लोड होत आहे...",
+    pleaseWait: "कृपया थांबा...",
+    submit: "सबमिट करा",
+    cancel: "रद्द करा",
+    confirm: "पुष्टी करा",
+    save: "जतन करा",
+    edit: "संपादन करा",
+    delete: "हटवा",
+    search: "शोधा",
+    filter: "फिल्टर",
+    close: "बंद करा",
+    back: "मागे",
+    next: "पुढे",
+    done: "पूर्ण",
+    retry: "पुन्हा प्रयत्न",
+    tryAgain: "पुन्हा प्रयत्न करा",
+    ok: "ठीक",
+    yes: "होय",
+    no: "नाही",
+    great: "छान!",
+    error: "त्रुटी",
+    success: "यशस्वी",
+    warning: "इशारा",
+    info: "माहिती",
+    required: "आवश्यक",
+    optional: "ऐच्छिक",
+    notProvided: "पुरवलेले नाही",
+    comingSoon: "लवकरच येत आहे",
+    version: "आवृत्ती",
+  },
+
+  // App Name & Branding
+  branding: {
+    appName: "मंडीगो",
+    tagline: "पिके व्यवस्थापित करा, किंमती पाहा, आणि डिजिटल व्यापारासाठी सज्ज व्हा",
+    copyright: "© {{year}} मंडीगो. सर्व हक्क राखीव.",
+  },
+
+  // Authentication
+  auth: {
+    welcomeBack: "परत स्वागत आहे!",
+    createAccount: "तुमचे खाते तयार करा",
+    loginSubtitle: "पुढे सुरू ठेवण्यासाठी तुमचे तपशील भरा.",
+    signupSubtitle: "सुरुवात करण्यासाठी आमच्या समुदायात सामील व्हा.",
+    username: "वापरकर्ता नाव",
+    email: "ईमेल पत्ता",
+    password: "पासवर्ड",
+    phoneNumber: "फोन नंबर (ऐच्छिक)",
+    forgotPassword: "पासवर्ड विसरलात?",
+    login: "लॉग इन करा",
+    loggingIn: "लॉग इन होत आहे...",
+    signUp: "साइन अप करा",
+    creatingAccount: "खाते तयार होत आहे...",
+    signingYouIn: "आपल्याला साइन इन केले जात आहे...",
+    dontHaveAccount: "खाते नाही?",
+    alreadyHaveAccount: "आधीच खाते आहे?",
+    logout: "साइन आउट करा",
+    logoutConfirm: "आपण खरोखर साइन आउट करू इच्छिता?",
+
+    // User Types
+    iAmA: "मी आहे",
+    userTypeFarmer: "शेतकरी",
+    userTypeFarmerDesc: "पिके उगवा आणि विका",
+    userTypeConsumer: "ग्राहक",
+    userTypeConsumerDesc: "वैयक्तिक वापरासाठी खरेदी करा",
+
+    // Location
+    locationRequired: "स्थान प्रवेश आवश्यक",
+    locationRequiredMessage:
+      "📍 पिक डेटा सबमिट करण्यासाठी आणि जवळचे बाजार शोधण्यासाठी स्थान प्रवेश आवश्यक आहे.",
+    enableLocation: "स्थान सक्षम करा",
+    waitingForLocation: "स्थानाची प्रतीक्षा...",
+    currentLocationDetected: "सध्याचे स्थान ओळखले",
+    locationAutoDetect: "स्वयंचलित ओळखा",
+    locationAutoDetectDesc: "आपले सध्याचे स्थान वापरा",
+    locationChooseMap: "नकाशातून निवडा",
+    locationChooseMapDesc: "स्थान हाताने निवडा",
+
+    // Validation & Errors
+    validationError: "सत्यापन त्रुटी",
+    loginFailed: "लॉगिन अयशस्वी",
+    registrationSuccessful: "नोंदणी यशस्वी",
+    registrationFailed: "नोंदणी अयशस्वी",
+    enterUsernamePassword: "कृपया वापरकर्ता नाव आणि पासवर्ड दोन्ही भरा.",
+    authRequired: "प्रमाणीकरण आवश्यक",
+    authRequiredMessage: "कृपया पिक डेटा जोडण्यासाठी लॉगिन करा.",
+    logoutFailed: "साइन आउट अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+  },
+
+  // Navigation
+  nav: {
+    home: "होम",
+    map: "नकाशा",
+    stats: "आकडेवारी",
+    profile: "प्रोफाइल",
+    aboutUs: "आमच्याबद्दल",
+    register: "नोंदणी करा",
+  },
+
+  // Home Screen
+  home: {
+    welcomeBack: "परत स्वागत आहे, {{username}}!",
+    checkingAuth: "प्रमाणीकरण तपासत आहे...",
+    chooseLanguage: "भाषा निवडा",
+    activeFeatures: "सक्रिय वैशिष्ट्ये",
+    coreFeatures: "मुख्य वैशिष्ट्ये",
+    quickActions: "त्वरित कृती",
+    priceUpdates: "किंमत अद्यतने",
+    status: "स्थिती",
+    online: "ऑनलाइन",
+    offline: "ऑफलाइन",
+
+    // Feature Cards
+    addCropData: "पिक डेटा जोडा",
+    addCropDataDesc: "नव्या पिकांच्या किंमती आणि बाजार माहिती सबमिट करा",
+    priceMap: "किंमत नकाशा",
+    priceMapDesc: "आज/काल/दिनांक श्रेणी किंमती स्थान पिन आणि त्रिज्येसह",
+    digitalThela: "डिजिटल ठेला",
+    digitalThelaDesc: "क्रांतिकरी व्यापार मंच - लवकरच",
+    featureUnavailable: "वैशिष्ट्य उपलब्ध नाही",
+    featureUnavailableMessage: "हे वैशिष्ट्य लवकरच येत आहे!",
+    explore: "अन्वेषण करा",
+
+    // Quick Actions
+    viewRecentPrices: "अलीकडील किंमती पहा",
+    findNearbyMarkets: "जवळच्या बाजारपेठा शोधा",
+  },
+
+  // Map Screen
+  map: {
+    header: "किंमत माहिती",
+    dragPinTip: "💡 वेगवेगळे भाग पाहण्यासाठी लाल पिन ओढा",
+    noPriceData: "{{range}} साठी किंमत डेटा उपलब्ध नाही.",
+    noData: "डेटा नाही",
+
+    // Price Stats
+    minPrice: "किमान किंमत",
+    maxPrice: "कमाल किंमत",
+    avgPrice: "सरासरी किंमत",
+    modalPrice: "बहुलक किंमत",
+
+    // Date Range
+    today: "आज",
+    yesterday: "काल",
+    week: "आठवडा",
+    month: "महिना",
+    custom: "कस्टम",
+    selectDateRange: "दिनांक श्रेणी निवडा",
+    fromDate: "पासून दिनांक:",
+    toDate: "पर्यंत दिनांक:",
+    quickSelect: "त्वरित निवड:",
+    last7Days: "मागील 7 दिवस",
+    last30Days: "मागील 30 दिवस",
+    last3Months: "मागील 3 महिने",
+    applyDateRange: "दिनांक श्रेणी लागू करा",
+    invalidDateRange: "अवैध दिनांक श्रेणी",
+
+    // Location & Radius
+    locationRadiusControl: "स्थान आणि त्रिज्या नियंत्रण",
+    dragMarkerMessage: "स्थान बदलण्यासाठी नकाशावर मार्कर ओढा...",
+    favoriteLocations: "आवडती ठिकाणे",
+    meters: "मीटर",
+    kilometers: "किलोमीटर",
+    dragSliderMessage:
+      "त्रिज्या समायोजित करण्यासाठी स्लायडर ओढा किंवा खालील स्टेप्सवर टॅप करा",
+    itemsInRange: "परिघातील आयटम",
+
+    // Analytics
+    dataSummaryAnalytics: "डेटा सारांश आणि विश्लेषण",
+    totalDataPoints: "एकूण डेटा पॉइंट्स",
+    inSelectedRadius: "निवडलेल्या त्रिज्येत",
+    activeConsumers: "सक्रिय ग्राहक",
+    totalFarmers: "एकूण शेतकरी",
+    priceTrend: "किंमत प्रवृत्ती",
+    marketVolatility: "बाजार अस्थिरता",
+
+    // Quick Actions
+    quickActions: "त्वरित कृती",
+    exportData: "डेटा निर्यात करा",
+    shareLocation: "स्थान शेअर करा",
+    resetToMyLocation: "माझ्या स्थानावर रीसेट करा",
+    priceAlert: "किंमत इशारा",
+
+    // Chart Titles
+    consumerBuyingPriceTrends: "ग्राहक खरेदी किंमत प्रवृत्ती",
+    farmerSellingPriceTrends: "शेतकरी विक्री किंमत प्रवृत्ती",
+
+    // Insights
+    marketInsights: "बाजार अंतर्दृष्टी",
+    bestTimeToBuy: "खरेदी करण्यासाठी सर्वोत्तम वेळ",
+    priceStability: "किंमत स्थिरता",
+    dataQuality: "डेटा गुणवत्ता",
+  },
+
+  // Stats Screen
+  stats: {
+    header: "बाजार विश्लेषण",
+    subtitle: "कालांतराने पिकांच्या किंमतींच्या प्रवृत्ती ट्रॅक आणि विश्लेषित करा",
+    consumerMarket: "ग्राहक बाजार",
+    farmerMarket: "शेतकरी बाजार",
+    consumerCropAnalysis: "ग्राहक पिक विश्लेषण",
+    farmerCropAnalysis: "शेतकरी पिक विश्लेषण",
+    selectCrop: "पिक निवडा",
+    loadingCropData: "पिक डेटा लोड होत आहे...",
+    selectCropMessage: "आकडेवारी पाहण्यासाठी पिक निवडा",
+    noDataForCrop: "{{crop}} साठी डेटा उपलब्ध नाही",
+    tryDifferentCrop: "वेगळे पिक निवडून पाहा",
+    noValidPriceData: "{{crop}} साठी वैध किंमत डेटा नाही",
+    checkPriceInfo: "किंमत माहिती उपलब्ध आहे का ते तपासा",
+    errorLoadingChart: "चार्ट लोड करण्यात त्रुटी",
+
+    // Today's Prices
+    todayPrices: "📅 आजच्या किंमती",
+    highestToday: "आजची सर्वाधिक",
+    lowestToday: "आजची किमान",
+    entriesCount: "{{count}} नोंदी",
+    todayAverage: "आजची सरासरी: ₹{{amount}}",
+
+    // Overall Stats
+    overallMarketStats: "📊 एकूण बाजार आकडे",
+    allTimeHigh: "सर्वकालीन उच्च",
+    allTimeLow: "सर्वकालीन नीच",
+    overallMedian: "एकूण माध्य",
+    overallAvg: "एकूण सरासरी",
+    priceRange: "किंमत श्रेणी",
+    volatility: "अस्थिरता",
+    totalPoints: "एकूण बिंदू",
+    peakPrice: "शिखर किंमत",
+    lowPrice: "किमान किंमत",
+    dataPoints: "डेटा बिंदू",
+
+    // Market Insights
+    stablePricing: "बाजार कमी अस्थिरतेसह स्थिर किंमत दाखवतो",
+    highVolatility: "बाजार उच्च अस्थिरता दाखवतो - किंमती लक्षणीय बदलतात",
+    goodDataCoverage: "{{count}} डेटा बिंदूंसह चांगले डेटा कव्हरेज",
+    limitedData: "मर्यादित डेटा उपलब्ध ({{count}} बिंदू)...",
+
+    // Actions
+    hideMarketAnalytics: "बाजार विश्लेषण लपवा",
+    showMarketAnalytics: "बाजार विश्लेषण दाखवा",
+  },
+
+  // Profile Screen
+  profile: {
+    header: "प्रोफाइल माहिती",
+    username: "वापरकर्ता नाव",
+    email: "ईमेल",
+    mobile: "मोबाइल",
+    memberSince: "पासून सदस्य",
+    preferences: "प्राधान्ये",
+    language: "भाषा",
+    languageEnglish: "इंग्रजी",
+    userType: "वापरकर्ता प्रकार",
+    locationMethod: "स्थान पद्धत",
+    loadingProfile: "प्रोफाइल लोड होत आहे...",
+    roleUpdated: "आपली भूमिका {{userType}} मध्ये अद्यतनित केली आहे.",
+    roleUpdateFailed: "भूमिका अद्यतनित करण्यात अयशस्वी.",
+  },
+
+  // Crops Screen
+  crops: {
+    header: "पिक डेटा जोडा",
+    cropInformation: "पिक माहिती",
+    selectCropCommodity: "पिक वस्तू निवडा *",
+    chooseCrop: "पिक निवडा...",
+    pricePerKg: "प्रति किलो किंमत (₹) *",
+    enterPricePerKg: "प्रति किलो किंमत भरा",
+    quantityBought: "खरेदी केलेली मात्रा (किलो) *",
+    enterQuantity: "किलोमध्ये मात्रा भरा",
+    addPhoto: "छायाचित्र जोडा (ऐच्छिक)",
+    addPhotoMessage: "फोटो जोडल्याने तुमचा पिक डेटा सत्यापित करण्यात मदत होते...",
+    takePhoto: "फोटो काढा",
+    fromGallery: "गॅलरीमधून",
+    photoAttached: "📎 {{fileName}}",
+    submitCropData: "पिक डेटा सबमिट करा",
+    requiredFields: "* आवश्यक फील्ड",
+    locationDetected: "📍 स्थान: ओळखले",
+    locationRequired: "सबमिशनसाठी आवश्यक",
+
+    // Coming Soon
+    featureComingSoon: "वैशिष्ट्य लवकरच येत आहे!",
+    workingHardMessage: "आम्ही तुमच्यासाठी मेहनत घेत आहोत...",
+
+    // Validation
+    fillAllFields: "कृपया सर्व पिक फील्ड भरा.",
+    locationRequiredMessage: "कृपया स्थान सेवा सक्षम करा...",
+    validPrice: "कृपया प्रति युनिट वैध किंमत भरा.",
+    validQuantity: "कृपया वैध मात्रा भरा.",
+
+    // Success
+    submissionSuccess: "पिक डेटा यशस्वीरित्या सबमिट झाला! आयडी: {{id}}...",
+    submissionError: "सबमिशन त्रुटी",
+
+    // Crop Names
+    cropOnion: "कांदा",
+    cropTomato: "टोमॅटो",
+    cropPotato: "बटाटा",
+    cropDrumstick: "शेवगा",
+    cropCarrot: "गाजर",
+    cropGinger: "आलं",
+    cropGarlic: "लसूण",
+    cropGreenChilli: "हिरवी मिरची",
+    cropLemon: "लिंबू",
+    cropBanana: "केळी",
+  },
+
+  // Network & Connectivity
+  network: {
+    youreOffline: "आपण ऑफलाइन आहात",
+    someFeaturesMayNotWork: "काही वैशिष्ट्ये कार्य करू शकत नाहीत",
+    connectionRestored: "कनेक्शन पुनर्स्थापित! 🎉",
+    connectionRestoredMessage: "आपले इंटरनेट कनेक्शन आता सक्रिय आहे...",
+    stillOffline: "अजूनही ऑफलाइन",
+    networkStatus: "नेटवर्क स्थिती: {{type}}",
+    internetReachable: "इंटरनेट प्रवेशयोग्य: {{status}}",
+    connectionCheckFailed: "कनेक्शन तपासणी अयशस्वी",
+    unableToCheckNetwork: "नेटवर्क स्थिती तपासता आली नाही...",
+    noInternetConnection: "इंटरनेट कनेक्शन नाही",
+    checkNetworkSettings: "कृपया आपली नेटवर्क सेटिंग्ज तपासा...",
+  },
+
+  // Language Options
+  languages: {
+    english: "English",
+    hindi: "हिंदी",
+    marathi: "मराठी",
+  },
+};

@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, ViewStyle, TextStyle } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface TabIconProps {
   icon: string;
@@ -48,6 +49,8 @@ interface TabBarIconProps {
 }
 
 const TabLayout: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <Tabs
       screenOptions={{
@@ -72,22 +75,22 @@ const TabLayout: React.FC = () => {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t.nav.home,
           headerShown: false,
           tabBarIcon: ({ color, focused }: TabBarIconProps) => (
-            <TabIcon icon="home" name="Home" color={color} focused={focused} />
+            <TabIcon icon="home" name={t.nav.home} color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
-          title: "Statistics",
+          title: t.nav.stats,
           headerShown: false,
           tabBarIcon: ({ color, focused }: TabBarIconProps) => (
             <TabIcon
               icon="stats-chart"
-              name="Stats"
+              name={t.nav.stats}
               color={color}
               focused={focused}
             />
@@ -97,22 +100,22 @@ const TabLayout: React.FC = () => {
       <Tabs.Screen
         name="map"
         options={{
-          title: "Map",
+          title: t.nav.map,
           headerShown: false,
           tabBarIcon: ({ color, focused }: TabBarIconProps) => (
-            <TabIcon icon="map" name="Map" color={color} focused={focused} />
+            <TabIcon icon="map" name={t.nav.map} color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t.nav.profile,
           headerShown: false,
           tabBarIcon: ({ color, focused }: TabBarIconProps) => (
             <TabIcon
               icon="person"
-              name="Profile"
+              name={t.nav.profile}
               color={color}
               focused={focused}
             />

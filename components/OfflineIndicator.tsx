@@ -3,10 +3,12 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useGlobal } from "@/context/global-provider";
+import { useTranslation } from "@/hooks/useTranslation";
 import { refreshNetworkStatus, getNetworkStatus } from "@/utils/networkUtils";
 
 const OfflineIndicator = ({ style = {} }) => {
   const { isOnline, } = useGlobal();
+  const { t, interpolate } = useTranslation();
 
   if (isOnline) return null; // Don't show anything if online
 
@@ -20,26 +22,28 @@ const OfflineIndicator = ({ style = {} }) => {
 
       if (isConnected) {
         Alert.alert(
-          "Connection Restored! 🎉",
-          "Your internet connection is now active. The app will automatically refresh.",
-          [{ text: "Great!" }]
+          t.network.connectionRestored,
+          t.network.connectionRestoredMessage,
+          [{ text: t.common.great }]
         );
       } else {
         Alert.alert(
-          "Still Offline",
-          `Network Status: ${networkStatus.type || 'Unknown'}\nInternet Reachable: ${networkStatus.isInternetReachable ? 'Yes' : 'No'}\n\nPlease check your internet connection and try again.`,
+          t.network.stillOffline,
+          interpolate(t.network.networkStatus, { type: networkStatus.type || 'Unknown' }) +
+          '\n' + interpolate(t.network.internetReachable, { status: networkStatus.isInternetReachable ? 'Yes' : 'No' }) +
+          '\n\n' + t.network.checkNetworkSettings,
           [
-            { text: "Cancel", style: "cancel" },
-            { text: "Try Again", onPress: handleCheckConnection }
+            { text: t.common.cancel, style: "cancel" },
+            { text: t.common.tryAgain, onPress: handleCheckConnection }
           ]
         );
       }
     } catch (error) {
       console.error("Error checking connection:", error);
       Alert.alert(
-        "Connection Check Failed",
-        "Unable to check network status. Please try again.",
-        [{ text: "OK" }]
+        t.network.connectionCheckFailed,
+        t.network.unableToCheckNetwork,
+        [{ text: t.common.ok }]
       );
     }
   };
@@ -64,14 +68,14 @@ const OfflineIndicator = ({ style = {} }) => {
             color: "#856404",
             fontWeight: "600"
           }}>
-            You're offline
+            {t.network.youreOffline}
           </Text>
           <Text style={{
             fontSize: 10,
             color: "#856404",
             opacity: 0.8
           }}>
-            Some features may not work
+            {t.network.someFeaturesMayNotWork}
           </Text>
         </View>
       </View>
@@ -92,7 +96,7 @@ const OfflineIndicator = ({ style = {} }) => {
           color: "#fff",
           fontWeight: "600"
         }}>
-          Retry
+          {t.common.retry}
         </Text>
       </TouchableOpacity>
     </View>

@@ -10,6 +10,8 @@ export const loginStyles = StyleSheet.create({
   input: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, fontSize: 16, color: '#333' },
   inputIcon: { marginHorizontal: 10 },
   eyeIcon: { padding: 10 },
+  forgotPasswordContainer: { alignItems: "flex-end", marginTop: 8, marginBottom: 8 },
+  forgotPasswordText: { color: "#2E7D32", fontSize: 14, fontWeight: "600" },
   submitButton: { backgroundColor: "#2E7D32", paddingVertical: 15, borderRadius: 8, alignItems: "center", marginTop: 20 },
   submitButtonDisabled: { backgroundColor: "#ccc", opacity: 0.7 },
   submitButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },

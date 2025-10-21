@@ -2,6 +2,7 @@
 
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { useGlobal } from "@/context/global-provider";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface LoaderProps {
   message?: string;
@@ -9,26 +10,22 @@ interface LoaderProps {
 }
 
 const GlobalLoader = ({ message, visible }: LoaderProps = {}) => {
-  // Safely get context with error handling
-  let contextValue;
-  try {
-    contextValue = useGlobal();
-  } catch (error) {
-    console.error("Error accessing GlobalContext in Loader:", error);
-    contextValue = {};
-  }
+  // Get contexts - these must be called unconditionally at the top level
+  const contextValue = useGlobal();
+  const { t, isLoading: translationLoading } = useTranslation();
 
   const { isLoading = false } = contextValue || {};
   const shouldShow = visible !== undefined ? visible : isLoading;
 
-  if (!shouldShow) return null;
+  // Don't show loader if translations are still loading to avoid errors
+  if (translationLoading || !shouldShow) return null;
 
   return (
     <View style={styles.loaderContainer}>
       <View style={styles.loaderBox}>
         <ActivityIndicator size="large" color="#49A760" style={{ marginBottom: 16 }} />
         <Text style={styles.text}>
-          {message || "Please wait..."}
+          {message || t.common.pleaseWait}
         </Text>
       </View>
     </View>

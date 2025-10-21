@@ -19,6 +19,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 // Local imports
 import { signUpStyles as styles } from "@/components/auth/SignUpStyles";
 import { useGlobal } from "@/context/global-provider";
+import { useTranslation } from "@/hooks/useTranslation";
 import authService, { RegistrationData } from "@/services/auth-service";
 import { getMandatoryLocation } from "@/components/getLocation";
 import { APIError } from "@/services/api";
@@ -43,6 +44,7 @@ type ModalType = 'userType' | null;
 const SignUp = () => {
   const navigation = useNavigation();
   const { setIsLoading, currentLocation } = useGlobal();
+  const { t } = useTranslation();
 
   const [form, setForm] = useState<SignUpFormState>({
     name: "",
@@ -94,28 +96,28 @@ const SignUp = () => {
 
     // Client-side Validation
     if (!username.trim() || !password.trim()) {
-      Alert.alert("Validation Error", "Username and password are required.");
+      Alert.alert(t.auth.validationError, t.auth.enterUsernamePassword);
       return;
     }
     if (!email.trim()) {
-      Alert.alert("Validation Error", "Email address is required.");
+      Alert.alert(t.auth.validationError, "Email address is required.");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Alert.alert("Validation Error", "Please enter a valid email address.");
+      Alert.alert(t.auth.validationError, "Please enter a valid email address.");
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Validation Error", "Password must be at least 6 characters long.");
+      Alert.alert(t.auth.validationError, "Password must be at least 6 characters long.");
       return;
     }
 
     // Check if location is available
     if (!currentLocation?.latitude || !currentLocation?.longitude) {
       Alert.alert(
-        "Location Required",
-        "Please enable location services to continue with registration. Your exact location is required for the best experience.",
-        [{ text: "OK" }]
+        t.auth.locationRequired,
+        t.auth.locationRequiredMessage,
+        [{ text: t.common.ok }]
       );
       return;
     }
@@ -141,9 +143,9 @@ const SignUp = () => {
       const result = await authService.register(payload);
 
       Alert.alert(
-        'Registration Successful',
+        t.auth.registrationSuccessful,
         result.message,
-        [{ text: 'OK', onPress: () => navigation.navigate('Login' as never) }]
+        [{ text: t.common.ok, onPress: () => navigation.navigate('Login' as never) }]
       );
 
     } catch (error: unknown) {
@@ -157,12 +159,12 @@ const SignUp = () => {
         if (__DEV__) console.error("Registration Generic Error:", error);
       }
 
-      Alert.alert('Registration Failed', errorMessage);
+      Alert.alert(t.auth.registrationFailed, errorMessage);
     } finally {
       setIsRegistering(false);
       setIsLoading(false);
     }
-  }, [form, selectedUserType, currentLocation, setIsLoading]);
+  }, [form, selectedUserType, currentLocation, setIsLoading, t]);
 
   const handleRetryLocation = useCallback(async () => {
     setIsRequestingLocation(true);
@@ -176,16 +178,16 @@ const SignUp = () => {
     } catch (error) {
       console.error('Signup: Manual location request failed:', error);
       Alert.alert(
-        "Location Error",
+        t.common.error,
         "Unable to get your location. Please check your location settings and try again.",
         [
-          { text: "OK" }
+          { text: t.common.ok }
         ]
       );
     } finally {
       setIsRequestingLocation(false);
     }
-  }, []);
+  }, [t]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -201,14 +203,14 @@ const SignUp = () => {
         >
           <View style={styles.container}>
             <Image source={illustration} style={styles.illustration} resizeMode="contain" />
-            <Text style={styles.title}>Create Your Account</Text>
-            <Text style={styles.subtitle}>Join our community to get started.</Text>
+            <Text style={styles.title}>{t.auth.createAccount}</Text>
+            <Text style={styles.subtitle}>{t.auth.signupSubtitle}</Text>
             <Text style={styles.locationNote}>
-              📍 Location access is required to provide you with accurate local market prices and nearby opportunities.
+              {t.auth.locationRequiredMessage}
             </Text>
 
             <SelectionButton
-              label="I am a"
+              label={t.auth.iAmA}
               value={selectedUserType}
               icon={USER_TYPES.find(type => type.name === selectedUserType)?.icon || "👤"}
               onPress={() => setModalVisible('userType')}
@@ -218,14 +220,14 @@ const SignUp = () => {
             <View style={styles.locationContainer}>
               <View style={styles.locationHeader}>
                 <Ionicons name="location" size={20} color="#49A760" />
-                <Text style={styles.locationLabel}>Location</Text>
+                <Text style={styles.locationLabel}>{t.auth.locationRequired}</Text>
               </View>
 
               {isRequestingLocation && !currentLocation?.latitude ? (
                 <View style={styles.locationStatus}>
                   <Ionicons name="time" size={16} color="#49A760" />
                   <Text style={styles.locationText}>
-                    Waiting for location...
+                    {t.auth.waitingForLocation}
                   </Text>
                 </View>
               ) : currentLocation?.latitude && currentLocation?.longitude ? (
@@ -233,7 +235,7 @@ const SignUp = () => {
                   <View style={styles.locationStatus}>
                     <Ionicons name="checkmark-circle" size={16} color="#49A760" />
                     <Text style={styles.locationText}>
-                      Current location detected
+                      {t.auth.currentLocationDetected}
                     </Text>
                   </View>
                   <Text style={styles.locationCoords}>
@@ -245,7 +247,7 @@ const SignUp = () => {
                   <View style={styles.locationStatus}>
                     <Ionicons name="warning" size={16} color="#ff6b6b" />
                     <Text style={[styles.locationText, { color: '#ff6b6b' }]}>
-                      Location access required
+                      {t.auth.locationRequired}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -255,7 +257,7 @@ const SignUp = () => {
                   >
                     <Ionicons name="refresh" size={14} color="#49A760" />
                     <Text style={styles.retryLocationText}>
-                      Enable Location
+                      {t.auth.enableLocation}
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -265,14 +267,14 @@ const SignUp = () => {
             {/* Form Inputs */}
             <FormInput
               icon="person-outline"
-              placeholder="Username"
+              placeholder={t.auth.username}
               value={form.username}
               onChangeText={(text: string) => handleInputChange("username", text)}
               autoCapitalize="none"
             />
             <FormInput
               icon="mail-outline"
-              placeholder="Email Address"
+              placeholder={t.auth.email}
               value={form.email}
               onChangeText={(text: string) => handleInputChange("email", text)}
               keyboardType="email-address"
@@ -282,7 +284,7 @@ const SignUp = () => {
               <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder={t.auth.password}
                 placeholderTextColor="#9A9A9A"
                 value={form.password}
                 onChangeText={(text) => handleInputChange("password", text)}
@@ -294,7 +296,7 @@ const SignUp = () => {
             </View>
             <FormInput
               icon="call-outline"
-              placeholder="Phone Number (Optional)"
+              placeholder={t.auth.phoneNumber}
               value={form.phoneNumber}
               onChangeText={(text: string) => handleInputChange("phoneNumber", text)}
               keyboardType="phone-pad"
@@ -310,18 +312,18 @@ const SignUp = () => {
               disabled={isRegistering}
             >
               <Text style={styles.submitButtonText}>
-                {isRegistering ? "Creating Account..." : "Sign Up"}
+                {isRegistering ? t.auth.creatingAccount : t.auth.signUp}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={styles.loginText}>{t.auth.alreadyHaveAccount} </Text>
               <TouchableOpacity
                 disabled={isRegistering}
                 onPress={() => navigation.navigate('Login' as never)}
               >
                 <Text style={[styles.loginLink, isRegistering && { opacity: 0.5 }]}>
-                  Login
+                  {t.auth.login}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -341,7 +343,7 @@ const SignUp = () => {
 
       <GlobalLoader
         visible={isRegistering}
-        message="Creating your account..."
+        message={t.auth.creatingAccount}
       />
 
 

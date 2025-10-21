@@ -18,6 +18,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 // Local imports
 import { loginStyles as styles } from "@/components/auth/LoginStyle";
 import { useGlobal } from "@/context/global-provider";
+import { useTranslation } from "@/hooks/useTranslation";
 import { authService } from "@/services";
 import { APIError } from "@/services/api";
 import { FormInput } from "@/components/auth/FormComponents";
@@ -37,6 +38,7 @@ interface LoginFormState {
 const LoginScreen = () => {
   const navigation = useNavigation();
   const { setIsLoading } = useGlobal();
+  const { t } = useTranslation();
 
   const [form, setForm] = useState<LoginFormState>({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -52,7 +54,7 @@ const LoginScreen = () => {
     const { username, password } = form;
 
     if (!username.trim() || !password.trim()) {
-      Alert.alert("Validation Error", "Please enter both username and password.");
+      Alert.alert(t.auth.validationError, t.auth.enterUsernamePassword);
       return;
     }
 
@@ -81,13 +83,13 @@ const LoginScreen = () => {
         if (__DEV__) console.error("Login Generic Error:", error);
       }
 
-      Alert.alert("Login Failed", errorMessage);
+      Alert.alert(t.auth.loginFailed, errorMessage);
     } finally {
       setIsLoggingIn(false);
       setIsLoading(false);
     }
 
-  }, [form, setIsLoading]);
+  }, [form, setIsLoading, t]);
 
 
   // --- Render ---
@@ -110,12 +112,12 @@ const LoginScreen = () => {
               style={styles.illustration}
               resizeMode="contain"
             />
-            <Text style={styles.title}>Welcome Back!</Text>
-            <Text style={styles.subtitle}>Please enter your details to continue.</Text>
+            <Text style={styles.title}>{t.auth.welcomeBack}</Text>
+            <Text style={styles.subtitle}>{t.auth.loginSubtitle}</Text>
 
             <FormInput
               icon="person-outline"
-              placeholder="Username"
+              placeholder={t.auth.username}
               value={form.username}
               onChangeText={(text: string) => handleInputChange("username", text)}
               autoCapitalize="none"
@@ -126,7 +128,7 @@ const LoginScreen = () => {
               <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Password"
+                placeholder={t.auth.password}
                 placeholderTextColor="#9A9A9A"
                 value={form.password}
                 onChangeText={(text) => handleInputChange("password", text)}
@@ -145,6 +147,17 @@ const LoginScreen = () => {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.forgotPasswordContainer}>
+              <TouchableOpacity
+                disabled={isLoggingIn}
+                onPress={() => Alert.alert(t.auth.forgotPassword, t.home.featureUnavailableMessage)}
+              >
+                <Text style={[styles.forgotPasswordText, isLoggingIn && { opacity: 0.5 }]}>
+                  {t.auth.forgotPassword}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               style={[
                 styles.submitButton,
@@ -154,18 +167,18 @@ const LoginScreen = () => {
               disabled={isLoggingIn || !form.username || !form.password}
             >
               <Text style={styles.submitButtonText}>
-                {isLoggingIn ? "Logging In..." : "Log In"}
+                {isLoggingIn ? t.auth.loggingIn : t.auth.login}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.signUpContainer}>
-              <Text style={styles.signUpText}>Don't have an account? </Text>
+              <Text style={styles.signUpText}>{t.auth.dontHaveAccount} </Text>
               <TouchableOpacity
                 disabled={isLoggingIn}
                 onPress={() => navigation.navigate('Signup' as never)}
               >
                 <Text style={[styles.signUpLink, isLoggingIn && { opacity: 0.5 }]}>
-                  Sign Up
+                  {t.auth.signUp}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -175,7 +188,7 @@ const LoginScreen = () => {
 
       <GlobalLoader
         visible={isLoggingIn}
-        message="Signing you in..."
+        message={t.auth.signingYouIn}
       />
     </SafeAreaView>
   );
