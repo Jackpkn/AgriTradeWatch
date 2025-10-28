@@ -338,6 +338,50 @@ class AuthService {
     if (__DEV__) console.log("🔄 Profile updated successfully");
     return updatedUser;
   }
+
+  /**
+   * Request a password reset email.
+   * Sends a password reset link to the provided email address.
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    try {
+      if (!email || !email.trim()) {
+        throw new APIError(
+          "Email address is required",
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+
+      // Validate email format
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new APIError(
+          "Please enter a valid email address",
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+
+      const response = await apiWithRetry.post<{ message: string }>(
+        "/password_reset/",
+        { email }
+      );
+
+      if (__DEV__) {
+        console.log("✅ Password reset email sent successfully");
+      }
+
+      return {
+        message: response.data.message || "Password reset email sent successfully",
+      };
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      if (error instanceof APIError) throw error;
+      throw new APIError(
+        error.data?.message || "Failed to send password reset email",
+        error.status || 500,
+        error.data
+      );
+    }
+  }
 }
 
 const authService = new AuthService();

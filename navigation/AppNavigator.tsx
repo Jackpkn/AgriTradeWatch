@@ -16,6 +16,7 @@ import ProfileScreen from '../app/(tabs)/profile';
 import CropsScreen from '../app/crops';
 import LoginScreen from '../app/(auth)/login';
 import SignupScreen from '../app/(auth)/signup';
+import ForgotPasswordScreen from '../app/(auth)/forgot-password';
 import IndexScreen from '../app/index';
 
 const Stack = createStackNavigator();
@@ -144,6 +145,11 @@ export default function AppNavigator() {
                             name="Signup"
                             component={SignupScreen}
                             options={{ title: 'Sign Up' }}
+                        />
+                        <Stack.Screen
+                            name="ForgotPassword"
+                            component={ForgotPasswordScreen}
+                            options={{ title: 'Forgot Password' }}
                         />
                     </>
                 )}

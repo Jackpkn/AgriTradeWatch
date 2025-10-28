@@ -151,7 +151,7 @@ const LoginScreen = () => {
             <View style={styles.forgotPasswordContainer}>
               <TouchableOpacity
                 disabled={isLoggingIn}
-                onPress={() => Alert.alert(t.auth.forgotPassword, t.home.featureUnavailableMessage)}
+                onPress={() => navigation.navigate('ForgotPassword' as never)}
               >
                 <Text style={[styles.forgotPasswordText, isLoggingIn && { opacity: 0.5 }]}>
                   {t.auth.forgotPassword}
