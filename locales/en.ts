@@ -87,6 +87,11 @@ export const en = {
     authRequired: "Authentication Required",
     authRequiredMessage: "Please login to add crop data.",
     logoutFailed: "Failed to sign out. Please try again.",
+
+    // Disclaimer
+    disclaimerTitle: "Disclaimer",
+    disclaimerText: "The crop data inputted in the app will be displayed on the public dashboard. By entering data on the app, you consent to use the data for the dashboard.",
+    disclaimerAccept: "I agree to the terms above",
   },
 
   // Navigation

@@ -90,6 +90,11 @@ export const mr: TranslationKeys = {
     authRequired: "प्रमाणीकरण आवश्यक",
     authRequiredMessage: "कृपया पिक डेटा जोडण्यासाठी लॉगिन करा.",
     logoutFailed: "साइन आउट अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+
+    // Disclaimer
+    disclaimerTitle: "अस्वीकरण",
+    disclaimerText: "अॅपमध्ये इनपुट केलेला पिक डेटा सार्वजनिक डॅशबोर्डवर प्रदर्शित केला जाईल. अॅपवर डेटा प्रविष्ट करून, आपण डॅशबोर्डसाठी डेटा वापरण्यास संमती देता.",
+    disclaimerAccept: "मी वरील अटींशी सहमत आहे",
   },
 
   // Navigation

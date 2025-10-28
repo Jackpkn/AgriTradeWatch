@@ -43,6 +43,7 @@ const LoginScreen = () => {
   const [form, setForm] = useState<LoginFormState>({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState<boolean>(false);
 
   // --- Handlers ---
 
@@ -158,13 +159,33 @@ const LoginScreen = () => {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.disclaimerContainer}>
+              <Text style={styles.disclaimerText}>
+                <Text style={styles.disclaimerLabel}>{t.auth.disclaimerTitle}: </Text>
+                {t.auth.disclaimerText}
+              </Text>
+
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={() => setDisclaimerAccepted(!disclaimerAccepted)}
+                disabled={isLoggingIn}
+              >
+                <View style={[styles.checkbox, disclaimerAccepted && styles.checkboxChecked]}>
+                  {disclaimerAccepted && (
+                    <Ionicons name="checkmark" size={18} color="#fff" />
+                  )}
+                </View>
+                <Text style={styles.checkboxLabel}>{t.auth.disclaimerAccept}</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                (isLoggingIn || !form.username || !form.password) && styles.submitButtonDisabled
+                (isLoggingIn || !form.username || !form.password || !disclaimerAccepted) && styles.submitButtonDisabled
               ]}
               onPress={handleLogin}
-              disabled={isLoggingIn || !form.username || !form.password}
+              disabled={isLoggingIn || !form.username || !form.password || !disclaimerAccepted}
             >
               <Text style={styles.submitButtonText}>
                 {isLoggingIn ? t.auth.loggingIn : t.auth.login}

@@ -89,6 +89,11 @@ export const hi: TranslationKeys = {
     authRequired: "प्रमाणीकरण आवश्यक",
     authRequiredMessage: "कृपया फसल डेटा जोड़ने के लिए लॉगिन करें।",
     logoutFailed: "साइन आउट विफल रहा। कृपया पुनः प्रयास करें।",
+
+    // Disclaimer
+    disclaimerTitle: "अस्वीकरण",
+    disclaimerText: "ऐप में दर्ज की गई फसल डेटा सार्वजनिक डैशबोर्ड पर प्रदर्शित की जाएगी। ऐप पर डेटा दर्ज करके, आप डैशबोर्ड के लिए डेटा का उपयोग करने के लिए सहमति देते हैं।",
+    disclaimerAccept: "मैं उपरोक्त शर्तों से सहमत हूं",
   },
 
   // Navigation
