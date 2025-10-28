@@ -423,15 +423,6 @@ const CropsScreen = () => {
                         <Ionicons name="camera" size={24} color="#49A760" />
                         <Text style={styles.imageButtonText}>Take Photo</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.imageButton}
-                        onPress={handlePickImage}
-                        accessible={true}
-                        accessibilityLabel="Select photo from gallery"
-                      >
-                        <Ionicons name="images" size={24} color="#49A760" />
-                        <Text style={styles.imageButtonText}>From Gallery</Text>
-                      </TouchableOpacity>
                     </View>
                     {photo && (
                       <View style={styles.imagePreview}>

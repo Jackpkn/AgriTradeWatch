@@ -488,7 +488,7 @@ export const createCropsStyles = createOrientationStyles(
     submitButton: {
       borderRadius: 16,
       overflow: "hidden",
-      marginTop: 20,
+      // marginTop: 20,
     },
     submitButtonGradient: {
       paddingVertical: 16,
@@ -553,7 +553,6 @@ export const createCropsStyles = createOrientationStyles(
     imageButtons: {
       flexDirection: isLandscape ? "row" : "column",
       gap: 12,
-      marginBottom: 16,
     },
     imageButton: {
       flex: isLandscape ? 1 : undefined,
