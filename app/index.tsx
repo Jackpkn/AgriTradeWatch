@@ -57,9 +57,6 @@ export default function Index() {
 
   // Debug: Log current language whenever it changes
   useEffect(() => {
-    console.log('📱 Current language in Index:', language);
-    console.log('📚 Current translations sample:', t.common.loading);
-    console.log('📝 App name should be:', t.branding.appName);
     // Force a re-render when language changes
     forceUpdate({});
   }, [language]);
@@ -119,8 +116,6 @@ export default function Index() {
   }
 
   const currentLanguage = LANGUAGES.find((lang) => lang.code === language);
-
-  console.log('🔄 Rendering Index component with language:', language);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#eafbe7" }}>
@@ -207,13 +202,8 @@ export default function Index() {
                   language === lang.code && styles.modalLanguageOptionActive,
                 ]}
                 onPress={async () => {
-                  console.log('🔘 Language option pressed:', lang.code);
-                  console.log('🔘 setLanguage function:', setLanguage);
-                  console.log('🔘 Current language before change:', language);
                   try {
                     await setLanguage(lang.code);
-                    console.log('✅ setLanguage call completed');
-                    console.log('🔘 Current language after change:', language);
                     setShowLanguageModal(false);
                   } catch (error) {
                     console.error('❌ Error changing language:', error);
