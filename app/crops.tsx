@@ -22,22 +22,24 @@ import { useGlobal } from "@/context/global-provider";
 import { addCrop } from "@/components/cropsController";
 import { useOrientation } from "@/utils/orientationUtils";
 import { createCropsStyles } from "@/utils/responsiveStyles";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ADD_CROP_ENABLED = true;
 // Set to `true` to show the camera/gallery UI.
 const ADD_IMAGE_ENABLED = true;
 
-const CROP_ITEMS = [
-  { label: "Onion", value: "onion", icon: "🧅" },
-  { label: "Tomato", value: "tomato", icon: "🍅" },
-  { label: "Potato", value: "potato", icon: "🥔" },
-  { label: "Drumstick", value: "drumstick", icon: "🥬" },
-  { label: "Carrot", value: "carrot", icon: "🥕" },
-  { label: "Ginger", value: "ginger", icon: "🫚" },
-  { label: "Garlic", value: "garlic", icon: "🧄" },
-  { label: "Green Chilli", value: "green chilli", icon: "🌶️" },
-  { label: "Lemon", value: "lemon", icon: "🍋" },
-  { label: "Banana", value: "banana", icon: "🍌" },
+// Crop items will be generated dynamically using translations
+const getCropItems = (t: any) => [
+  { labelKey: "cropOnion", value: "onion", icon: "🧅" },
+  { labelKey: "cropTomato", value: "tomato", icon: "🍅" },
+  { labelKey: "cropPotato", value: "potato", icon: "🥔" },
+  { labelKey: "cropDrumstick", value: "drumstick", icon: "🥬" },
+  { labelKey: "cropCarrot", value: "carrot", icon: "🥕" },
+  { labelKey: "cropGinger", value: "ginger", icon: "🫚" },
+  { labelKey: "cropGarlic", value: "garlic", icon: "🧄" },
+  { labelKey: "cropGreenChilli", value: "green chilli", icon: "🌶️" },
+  { labelKey: "cropLemon", value: "lemon", icon: "🍋" },
+  { labelKey: "cropBanana", value: "banana", icon: "🍌" },
   // Add more crops as needed
 ];
 
@@ -103,6 +105,7 @@ const getMimeType = (uri: string): string => {
 
 const CropsScreen = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const { isLandscape, width } = useOrientation() as unknown as {
     isLandscape: boolean;
     width: number;
@@ -116,6 +119,7 @@ const CropsScreen = () => {
   );
 
   const { currentLocation, setIsLoading, isLogged } = useGlobal();
+  const cropItems = useMemo(() => getCropItems(t), [t]);
 
   const [form, setForm] = useState<CropFormState>({
     name: "",
@@ -170,7 +174,7 @@ const CropsScreen = () => {
   const handlePickImage = useCallback(async () => {
     if (!hasPermission) {
       Alert.alert(
-        "Permission Required",
+        t.common.required,
         "Please grant camera and media library access in your device settings."
       );
       return;
@@ -196,29 +200,29 @@ const CropsScreen = () => {
         type: mimeType,
       });
     }
-  }, [hasPermission, form.name]);
+  }, [hasPermission, form.name, t]);
 
   const handleCropSubmit = useCallback(async () => {
     if (!isLogged) {
-      Alert.alert("Authentication Required", "Please login to add crop data.", [
-        { text: "Login", onPress: () => navigation.navigate("Login" as never) },
-        { text: "Cancel", style: "cancel" },
+      Alert.alert(t.auth.authRequired, t.auth.authRequiredMessage, [
+        { text: t.auth.login, onPress: () => navigation.navigate("Login" as never) },
+        { text: t.common.cancel, style: "cancel" },
       ]);
       return;
     }
 
     if (!form.name || !form.pricePerUnit || !form.quantity) {
-      Alert.alert("Validation Error", "Please fill in all crop fields.");
+      Alert.alert(t.auth.validationError, t.crops.fillAllFields);
       return;
     }
 
     if (!currentLocation) {
       Alert.alert(
-        "Location Required",
-        "Please enable location services to submit data.",
+        t.auth.locationRequired,
+        t.crops.locationRequiredMessage,
         [
           { text: "Open Settings", onPress: () => Linking.openSettings() },
-          { text: "Cancel", style: "cancel" },
+          { text: t.common.cancel, style: "cancel" },
         ]
       );
       return;
@@ -229,12 +233,12 @@ const CropsScreen = () => {
     const quantity = parseFloat(form.quantity);
 
     if (isNaN(price) || price <= 0) {
-      Alert.alert("Validation Error", "Please enter a valid price per unit.");
+      Alert.alert(t.auth.validationError, t.crops.validPrice);
       return;
     }
 
     if (isNaN(quantity) || quantity <= 0) {
-      Alert.alert("Validation Error", "Please enter a valid quantity.");
+      Alert.alert(t.auth.validationError, t.crops.validQuantity);
       return;
     }
 
@@ -272,11 +276,11 @@ const CropsScreen = () => {
       const response = await addCrop(payload);
 
       Alert.alert(
-        "Success",
-        `Crop data submitted successfully!\n\nID: ${response.id}\nCommodity: ${response.commodity}\nPrice: ₹${response.buyingprice}/kg\nQuantity: ${response.quantitybought}kg`,
+        t.common.success,
+        `${t.crops.submissionSuccess.replace('{{id}}', response.id)}\n\nID: ${response.id}\nCommodity: ${response.commodity}\nPrice: ₹${response.buyingprice}/kg\nQuantity: ${response.quantitybought}kg`,
         [
           {
-            text: "OK",
+            text: t.common.ok,
             onPress: () => {
               // Reset form after successful submission
               setForm({ name: "", pricePerUnit: "", quantity: "" });
@@ -288,14 +292,14 @@ const CropsScreen = () => {
     } catch (error: any) {
       console.error("Crop submission error:", error);
       Alert.alert(
-        "Submission Error",
+        t.crops.submissionError,
         error.message ||
           "Failed to submit crop data. Please check your internet connection and try again."
       );
     } finally {
       setIsLoading(false);
     }
-  }, [form, currentLocation, isLogged, setIsLoading, photo]);
+  }, [form, currentLocation, isLogged, setIsLoading, photo, t, navigation]);
 
   // --- Render Logic ---
 
@@ -338,17 +342,17 @@ const CropsScreen = () => {
               style={styles.headerGradient}
             >
               <Ionicons name="leaf" size={32} color="#fff" />
-              <Text style={styles.headerTitle}>Add Crop Data</Text>
+              <Text style={styles.headerTitle}>{t.crops.header}</Text>
             </LinearGradient>
           </View>
 
           {ADD_CROP_ENABLED ? (
             <View style={styles.formContainer}>
               <View style={styles.formCard}>
-                <Text style={styles.formTitle}>Crop Information</Text>
+                <Text style={styles.formTitle}>{t.crops.cropInformation}</Text>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Select Crop Commodity *</Text>
+                  <Text style={styles.inputLabel}>{t.crops.selectCropCommodity}</Text>
                   <View style={styles.pickerContainer}>
                     <Picker
                       selectedValue={form.name}
@@ -359,14 +363,14 @@ const CropsScreen = () => {
                       accessibilityLabel="Select crop commodity"
                     >
                       <Picker.Item
-                        label="Choose a crop..."
+                        label={t.crops.chooseCrop}
                         value=""
                         color="#888"
                       />
-                      {CROP_ITEMS.map((item) => (
+                      {cropItems.map((item) => (
                         <Picker.Item
                           key={item.value}
-                          label={`${item.icon} ${item.label}`}
+                          label={`${item.icon} ${t.crops[item.labelKey as keyof typeof t.crops]}`}
                           value={item.value}
                         />
                       ))}
@@ -375,7 +379,7 @@ const CropsScreen = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Price Per Kg (₹) *</Text>
+                  <Text style={styles.inputLabel}>{t.crops.pricePerKg}</Text>
                   <TextInput
                     style={styles.textInput}
                     mode="outlined"
@@ -384,14 +388,14 @@ const CropsScreen = () => {
                       setForm((f) => ({ ...f, pricePerUnit: text }))
                     }
                     keyboardType="numeric"
-                    placeholder="Enter price per kg"
+                    placeholder={t.crops.enterPricePerKg}
                     accessible={true}
                     accessibilityLabel="Price per kilogram"
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Quantity Bought (kg) *</Text>
+                  <Text style={styles.inputLabel}>{t.crops.quantityBought}</Text>
                   <TextInput
                     style={styles.textInput}
                     mode="outlined"
@@ -400,7 +404,7 @@ const CropsScreen = () => {
                       setForm((f) => ({ ...f, quantity: text }))
                     }
                     keyboardType="numeric"
-                    placeholder="Enter quantity in kg"
+                    placeholder={t.crops.enterQuantity}
                     accessible={true}
                     accessibilityLabel="Quantity bought in kilograms"
                   />
@@ -408,10 +412,9 @@ const CropsScreen = () => {
 
                 {ADD_IMAGE_ENABLED && (
                   <View style={styles.imageSection}>
-                    <Text style={styles.inputLabel}>Add Photo (Optional)</Text>
+                    <Text style={styles.inputLabel}>{t.crops.addPhoto}</Text>
                     <Text style={styles.imageHelpText}>
-                      Adding a photo helps verify your crop data and improves
-                      market transparency.
+                      {t.crops.addPhotoMessage}
                     </Text>
                     <View style={styles.imageButtons}>
                       <TouchableOpacity
@@ -421,7 +424,7 @@ const CropsScreen = () => {
                         accessibilityLabel="Take photo with camera"
                       >
                         <Ionicons name="camera" size={24} color="#49A760" />
-                        <Text style={styles.imageButtonText}>Take Photo</Text>
+                        <Text style={styles.imageButtonText}>{t.crops.takePhoto}</Text>
                       </TouchableOpacity>
                     </View>
                     {photo && (
@@ -446,7 +449,7 @@ const CropsScreen = () => {
                         </TouchableOpacity>
                         <View style={styles.imageInfo}>
                           <Text style={styles.imageInfoText}>
-                            📎 {photo.fileName || "Image selected"}
+                            {t.crops.photoAttached.replace('{{fileName}}', photo.fileName || "Image selected")}
                           </Text>
                         </View>
                       </View>
@@ -466,16 +469,15 @@ const CropsScreen = () => {
                   >
                     <Ionicons name="checkmark-circle" size={24} color="#fff" />
                     <Text style={styles.submitButtonText}>
-                      Submit Crop Data
+                      {t.crops.submitCropData}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
 
                 <View style={styles.footerInfo}>
-                  <Text style={styles.footerText}>* Required fields</Text>
+                  <Text style={styles.footerText}>{t.crops.requiredFields}</Text>
                   <Text style={styles.footerText}>
-                    📍 Location:{" "}
-                    {currentLocation ? "Detected" : "Required for submission"}
+                    {currentLocation ? t.crops.locationDetected : t.crops.locationRequired}
                   </Text>
                 </View>
               </View>
@@ -483,10 +485,9 @@ const CropsScreen = () => {
           ) : (
             <View style={styles.comingSoonContainer}>
               <Ionicons name="construct-outline" size={64} color="#49A760" />
-              <Text style={styles.comingSoonTitle}>Feature Coming Soon!</Text>
+              <Text style={styles.comingSoonTitle}>{t.crops.featureComingSoon}</Text>
               <Text style={styles.comingSoonText}>
-                We're working hard to bring you the ability to add and track
-                your crop data.
+                {t.crops.workingHardMessage}
               </Text>
             </View>
           )}

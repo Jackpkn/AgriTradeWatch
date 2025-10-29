@@ -1184,6 +1184,7 @@ export const createProfileStyles = createOrientationStyles(
       flexDirection: "row",
       alignItems: "center",
       paddingVertical: 16,
+      paddingHorizontal: 20,
       borderBottomWidth: 1,
       borderBottomColor: "#F8F9FA",
     },
@@ -1369,11 +1370,10 @@ export const createProfileStyles = createOrientationStyles(
 
     modalContent: {
       backgroundColor: "white",
-      maxHeight: screenHeight * 0.9,
-      minHeight: screenHeight * 0.5,
+      maxHeight: screenHeight * 0.75,
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
-      paddingBottom: 16,
+      paddingBottom: 20,
     },
 
     bottomSheetStyle: {
@@ -1399,7 +1399,8 @@ export const createProfileStyles = createOrientationStyles(
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 24,
-      paddingBottom: 20,
+      paddingTop: 20,
+      paddingBottom: 16,
       borderBottomWidth: 1,
       borderBottomColor: "#F5F5F5",
     },
@@ -1523,6 +1524,61 @@ export const createProfileStyles = createOrientationStyles(
       fontSize: 16,
       color: "white",
       fontWeight: "600",
+    },
+
+    // Modal Selection Styles
+    modalScroll: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 20,
+    },
+
+    modalOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginBottom: 12,
+      backgroundColor: "#FAFBFC",
+      borderWidth: 1,
+      borderColor: "transparent",
+    },
+
+    modalOptionSelected: {
+      backgroundColor: "#E8F5E8",
+      borderColor: "#49A760",
+      borderWidth: 2,
+    },
+
+    modalOptionIcon: {
+      fontSize: 28,
+      marginRight: 14,
+      minWidth: 32,
+    },
+
+    modalOptionContent: {
+      flex: 1,
+      marginRight: 8,
+    },
+
+    modalOptionText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#2C3E50",
+      marginBottom: 2,
+    },
+
+    modalOptionTextSelected: {
+      color: "#49A760",
+      fontWeight: "700",
+    },
+
+    modalOptionDesc: {
+      fontSize: 13,
+      color: "#7F8C8D",
+      lineHeight: 18,
+      marginTop: 4,
     },
 
     // Responsive adjustments

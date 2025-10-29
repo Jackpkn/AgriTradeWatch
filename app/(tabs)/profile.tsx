@@ -17,11 +17,12 @@ import { useNavigation } from "@react-navigation/native";
 // Local Imports
 import { useGlobal } from "@/context/global-provider";
 import { authService, profileService } from "@/services";
-import { USER_TYPES, LOCATION_OPTIONS } from "@/constants/authConstants";
+import { USER_TYPES, LOCATION_OPTIONS, LANGUAGES } from "@/constants/authConstants";
 import { createProfileStyles } from "@/utils/responsiveStyles";
 import { useOrientation } from "@/utils/orientationUtils";
 import { EnhancedProfileData } from "@/services/profile-service";
 import GlobalLoader from "@/components/Loader";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // = a======================================================================
 // Type Definitions
@@ -40,7 +41,7 @@ interface SelectionModalProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  options: typeof USER_TYPES | typeof LOCATION_OPTIONS;
+  options: typeof USER_TYPES | typeof LOCATION_OPTIONS | typeof LANGUAGES;
   selectedValue: string;
   onSelect: (value: string) => void;
   styles: any;
@@ -109,15 +110,18 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ user, styles }
   </View>
 ));
 
-const ProfileField: React.FC<ProfileFieldProps> = React.memo(({ field, styles }) => (
-  <View style={styles.fieldRow}>
-    <View style={styles.fieldIcon}><Text style={styles.iconText}>{field.icon}</Text></View>
-    <View style={styles.fieldContent}>
-      <Text style={styles.fieldLabel}>{field.label}</Text>
-      <Text style={styles.fieldValue} numberOfLines={1}>{field.value || "Not provided"}</Text>
+const ProfileField: React.FC<ProfileFieldProps> = React.memo(({ field, styles }) => {
+  // Import t inside the component if needed, or pass it as a prop
+  return (
+    <View style={styles.fieldRow}>
+      <View style={styles.fieldIcon}><Text style={styles.iconText}>{field.icon}</Text></View>
+      <View style={styles.fieldContent}>
+        <Text style={styles.fieldLabel}>{field.label}</Text>
+        <Text style={styles.fieldValue} numberOfLines={1}>{field.value || "Not provided"}</Text>
+      </View>
     </View>
-  </View>
-));
+  );
+});
 
 const PreferenceField: React.FC<PreferenceFieldProps> = React.memo(({ field, styles }) => (
   <TouchableOpacity style={styles.fieldRow} onPress={field.onPress} disabled={!field.editable}>
@@ -130,9 +134,57 @@ const PreferenceField: React.FC<PreferenceFieldProps> = React.memo(({ field, sty
   </TouchableOpacity>
 ));
 
-const SelectionModal: React.FC<SelectionModalProps> = React.memo(({ visible, onClose, }) => (
+const SelectionModal: React.FC<SelectionModalProps> = React.memo(({
+  visible,
+  onClose,
+  title,
+  options,
+  selectedValue,
+  onSelect,
+  styles
+}) => (
   <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-    {/* Your full modal implementation here */}
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={styles.modalScroll}>
+          {options.map((option: any) => {
+            const optionValue = option.id || option.code || option.name;
+            const optionName = option.name;
+            const optionIcon = option.icon || option.flag;
+            const optionDesc = option.description;
+            const isSelected = selectedValue === optionName || selectedValue === optionValue;
+
+            return (
+              <TouchableOpacity
+                key={optionValue}
+                style={[styles.modalOption, isSelected && styles.modalOptionSelected]}
+                onPress={() => {
+                  onSelect(optionValue);
+                  onClose();
+                }}
+              >
+                <Text style={styles.modalOptionIcon}>{optionIcon}</Text>
+                <View style={styles.modalOptionContent}>
+                  <Text style={[styles.modalOptionText, isSelected && styles.modalOptionTextSelected]}>
+                    {optionName}
+                  </Text>
+                  {optionDesc && (
+                    <Text style={styles.modalOptionDesc}>{optionDesc}</Text>
+                  )}
+                </View>
+                {isSelected && <Ionicons name="checkmark-circle" size={24} color="#49A760" />}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    </View>
   </Modal>
 ));
 
@@ -145,10 +197,11 @@ const SelectionModal: React.FC<SelectionModalProps> = React.memo(({ visible, onC
 const Profile = () => {
   const navigation = useNavigation();
   const { setIsLoading } = useGlobal();
+  const { t, language, setLanguage } = useTranslation();
   const { user, refetch } = useUserData();
   const { selectedUserType, selectedLocation } = useUserPreferences(user);
 
-  const [modal, setModal] = useState<'userType' | 'location' | null>(null);
+  const [modal, setModal] = useState<'userType' | 'location' | 'language' | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const { isLandscape, width } = useOrientation() as unknown as {
@@ -161,10 +214,10 @@ const Profile = () => {
   const styles = useMemo(() => createProfileStyles(isLandscape, width), [isLandscape, width]);
 
   const handleLogout = useCallback(() => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.auth.logout, t.auth.logoutConfirm, [
+      { text: t.common.cancel, style: "cancel" },
       {
-        text: "Sign Out", style: "destructive", onPress: async () => {
+        text: t.auth.logout, style: "destructive", onPress: async () => {
           setIsLoading(true);
           try {
             await authService.logout();
@@ -174,14 +227,14 @@ const Profile = () => {
             console.log('✅ Logout successful, navigated to index');
           } catch (error) {
             console.error('❌ Logout error:', error);
-            Alert.alert('Error', 'Failed to sign out. Please try again.');
+            Alert.alert(t.common.error, t.auth.logoutFailed);
           } finally {
             setIsLoading(false);
           }
         }
       },
     ]);
-  }, [setIsLoading]);
+  }, [setIsLoading, t, navigation]);
 
   const handleUserTypeChange = useCallback(async (userType: string) => {
     const jobValue = userType.toLowerCase() as 'farmer' | 'consumer';
@@ -189,13 +242,26 @@ const Profile = () => {
     try {
       await profileService.updateProfile({ job: jobValue });
       await refetch();
-      Alert.alert("Success", `Your role has been updated to ${userType}.`);
+      Alert.alert(t.common.success, t.profile.roleUpdated.replace('{{userType}}', userType));
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to update role.");
+      Alert.alert(t.common.error, err.message || t.profile.roleUpdateFailed);
     } finally {
       setIsLoading(false);
     }
-  }, [setIsLoading, refetch]);
+  }, [setIsLoading, refetch, t]);
+
+  const handleLanguageChange = useCallback(async (languageCode: string) => {
+    setIsLoading(true);
+    try {
+      await setLanguage(languageCode as 'en' | 'hi' | 'mr');
+      setModal(null);
+      Alert.alert(t.common.success, "Language updated successfully");
+    } catch (err: any) {
+      Alert.alert(t.common.error, err.message || "Failed to update language.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setLanguage, setIsLoading, t]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -204,26 +270,45 @@ const Profile = () => {
   }, [refetch]);
 
   const profileFields = useMemo(() => user ? [
-    { label: "Username", value: user.username, icon: "👤" },
-    { label: "Email", value: user.email, icon: "📧" },
-    { label: "Mobile", value: user.mobile, icon: "📱" },
-    { label: "Member Since", value: profileService.formatDate(user.date_joined), icon: "📅" },
-  ] : [], [user]);
+    { label: t.profile.username, value: user.username, icon: "👤" },
+    { label: t.profile.email, value: user.email, icon: "📧" },
+    { label: t.profile.mobile, value: user.mobile, icon: "📱" },
+    { label: t.profile.memberSince, value: profileService.formatDate(user.date_joined), icon: "📅" },
+  ] : [], [user, t]);
+
+  // Get current language display name
+  const currentLanguageName = useMemo(() => {
+    const lang = LANGUAGES.find(l => l.code === language);
+    return lang ? lang.name : "English";
+  }, [language]);
 
   const preferenceFields = useMemo(() => [
-    { label: "Language", value: "English", icon: "🌐", onPress: () => { }, editable: false },
     {
-      label: "User Type", value: selectedUserType, icon: "👥", onPress: () => {
+      label: t.profile.language,
+      value: currentLanguageName,
+      icon: "🌐",
+      onPress: () => setModal('language'),
+      editable: true
+    },
+    {
+      label: t.profile.userType,
+      value: selectedUserType,
+      icon: "👥",
+      onPress: () => {
         // setModal('userType')
-
-      }, editable: false
+      },
+      editable: false
     },
     {
-      label: "Location Method", value: selectedLocation, icon: "📍", onPress: () => {
-        //  setModal('location') 
-      }, editable: false
+      label: t.profile.locationMethod,
+      value: selectedLocation,
+      icon: "📍",
+      onPress: () => {
+        //  setModal('location')
+      },
+      editable: false
     },
-  ], [selectedUserType, selectedLocation]);
+  ], [selectedUserType, selectedLocation, t, currentLanguageName]);
 
   // Show loading state only if user data hasn't loaded yet
   if (!user) {
@@ -234,7 +319,7 @@ const Profile = () => {
             <View style={{ flex: 1 }} />
           </LinearGradient>
         </SafeAreaView>
-        <GlobalLoader visible={true} message="Loading Profile..." />
+        <GlobalLoader visible={true} message={t.profile.loadingProfile} />
       </>
     );
   }
@@ -249,14 +334,14 @@ const Profile = () => {
 
           <View style={styles.profileCard}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Profile Information</Text>
+              <Text style={styles.cardTitle}>{t.profile.header}</Text>
             </View>
             {profileFields.map((field, index) => <ProfileField key={index} field={field} styles={styles} />)}
           </View>
 
           <View style={styles.profileCard}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Preferences</Text>
+              <Text style={styles.cardTitle}>{t.profile.preferences}</Text>
             </View>
             {preferenceFields.map((field, index) => <PreferenceField key={index} field={field} styles={styles} />)}
           </View>
@@ -267,13 +352,13 @@ const Profile = () => {
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <LinearGradient colors={["#ff4757", "#ff3742"]} style={styles.logoutGradient}>
                 <Ionicons name="log-out-outline" size={20} color="white" />
-                <Text style={styles.logoutButtonText}>Sign Out</Text>
+                <Text style={styles.logoutButtonText}>{t.auth.logout}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
 
           <View style={styles.aboutSection}>
-            <Text style={styles.versionText}>Version 1.0.0</Text>
+            <Text style={styles.versionText}>{t.common.version} 1.0.0</Text>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -287,6 +372,17 @@ const Profile = () => {
         onSelect={handleUserTypeChange}
         styles={styles}
       />
+
+      <SelectionModal
+        visible={modal === 'language'}
+        onClose={() => setModal(null)}
+        title={t.home.chooseLanguage}
+        options={LANGUAGES}
+        selectedValue={language}
+        onSelect={handleLanguageChange}
+        styles={styles}
+      />
+
       {/* Add Location modal similarly */}
     </SafeAreaView>
   );

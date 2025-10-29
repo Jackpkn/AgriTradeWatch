@@ -20,6 +20,7 @@ import OfflineIndicator from "@/components/OfflineIndicator";
 import { useOrientation } from "@/utils/orientationUtils";
 import { createHomeStyles } from "@/utils/responsiveStyles";
 import NetInfo from "@react-native-community/netinfo";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // ---------- Types ----------
 
@@ -45,11 +46,12 @@ interface QuickAction {
 
 // ---------- Constants ----------
 
-const FEATURES: Feature[] = [
+// Function to get features with translations
+const getFeatures = (t: any): Feature[] => [
   {
     id: 1,
-    title: "Add Crop Data",
-    description: "Submit new crop prices and market information",
+    title: t.home.addCropData,
+    description: t.home.addCropDataDesc,
     icon: "add-circle",
     route: "crops",
     gradient: ["#49A760", "#3d8b4f"],
@@ -58,9 +60,8 @@ const FEATURES: Feature[] = [
   },
   {
     id: 2,
-    title: "Price Map",
-    description:
-      "Today/Yesterday/Date Range prices with location pin & radius",
+    title: t.home.priceMap,
+    description: t.home.priceMapDesc,
     icon: "map",
     route: "map",
     gradient: ["#FF9800", "#F57C00"],
@@ -69,8 +70,8 @@ const FEATURES: Feature[] = [
   },
   {
     id: 3,
-    title: "Digital Thela",
-    description: "Revolutionary trading platform - Coming Soon",
+    title: t.home.digitalThela,
+    description: t.home.digitalThelaDesc,
     icon: "cart",
     route: null,
     gradient: ["#9C27B0", "#7B1FA2"],
@@ -104,6 +105,7 @@ const Home: React.FC = React.memo(() => {
 
   // Context
   const { mainUser } = useGlobal();
+  const { t } = useTranslation();
 
   // Hooks
   const isConnected = useNetworkStatus();
@@ -119,12 +121,15 @@ const Home: React.FC = React.memo(() => {
     [isLandscape, width]
   );
 
+  // Get features with translations
+  const FEATURES = useMemo(() => getFeatures(t), [t]);
+
   // Navigation handler
   const handleNavigation = useCallback(
     (route: string | null, params: Record<string, string | number> = {}) => {
       try {
         if (!route) {
-          Alert.alert("Feature Unavailable", "This feature is coming soon!");
+          Alert.alert(t.home.featureUnavailable, t.home.featureUnavailableMessage);
           return;
         }
 
@@ -140,10 +145,10 @@ const Home: React.FC = React.memo(() => {
         navigation.navigate(screenName as never);
       } catch (error) {
         console.error("Navigation error:", error);
-        Alert.alert("Error", "Unable to navigate. Please try again.");
+        Alert.alert(t.common.error, "Unable to navigate. Please try again.");
       }
     },
-    [navigation]
+    [navigation, t]
   );
 
   // Feature press handler
@@ -151,29 +156,29 @@ const Home: React.FC = React.memo(() => {
     (feature: Feature) => {
       if (!feature.isEnabled) {
         Alert.alert(
-          "Coming Soon",
+          t.common.comingSoon,
           `${feature.title} is currently under development. Stay tuned for updates!`,
-          [{ text: "OK" }]
+          [{ text: t.common.ok }]
         );
         return;
       }
 
       handleNavigation(feature.route);
     },
-    [handleNavigation]
+    [handleNavigation, t]
   );
 
   // Quick actions
   const quickActions: QuickAction[] = useMemo(
     () => [
       {
-        title: "View Recent Prices",
+        title: t.home.viewRecentPrices,
         icon: "trending-up",
         action: () => handleNavigation("map"),
         testID: "quick-action-recent-prices",
       },
       {
-        title: "Find Nearby Markets",
+        title: t.home.findNearbyMarkets,
         icon: "location",
         action: () => handleNavigation("map"),
         testID: "quick-action-nearby-markets",
@@ -185,7 +190,7 @@ const Home: React.FC = React.memo(() => {
       //   testID: "quick-action-notifications",
       // },
     ],
-    [handleNavigation]
+    [handleNavigation, t]
   );
 
 
@@ -200,10 +205,10 @@ const Home: React.FC = React.memo(() => {
             style={styles.headerGradient}
           >
             <Text style={styles.welcomeTitle} testID="welcome-title">
-              Welcome back, {(mainUser as any)?.username || "User"}!
+              {t.home.welcomeBack.replace('{{username}}', (mainUser as any)?.username || "User")}
             </Text>
             <Text style={styles.welcomeSubtitle} testID="welcome-subtitle">
-              Manage crops, explore prices, and prepare for digital trading
+              {t.branding.tagline}
             </Text>
 
             <View style={styles.statsContainer}>
@@ -212,19 +217,19 @@ const Home: React.FC = React.memo(() => {
                   <Text style={styles.statNumber}>
                     {FEATURES.filter((f) => f.isEnabled).length}
                   </Text>
-                  <Text style={styles.statLabel}>Active Features</Text>
+                  <Text style={styles.statLabel}>{t.home.activeFeatures}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>24/7</Text>
-                  <Text style={styles.statLabel}>Price Updates</Text>
+                  <Text style={styles.statLabel}>{t.home.priceUpdates}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>
-                    {isConnected ? "Online" : "Offline"}
+                    {isConnected ? t.home.online : t.home.offline}
                   </Text>
-                  <Text style={styles.statLabel}>Status</Text>
+                  <Text style={styles.statLabel}>{t.home.status}</Text>
                 </View>
               </View>
             </View>
@@ -232,7 +237,7 @@ const Home: React.FC = React.memo(() => {
         </View>
       </View>
     ),
-    [(mainUser as any)?.username, styles, isConnected]
+    [(mainUser as any)?.username, styles, isConnected, t, FEATURES]
   );
 
   // Render feature card
@@ -282,7 +287,7 @@ const Home: React.FC = React.memo(() => {
 
         {feature.comingSoon ? (
           <View style={styles.comingSoonButton}>
-            <Text style={styles.comingSoonText}>Coming Soon</Text>
+            <Text style={styles.comingSoonText}>{t.common.comingSoon}</Text>
           </View>
         ) : (
           <TouchableOpacity
@@ -294,14 +299,14 @@ const Home: React.FC = React.memo(() => {
               colors={feature.gradient as [string, string]}
               style={styles.featureButtonGradient}
             >
-              <Text style={styles.featureButtonText}>Explore</Text>
+              <Text style={styles.featureButtonText}>{t.home.explore}</Text>
               <Ionicons name="arrow-forward" size={16} color="#fff" />
             </LinearGradient>
           </TouchableOpacity>
         )}
       </TouchableOpacity>
     ),
-    [styles, handleFeaturePress]
+    [styles, handleFeaturePress, t]
   );
 
   return (
@@ -325,7 +330,7 @@ const Home: React.FC = React.memo(() => {
           {/* Features */}
           <View style={styles.featuresSection}>
             <Text style={styles.sectionTitleMain} testID="features-title">
-              Core Features
+              {t.home.coreFeatures}
             </Text>
             <View style={styles.featuresGrid}>
               {FEATURES.map(renderFeatureCard)}
@@ -335,7 +340,7 @@ const Home: React.FC = React.memo(() => {
           {/* Quick Actions */}
           <View style={styles.quickActionsSection}>
             <Text style={styles.sectionTitle} testID="quick-actions-title">
-              Quick Actions
+              {t.home.quickActions}
             </Text>
             <View style={styles.quickActionsContainer}>
               {quickActions.map((action, index) => (
