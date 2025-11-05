@@ -577,7 +577,7 @@ interface MarkerPosition {
   longitude: number;
 }
 
-type DateRangeType = 'today' | 'yesterday' | 'custom' | 'week' | 'month';
+type DateRangeType = 'custom';
 
 interface MapState {
   selectedCrop: string;
@@ -607,15 +607,11 @@ const useMapState = () => {
     radius: MAP_CONFIG.RADIUS.DEFAULT,
     markerPosition: null,
     priceUnit: MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_UNIT,
-    selectedDateRange: 'today',
+    selectedDateRange: 'custom',
     customStartDate: new Date(),
     customEndDate: new Date(),
     priceData: {
-      today: { min: 0, max: 0, modal: 0, average: 0, count: 0 },
-      yesterday: { min: 0, max: 0, modal: 0, average: 0, count: 0 },
-      custom: { min: 0, max: 0, modal: 0, average: 0, count: 0 },
-      week: { min: 0, max: 0, modal: 0, average: 0, count: 0 },
-      month: { min: 0, max: 0, modal: 0, average: 0, count: 0 }
+      custom: { min: 0, max: 0, modal: 0, average: 0, count: 0 }
     },
     priceLoading: false,
     showCropModal: false,
@@ -653,53 +649,16 @@ const usePriceCalculations = (allCrops: any[], selectedCrop: string) => {
       }
 
       let filteredCrops = relevantCrops;
-      const now = new Date();
 
-      switch (dateRange) {
-        case 'custom':
-          if (startDate && endDate) {
-            filteredCrops = relevantCrops.filter(crop => {
-              if (!crop.createdAt?.seconds) return false;
-              const cropDate = new Date(crop.createdAt.seconds * 1000);
-              return cropDate >= startDate && cropDate <= endDate;
-            });
-          }
-          break;
-        case 'today':
-          const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
-          filteredCrops = relevantCrops.filter(crop => {
-            if (!crop.createdAt?.seconds) return false;
-            const cropDate = new Date(crop.createdAt.seconds * 1000);
-            return cropDate >= startOfDay && cropDate < endOfDay;
-          });
-          break;
-        case 'yesterday':
-          const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-          const endOfYesterday = new Date(startOfYesterday.getTime() + 24 * 60 * 60 * 1000);
-          filteredCrops = relevantCrops.filter(crop => {
-            if (!crop.createdAt?.seconds) return false;
-            const cropDate = new Date(crop.createdAt.seconds * 1000);
-            return cropDate >= startOfYesterday && cropDate < endOfYesterday;
-          });
-          break;
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          filteredCrops = relevantCrops.filter(crop => {
-            if (!crop.createdAt?.seconds) return false;
-            const cropDate = new Date(crop.createdAt.seconds * 1000);
-            return cropDate >= weekAgo && cropDate <= now;
-          });
-          break;
-        case 'month':
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          filteredCrops = relevantCrops.filter(crop => {
-            if (!crop.createdAt?.seconds) return false;
-            const cropDate = new Date(crop.createdAt.seconds * 1000);
-            return cropDate >= monthAgo && cropDate <= now;
-          });
-          break;
+      if (startDate && endDate) {
+        const startOfDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const endOfDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59);
+
+        filteredCrops = relevantCrops.filter(crop => {
+          if (!crop.createdAt?.seconds) return false;
+          const cropDate = new Date(crop.createdAt.seconds * 1000);
+          return cropDate >= startOfDay && cropDate <= endOfDay;
+        });
       }
 
       if (filteredCrops.length === 0) {
@@ -870,15 +829,9 @@ const MapScreen = () => {
     if (state.selectedCrop && allCrops.length > 0 && !dataLoading) {
       updateState({ priceLoading: true });
       try {
-        const newPriceData = { ...state.priceData };
-        if (state.selectedDateRange === 'custom') {
-          newPriceData.custom = calculatePriceData('custom', state.customStartDate, state.customEndDate);
-        } else {
-          newPriceData.today = calculatePriceData('today');
-          newPriceData.yesterday = calculatePriceData('yesterday');
-          newPriceData.week = calculatePriceData('week');
-          newPriceData.month = calculatePriceData('month');
-        }
+        const newPriceData = {
+          custom: calculatePriceData('custom', state.customStartDate, state.customEndDate)
+        };
         updateState({
           priceData: newPriceData,
           priceLoading: false
@@ -888,7 +841,7 @@ const MapScreen = () => {
         updateState({ priceLoading: false });
       }
     }
-  }, [state.selectedDateRange, state.customStartDate, state.customEndDate, state.selectedCrop, allCrops, dataLoading, calculatePriceData, updateState]);
+  }, [state.customStartDate, state.customEndDate, state.selectedCrop, allCrops, dataLoading, calculatePriceData, updateState]);
 
   // The rest of your component logic follows, and should now work without TypeScript errors.
   // ... (The entire Map component's return JSX remains the same as in your original post) ...
@@ -1127,40 +1080,23 @@ const MapScreen = () => {
           <MapLegend selectedCrop={state.selectedCrop} radius={state.radius} />
           <View style={mapStyles.priceDisplaySection}>
             <Text style={mapStyles.priceSectionTitle}>Price Information</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={mapStyles.dateRangeSelectorScroll}
-            >
-              <View style={mapStyles.dateRangeSelector}>
-                {(['today', 'yesterday', 'week', 'month', 'custom'] as DateRangeType[]).map((range) => (
-                  <TouchableOpacity
-                    key={range}
-                    style={[
-                      mapStyles.dateButton,
-                      state.selectedDateRange === range && mapStyles.dateButtonActive
-                    ]}
-                    onPress={() => {
-                      if (range === 'custom') {
-                        updateState({ showCustomDateModal: true });
-                      } else {
-                        updateState({ selectedDateRange: range });
-                      }
-                    }}
-                  >
-                    <Text style={[
-                      mapStyles.dateButtonText,
-                      state.selectedDateRange === range && mapStyles.dateButtonTextActive
-                    ]}>
-                      {range === 'custom' && state.selectedDateRange === 'custom'
-                        ? `${state.customStartDate.toLocaleDateString()} - ${state.customEndDate.toLocaleDateString()}`
-                        : range.charAt(0).toUpperCase() + range.slice(1)
-                      }
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
+            <View style={{ marginBottom: 16 }}>
+              <TouchableOpacity
+                style={[
+                  mapStyles.dateButton,
+                  mapStyles.dateButtonActive,
+                  { width: '100%', alignItems: 'center' }
+                ]}
+                onPress={() => updateState({ showCustomDateModal: true })}
+              >
+                <Text style={[mapStyles.dateButtonText, mapStyles.dateButtonTextActive]}>
+                  {state.customStartDate.toLocaleDateString() === state.customEndDate.toLocaleDateString()
+                    ? state.customStartDate.toLocaleDateString()
+                    : `${state.customStartDate.toLocaleDateString()} - ${state.customEndDate.toLocaleDateString()}`
+                  }
+                </Text>
+              </TouchableOpacity>
+            </View>
             <View style={mapStyles.priceCardsContainer}>
               {[
                 { key: 'min', title: 'Min Price', color: '#ff6b6b' },
@@ -1175,25 +1111,24 @@ const MapScreen = () => {
                   ) : (
                     <>
                       <Text style={mapStyles.priceCardValue}>
-                        {state.priceData[state.selectedDateRange]?.[key as keyof PriceData] > 0
-                          ? `₹${state.priceData[state.selectedDateRange][key as keyof PriceData]}`
+                        {state.priceData.custom?.[key as keyof PriceData] > 0
+                          ? `₹${state.priceData.custom[key as keyof PriceData]}`
                           : 'No data'
                         }
                       </Text>
                       <Text style={mapStyles.priceCardCount}>
-                        {state.priceData[state.selectedDateRange]?.count || 0} data points
+                        {state.priceData.custom?.count || 0} data points
                       </Text>
                     </>
                   )}
                 </View>
               ))}
             </View>
-            {!state.priceLoading && state.priceData[state.selectedDateRange]?.count === 0 && (
+            {!state.priceLoading && state.priceData.custom?.count === 0 && (
               <View style={mapStyles.noDataMessage}>
                 <Ionicons name="information-circle-outline" size={24} color="#666" />
                 <Text style={mapStyles.noDataText}>
-                  No price data available for {state.selectedDateRange}.
-                  {state.selectedDateRange === 'custom' ? ' Try adjusting your date range.' : ' Data will appear here once available.'}
+                  No price data available for the selected date range. Try adjusting your date range.
                 </Text>
               </View>
             )}
@@ -1388,20 +1323,20 @@ const MapScreen = () => {
               </View>
               <View style={mapStyles.dataSummaryCard}>
                 <Ionicons name="trending-up" size={24} color="#ff6b6b" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>Price Trend</Text>
+                <Text style={mapStyles.dataSummaryLabel}>Avg Price</Text>
                 <Text style={mapStyles.dataSummaryValue}>
-                  {state.priceData.today.average > state.priceData.yesterday.average ? '↗️' : '↘️'}
+                  {state.priceData.custom.average > 0 ? `₹${state.priceData.custom.average}` : 'N/A'}
                 </Text>
                 <Text style={mapStyles.dataSummarySubtext}>
-                  {state.priceData.today.average > state.priceData.yesterday.average ? 'Rising' : 'Falling'}
+                  Selected period
                 </Text>
               </View>
               <View style={mapStyles.dataSummaryCard}>
                 <Ionicons name="stats-chart" size={24} color="#ffa726" style={{ marginBottom: 8 }} />
                 <Text style={mapStyles.dataSummaryLabel}>Market Volatility</Text>
                 <Text style={mapStyles.dataSummaryValue}>
-                  {state.priceData[state.selectedDateRange].count > 0 && state.priceData[state.selectedDateRange].average > 0
-                    ? Math.round(((state.priceData[state.selectedDateRange].max - state.priceData[state.selectedDateRange].min) / state.priceData[state.selectedDateRange].average) * 100) + '%'
+                  {state.priceData.custom.count > 0 && state.priceData.custom.average > 0
+                    ? Math.round(((state.priceData.custom.max - state.priceData.custom.min) / state.priceData.custom.average) * 100) + '%'
                     : 'N/A'
                   }
                 </Text>
@@ -1519,19 +1454,19 @@ const MapScreen = () => {
           <View style={mapStyles.marketInsightsSection}>
             <Text style={mapStyles.marketInsightsTitle}>Market Insights</Text>
             <View style={mapStyles.insightsContainer}>
-              {state.priceData[state.selectedDateRange].count > 0 ? (
+              {state.priceData.custom.count > 0 ? (
                 <>
                   <View style={mapStyles.insightCard}>
                     <Text style={mapStyles.insightTitle}>Best Time to Buy</Text>
                     <Text style={mapStyles.insightText}>
-                      Based on current trends, the optimal buying time appears to be when prices are closest to ₹{state.priceData[state.selectedDateRange].min}
+                      Based on current trends, the optimal buying time appears to be when prices are closest to ₹{state.priceData.custom.min}
                     </Text>
                   </View>
 
                   <View style={mapStyles.insightCard}>
                     <Text style={mapStyles.insightTitle}>Price Stability</Text>
                     <Text style={mapStyles.insightText}>
-                      {state.priceData[state.selectedDateRange].average > 0 && ((state.priceData[state.selectedDateRange].max - state.priceData[state.selectedDateRange].min) / state.priceData[state.selectedDateRange].average) < 0.2
+                      {state.priceData.custom.average > 0 && ((state.priceData.custom.max - state.priceData.custom.min) / state.priceData.custom.average) < 0.2
                         ? 'Market shows stable pricing with low volatility'
                         : 'Market shows high volatility - prices vary significantly'
                       }
@@ -1541,9 +1476,9 @@ const MapScreen = () => {
                   <View style={mapStyles.insightCard}>
                     <Text style={mapStyles.insightTitle}>Data Quality</Text>
                     <Text style={mapStyles.insightText}>
-                      {state.priceData[state.selectedDateRange].count > 10
-                        ? `Good data coverage with ${state.priceData[state.selectedDateRange].count} data points`
-                        : `Limited data available (${state.priceData[state.selectedDateRange].count} points) - insights may be less reliable`
+                      {state.priceData.custom.count > 10
+                        ? `Good data coverage with ${state.priceData.custom.count} data points`
+                        : `Limited data available (${state.priceData.custom.count} points) - insights may be less reliable`
                       }
                     </Text>
                   </View>
@@ -1649,10 +1584,7 @@ const MapScreen = () => {
                   ]}
                   onPress={() => {
                     if (state.customEndDate >= state.customStartDate) {
-                      updateState({
-                        selectedDateRange: 'custom',
-                        showCustomDateModal: false
-                      });
+                      updateState({ showCustomDateModal: false });
                     } else {
                       Alert.alert('Invalid Date Range', 'End date must be after start date');
                     }
