@@ -14,7 +14,6 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 // Components
 import MapHeader from "@/components/map/MapHeader";
 import InteractiveMap from "@/components/map/InteractiveMap";
-import ConsumerInfoPanel from "@/components/map/ConsumerInfoPanel";
 import PriceUnitToggle from "@/components/map/PriceUnitToggle";
 import MapLegend from "@/components/map/MapLegend";
 import PriceChart from "@/components/map/PriceChart";
@@ -1273,152 +1272,12 @@ const MapScreen = () => {
               )}
             </View>
           </View>
-          <ConsumerInfoPanel
-            selectedCrop={state.selectedCrop}
-            radius={state.radius}
-            consumerStats={consumerStats}
-            priceUnit={state.priceUnit}
-            onRadiusIncrease={() => {
-              const increment = state.radius <= 0.5 ? 0.05 : 1;
-              const maxRadius = state.radius <= 0.5 ? 0.5 : 50;
-              const newRadius = Math.min(state.radius + increment, maxRadius);
-              debouncedSetRadius(newRadius);
-            }}
-          />
+          
           <PriceUnitToggle
             priceUnit={state.priceUnit}
             onPriceUnitChange={handlePriceUnitChange}
           />
-          <View style={mapStyles.dataSummarySection}>
-            <Text style={mapStyles.dataSummaryTitle}>Data Summary & Analytics</Text>
-            <View style={mapStyles.dataSummaryGrid}>
-              <View style={mapStyles.dataSummaryCard}>
-                <Ionicons name="analytics" size={24} color="#49A760" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>Total Data Points</Text>
-                <Text style={mapStyles.dataSummaryValue}>{allCrops.length.toLocaleString()}</Text>
-                <Text style={mapStyles.dataSummarySubtext}>All crops in database</Text>
-              </View>
 
-              <View style={mapStyles.dataSummaryCard}>
-                <Ionicons name="location" size={24} color="#4ecdc4" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>In Selected Radius</Text>
-                <Text style={mapStyles.dataSummaryValue}>{filteredCrops.length}</Text>
-                <Text style={mapStyles.dataSummarySubtext}>
-                  {state.selectedCrop} within {state.radius <= 0.5 ? `${Math.round(state.radius * 1000)}m` : `${state.radius}km`}
-                </Text>
-              </View>
-
-              <View style={mapStyles.dataSummaryCard}>
-                <Ionicons name="people" size={24} color="#45b7d1" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>Active Consumers</Text>
-                <Text style={mapStyles.dataSummaryValue}>{consumersInRadius.length}</Text>
-                <Text style={mapStyles.dataSummarySubtext}>In current radius</Text>
-              </View>
-
-              <View style={mapStyles.dataSummaryCard}>
-                <Ionicons name="leaf" size={24} color="#96ceb4" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>Total Farmers</Text>
-                <Text style={mapStyles.dataSummaryValue}>{allFarmerCrops.length}</Text>
-                <Text style={mapStyles.dataSummarySubtext}>Selling data points</Text>
-              </View>
-              <View style={mapStyles.dataSummaryCard}>
-                <Ionicons name="trending-up" size={24} color="#ff6b6b" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>Avg Price</Text>
-                <Text style={mapStyles.dataSummaryValue}>
-                  {state.priceData.custom.average > 0 ? `₹${state.priceData.custom.average}` : 'N/A'}
-                </Text>
-                <Text style={mapStyles.dataSummarySubtext}>
-                  Selected period
-                </Text>
-              </View>
-              <View style={mapStyles.dataSummaryCard}>
-                <Ionicons name="stats-chart" size={24} color="#ffa726" style={{ marginBottom: 8 }} />
-                <Text style={mapStyles.dataSummaryLabel}>Market Volatility</Text>
-                <Text style={mapStyles.dataSummaryValue}>
-                  {state.priceData.custom.count > 0 && state.priceData.custom.average > 0
-                    ? Math.round(((state.priceData.custom.max - state.priceData.custom.min) / state.priceData.custom.average) * 100) + '%'
-                    : 'N/A'
-                  }
-                </Text>
-                <Text style={mapStyles.dataSummarySubtext}>Price variation</Text>
-              </View>
-            </View>
-          </View>
-          <View style={mapStyles.quickActionsSection}>
-            <Text style={mapStyles.quickActionTitle}>Quick Actions</Text>
-            <View style={mapStyles.quickActionsGrid}>
-              <TouchableOpacity
-                style={mapStyles.quickActionButton}
-                onPress={() => {
-                  Alert.alert(
-                    'Export Data',
-                    'Export current view data to CSV feature comming soon',
-                    [
-                      { text: 'OK' }
-                      // {
-                      //   text: 'Export', onPress: () => {
-                      //     Alert.alert('Success', 'Data exported successfully!');
-                      //   }
-                      // }
-                    ]
-                  );
-                }}
-              >
-                <Ionicons name="download" size={20} color="#49A760" />
-                <Text style={mapStyles.quickActionText}>Export Data</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={mapStyles.quickActionButton}
-                onPress={() => {
-                  if (state.markerPosition) {
-                    Alert.alert(
-                      'Share Location',
-                      `Lat: ${state.markerPosition.latitude.toFixed(4)}\nLng: ${state.markerPosition.longitude.toFixed(4)}`,
-                      [{ text: 'OK' }]
-                    );
-                  }
-                }}
-              >
-                <Ionicons name="share" size={20} color="#49A760" />
-                <Text style={mapStyles.quickActionText}>Share Location</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={mapStyles.quickActionButton}
-                onPress={() => {
-                  if (currentLocation) {
-                    updateState({
-                      markerPosition: {
-                        latitude: currentLocation.latitude,
-                        longitude: currentLocation.longitude
-                      }
-                    });
-                    Alert.alert('Location Updated', 'Search pin moved to your current location');
-                  } else {
-                    Alert.alert('Location Unavailable', 'Please enable location services to use this feature');
-                  }
-                }}
-              >
-                <Ionicons name="locate" size={20} color="#49A760" />
-                <Text style={mapStyles.quickActionText}>Reset to My Location</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={mapStyles.quickActionButton}
-                onPress={() => {
-                  Alert.alert(
-                    'Price Alert',
-                    'Price alert feature coming soon!',
-                    [{ text: 'OK' }]
-                  );
-                }}
-              >
-                <Ionicons name="notifications" size={20} color="#49A760" />
-                <Text style={mapStyles.quickActionText}>Price Alert</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
           {consumerChartData.length > 0 ? (
             <PriceChart
               chartData={consumerChartData}

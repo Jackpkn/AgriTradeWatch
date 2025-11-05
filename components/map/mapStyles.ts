@@ -183,11 +183,6 @@ export const createMapStyles = (isLandscape: boolean, screenWidth: number) => St
     height: 4,
     backgroundColor: "#ddd",
   },
-  consumerInfoPanel: {
-    backgroundColor: "#fff",
-    padding: 20,
-    marginTop: 1,
-  },
   consumerInfoHeaderCard: {
     flexDirection: "row",
     alignItems: "center",
