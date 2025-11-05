@@ -139,7 +139,15 @@ const InteractiveMap = React.forwardRef((
           <div id="map"></div>
           <script>
             console.log('Initializing Leaflet map at:', ${latitude}, ${longitude});
-            var map = L.map('map').setView([${latitude}, ${longitude}], ${MAP_CONFIG.DEFAULT_ZOOM});
+            var map = L.map('map', {
+              zoomControl: false
+            }).setView([${latitude}, ${longitude}], ${MAP_CONFIG.DEFAULT_ZOOM});
+
+            // Add zoom control to bottom right
+            L.control.zoom({
+              position: 'bottomright'
+            }).addTo(map);
+
             ${tileLayer}.addTo(map);
             console.log('Map initialized successfully');
 
@@ -148,9 +156,9 @@ const InteractiveMap = React.forwardRef((
               draggable: true,
               icon: L.divIcon({
                 className: 'user-location-marker',
-                html: '<div style="background: linear-gradient(45deg, #ff4444, #cc0000); width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.6); position: relative;"><div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 8px solid #ff4444;"></div></div>',
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
+                html: '<div style="position: relative; width: 20px; height: 20px;"><div style="background: #ff4444; width: 16px; height: 16px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.5); position: absolute; top: 0; left: 2px;"></div><div style="background: white; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 3px; left: 7px; z-index: 1;"></div></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 20]
               })
             }).addTo(map);
 
@@ -159,6 +167,8 @@ const InteractiveMap = React.forwardRef((
             // Handle marker drag events
             searchMarker.on('dragstart', function(event) {
               searchMarker.closePopup();
+              // Disable map dragging while marker is being dragged
+              map.dragging.disable();
             });
 
             searchMarker.on('drag', function(event) {
@@ -167,12 +177,19 @@ const InteractiveMap = React.forwardRef((
               if (window.radiusCircle) {
                 window.radiusCircle.setLatLng(position);
               }
+              // Update radius label position
+              if (window.radiusLabel) {
+                window.radiusLabel.setLatLng(position);
+              }
             });
 
             searchMarker.on('dragend', function(event) {
               var position = searchMarker.getLatLng();
+              // Re-enable map dragging
+              map.dragging.enable();
+
               searchMarker.bindPopup('<div style="font-family: Arial, sans-serif; text-align: center;"><strong>📍 New Search Location</strong><br><small>Lat: ' + position.lat.toFixed(4) + '</small><br><small>Lng: ' + position.lng.toFixed(4) + '</small></div>').openPopup();
-              
+
               window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'markerMoved',
                 latitude: position.lat,
@@ -190,8 +207,8 @@ const InteractiveMap = React.forwardRef((
               dashArray: '5, 5'
             }).addTo(map);
 
-            // Add radius label
-            var radiusLabel = L.marker([${latitude}, ${longitude}], {
+            // Add radius label (store reference for drag updates)
+            window.radiusLabel = L.marker([${latitude}, ${longitude}], {
               icon: L.divIcon({
                 className: 'radius-label',
                 html: '<div style="background: rgba(73, 167, 96, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${radius <= 0.5 ? Math.round(radius * 1000) + 'm' : radius + 'km'} radius</div>',
