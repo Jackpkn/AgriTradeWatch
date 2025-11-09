@@ -100,8 +100,12 @@ export const en = {
     map: "Map",
     stats: "Stats",
     profile: "Profile",
+    crops: "Crops",
     aboutUs: "About Us",
     register: "Register",
+    exitApp: "Exit App",
+    exitAppMessage: "Are you sure you want to exit?",
+    exit: "Exit",
   },
 
   // Home Screen

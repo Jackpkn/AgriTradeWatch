@@ -102,8 +102,12 @@ export const hi: TranslationKeys = {
     map: "मानचित्र",
     stats: "आंकड़े",
     profile: "प्रोफ़ाइल",
+    crops: "फसलें",
     aboutUs: "हमारे बारे में",
     register: "पंजीकरण करें",
+    exitApp: "ऐप से बाहर निकलें",
+    exitAppMessage: "क्या आप वाकई बाहर निकलना चाहते हैं?",
+    exit: "बाहर निकलें",
   },
 
   // Home Screen

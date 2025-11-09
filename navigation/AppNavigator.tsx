@@ -7,6 +7,7 @@ import { useGlobal } from '@/context/global-provider';
 import { useEffect } from 'react';
 import { BackHandler, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Import your screens
 import HomeScreen from '../app/(tabs)/home';
@@ -24,22 +25,23 @@ const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
     const navigation = useNavigation();
+    const { t } = useTranslation();
 
     // Handle hardware back button for Android
     useEffect(() => {
         const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
             // Show alert asking user if they want to exit the app
             Alert.alert(
-                'Exit App',
-                'Are you sure you want to exit?',
+                t.nav.exitApp,
+                t.nav.exitAppMessage,
                 [
                     {
-                        text: 'Cancel',
+                        text: t.common.cancel,
                         onPress: () => null,
                         style: 'cancel',
                     },
                     {
-                        text: 'Exit',
+                        text: t.nav.exit,
                         onPress: () => BackHandler.exitApp(),
                     },
                 ],
@@ -49,7 +51,7 @@ function TabNavigator() {
         });
 
         return () => backHandler.remove();
-    }, []);
+    }, [t]);
 
     return (
         <Tab.Navigator
@@ -59,9 +61,9 @@ function TabNavigator() {
                     backgroundColor: '#fff',
                     borderTopWidth: 1,
                     borderTopColor: '#e0e0e0',
-                    paddingBottom: 0,
+                    paddingBottom: 20,
                     paddingTop: 0,
-                    height: 75,
+                    height: 85,
                     position: 'absolute',
                     bottom: 0,
                     left: 0,
@@ -98,17 +100,38 @@ function TabNavigator() {
                 tabBarInactiveTintColor: 'gray',
             })}
         >
-            <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Map" component={MapScreen} />
-            <Tab.Screen name="Stats" component={StatsScreen} />
-            <Tab.Screen name="Crops" component={CropsScreen} />
-            <Tab.Screen name="Profile" component={ProfileScreen} />
+            <Tab.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{ title: t.nav.home }}
+            />
+            <Tab.Screen
+                name="Map"
+                component={MapScreen}
+                options={{ title: t.nav.map }}
+            />
+            <Tab.Screen
+                name="Stats"
+                component={StatsScreen}
+                options={{ title: t.nav.stats }}
+            />
+            <Tab.Screen
+                name="Crops"
+                component={CropsScreen}
+                options={{ title: t.nav.crops }}
+            />
+            <Tab.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ title: t.nav.profile }}
+            />
         </Tab.Navigator>
     );
 }
 
 export default function AppNavigator() {
     const { isLogged, isLoading } = useGlobal();
+    const { t } = useTranslation();
 
     return (
         <NavigationContainer>
@@ -139,17 +162,17 @@ export default function AppNavigator() {
                         <Stack.Screen
                             name="Login"
                             component={LoginScreen}
-                            options={{ title: 'Login' }}
+                            options={{ title: t.auth.login }}
                         />
                         <Stack.Screen
                             name="Signup"
                             component={SignupScreen}
-                            options={{ title: 'Sign Up' }}
+                            options={{ title: t.auth.signUp }}
                         />
                         <Stack.Screen
                             name="ForgotPassword"
                             component={ForgotPasswordScreen}
-                            options={{ title: 'Forgot Password' }}
+                            options={{ title: t.auth.forgotPassword }}
                         />
                     </>
                 )}

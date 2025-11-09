@@ -103,8 +103,12 @@ export const mr: TranslationKeys = {
     map: "नकाशा",
     stats: "आकडेवारी",
     profile: "प्रोफाइल",
+    crops: "पिके",
     aboutUs: "आमच्याबद्दल",
     register: "नोंदणी करा",
+    exitApp: "अॅप बंद करा",
+    exitAppMessage: "आपण खरोखर बाहेर पडू इच्छिता?",
+    exit: "बाहेर पडा",
   },
 
   // Home Screen
