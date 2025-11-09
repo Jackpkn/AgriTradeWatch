@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { CROP_OPTIONS, MAP_TYPES } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface MapHeaderProps {
   selectedCrop: string;
@@ -17,13 +18,21 @@ const MapHeader = ({
   onCropPress,
   onMapTypeChange,
 }: MapHeaderProps) => {
+  const { t } = useTranslation();
+
+  const getMapTypeLabel = (value: string) => {
+    if (value === "default") return t.map.satelliteMap;
+    if (value === "street") return t.map.streetMap;
+    return value;
+  };
+
   return (
     <View style={mapStyles.header}>
       <View style={mapStyles.headerTop}>
-        <Text style={mapStyles.headerTitle}>Crop Map</Text>
+        <Text style={mapStyles.headerTitle}>{t.map.cropMap}</Text>
         <View style={mapStyles.headerControls}>
           <View style={mapStyles.cropSelectorContainer}>
-            <Text style={mapStyles.cropSelectorLabel}>Select Crop:</Text>
+            <Text style={mapStyles.cropSelectorLabel}>{t.map.selectCrop}:</Text>
             <TouchableOpacity
               style={mapStyles.cropSelectorButton}
               onPress={onCropPress}
@@ -56,7 +65,7 @@ const MapHeader = ({
                 selectedMapType === type.value && mapStyles.selectedMapTypeText,
               ]}
             >
-              {type.label}
+              {getMapTypeLabel(type.value)}
             </Text>
           </TouchableOpacity>
         ))}

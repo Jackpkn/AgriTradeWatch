@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface MapLegendProps {
   selectedCrop: string;
@@ -8,25 +9,26 @@ interface MapLegendProps {
 }
 
 const MapLegend = ({ selectedCrop, radius }: MapLegendProps) => {
+  const { t } = useTranslation();
   const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
 
   const legendItems = [
     {
       id: "inside",
       color: MAP_CONFIG.COLORS.INSIDE_RADIUS,
-      label: `Within ${radius <= 0.5 ? `${Math.round(radius * 1000)}m` : `${radius}km`}`,
+      label: `${radius <= 0.5 ? `${Math.round(radius * 1000)}m` : `${radius}km`}`,
       type: "circle",
     },
     {
       id: "outside",
       color: MAP_CONFIG.COLORS.OUTSIDE_RADIUS,
-      label: "Beyond radius",
+      label: t.map.beyondRadius,
       type: "circle",
     },
     {
       id: "user",
       color: MAP_CONFIG.COLORS.USER_LOCATION,
-      label: "Your location",
+      label: t.map.yourLocation,
       type: "center",
     },
   ];
@@ -36,7 +38,7 @@ const MapLegend = ({ selectedCrop, radius }: MapLegendProps) => {
       <View style={mapStyles.compactLegendHeader}>
         <Text style={mapStyles.compactLegendCropIcon}>{selectedCropData?.icon}</Text>
         <Text style={mapStyles.compactLegendTitle}>
-          {selectedCropData?.label} Map Legend
+          {selectedCropData?.label} {t.map.mapLegend}
         </Text>
       </View>
 

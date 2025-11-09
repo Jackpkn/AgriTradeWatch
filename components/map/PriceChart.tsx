@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Dimensions } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { LinearGradient } from "expo-linear-gradient";
 import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface PriceChartProps {
   chartData: { value: number; label: string; count: number }[];
@@ -21,6 +22,8 @@ const PriceChart = ({
   title,
   isConsumerChart = false,
 }: PriceChartProps) => {
+  const { t } = useTranslation();
+
   // Validate and sanitize chart data
   const validChartData = React.useMemo(() => {
     if (!Array.isArray(chartData) || chartData.length === 0) return [];
@@ -121,7 +124,7 @@ const PriceChart = ({
               ]}
             >
               <Text style={modernStyles.badgeText}>
-                {isConsumerChart ? "Consumer" : "Farmer"}
+                {isConsumerChart ? t.map.consumer : t.map.farmer}
               </Text>
             </View>
           </View>
@@ -129,32 +132,32 @@ const PriceChart = ({
           <View style={modernStyles.statsRow}>
             <View style={modernStyles.statItem}>
               <Text style={modernStyles.statValue}>₹{Math.round(maxValue)}</Text>
-              <Text style={modernStyles.statLabel}>Peak Price</Text>
+              <Text style={modernStyles.statLabel}>{t.map.peakPrice}</Text>
             </View>
             <View style={modernStyles.statDivider} />
             <View style={modernStyles.statItem}>
               <Text style={modernStyles.statValue}>₹{Math.round(minValue)}</Text>
-              <Text style={modernStyles.statLabel}>Low Price</Text>
+              <Text style={modernStyles.statLabel}>{t.map.lowPrice}</Text>
             </View>
             <View style={modernStyles.statDivider} />
             <View style={modernStyles.statItem}>
               <Text style={modernStyles.statValue}>
                 {validChartData.length}
               </Text>
-              <Text style={modernStyles.statLabel}>Data Points</Text>
+              <Text style={modernStyles.statLabel}>{t.map.dataPoints}</Text>
             </View>
           </View>
 
           <Text style={modernStyles.subtitle}>
-            Daily{" "}
+            {t.map.daily}{" "}
             {priceUnit === MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_KG
-              ? "per kg"
-              : "per unit"}{" "}
-            prices
+              ? t.map.perKg
+              : t.map.perUnit}{" "}
+            {t.map.prices}
             {validChartData.length > 1 && (
               <Text style={modernStyles.dateRange}>
                 {" • "}
-                {validChartData[0]?.label} to{" "}
+                {validChartData[0]?.label} {t.map.to}{" "}
                 {validChartData[validChartData.length - 1]?.label}
               </Text>
             )}
@@ -235,7 +238,7 @@ const PriceChart = ({
                             ]}
                           />
                           <Text style={modernStyles.reportsText}>
-                            {item[0]?.count} reports
+                            {item[0]?.count} {t.map.reports}
                           </Text>
                         </View>
                       </LinearGradient>

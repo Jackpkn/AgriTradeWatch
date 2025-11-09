@@ -1,15 +1,17 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, Modal, PanResponder, Alert, StyleSheet } from "react-native";
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, Modal, Alert, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Slider from '@react-native-community/slider';
 import { Ionicons } from "@expo/vector-icons";
 import { useGlobal } from "@/context/global-provider";
 
 // Custom hooks
 import { useMapData } from "@/hooks/useMapData";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Components
 import MapHeader from "@/components/map/MapHeader";
@@ -605,7 +607,7 @@ const useMapState = () => {
     selectedMapType: "default",
     radius: MAP_CONFIG.RADIUS.DEFAULT,
     markerPosition: null,
-    priceUnit: MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_UNIT,
+    priceUnit: MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_KG,
     selectedDateRange: 'custom',
     customStartDate: new Date(),
     customEndDate: new Date(),
@@ -713,6 +715,7 @@ const usePriceCalculations = (allCrops: any[], selectedCrop: string) => {
 
 const MapScreen = () => {
   const { currentLocation, isLogged, mainUser } = useGlobal();
+  const { t } = useTranslation();
   const [state, updateState] = useMapState();
 
   const orientationData = useOrientation();
@@ -739,52 +742,37 @@ const MapScreen = () => {
 
   const radiusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const webViewRef = useRef<any>(null);
-  const sliderContainerRef = useRef<any>(null);
   const autoRefreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const setRadius = useCallback((value: number) => {
+    updateState({ radius: value });
+    try {
+      if (webViewRef.current) {
+        const message = JSON.stringify({
+          type: 'updateRadius',
+          radius: value
+        });
+        webViewRef.current.injectJavaScript(`
+          try {
+            window.postMessage('${message}', '*');
+          } catch(e) {
+            console.error('WebView message error:', e);
+          }
+        `);
+      }
+    } catch (error) {
+      console.error('WebView communication error:', error);
+    }
+  }, [updateState]);
 
   const debouncedSetRadius = useCallback((value: number) => {
     if (radiusTimeoutRef.current) {
       clearTimeout(radiusTimeoutRef.current);
     }
     radiusTimeoutRef.current = setTimeout(() => {
-      updateState({ radius: value });
-      try {
-        if (webViewRef.current) {
-          const message = JSON.stringify({
-            type: 'updateRadius',
-            radius: value
-          });
-          webViewRef.current.injectJavaScript(`
-            try {
-              window.postMessage('${message}', '*');
-            } catch(e) {
-              console.error('WebView message error:', e);
-            }
-          `);
-        }
-      } catch (error) {
-        console.error('WebView communication error:', error);
-      }
-    }, MAP_CONFIG.RADIUS.DEBOUNCE_MS);
-  }, [updateState]);
-
-  const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => { },
-    onPanResponderMove: (evt: any, gestureState: any) => {
-      if (sliderContainerRef.current) {
-        sliderContainerRef.current.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-          const touchX = evt.nativeEvent.pageX - pageX;
-          const percentage = Math.max(0, Math.min(1, touchX / width));
-          const newRadius = (percentage * 500) / 1000;
-          const roundedRadius = Math.round(newRadius * 1000 / 50) * 50 / 1000;
-          debouncedSetRadius(Math.max(0.05, roundedRadius));
-        });
-      }
-    },
-    onPanResponderRelease: () => { },
-  }), [debouncedSetRadius]);
+      setRadius(value);
+    }, 100);
+  }, [setRadius]);
 
   useEffect(() => {
     return () => {
@@ -926,9 +914,9 @@ const MapScreen = () => {
     if (state.markerPosition) {
       const newFavorites = [...state.favoriteLocations, state.markerPosition];
       updateState({ favoriteLocations: newFavorites });
-      Alert.alert('Success', 'Location saved to favorites!');
+      Alert.alert(t.common.success, t.map.locationSavedToFavorites);
     }
-  }, [state.markerPosition, state.favoriteLocations, updateState]);
+  }, [state.markerPosition, state.favoriteLocations, updateState, t]);
 
   const handleLoadFavoriteLocation = useCallback((location: MarkerPosition) => {
     updateState({ markerPosition: location });
@@ -973,10 +961,10 @@ const MapScreen = () => {
       <SafeAreaView style={mapStyles.container}>
         <View style={mapStyles.mapLoading}>
           <ActivityIndicator size="large" color="#49A760" />
-          <Text style={mapStyles.mapLoadingText}>Loading crop data...</Text>
+          <Text style={mapStyles.mapLoadingText}>{t.map.loadingCropData}</Text>
           <View style={{ marginTop: 20, alignItems: 'center' }}>
             <Text style={{ color: '#666', fontSize: 14 }}>
-              This may take a moment
+              {t.common.pleaseWait}
             </Text>
             <Text style={{ color: '#666', fontSize: 12, marginTop: 10 }}>
               Debug: Loading={dataLoading ? 'true' : 'false'}, Crops={allCrops.length}
@@ -993,10 +981,10 @@ const MapScreen = () => {
         <View style={mapStyles.mapLoading}>
           <Ionicons name="warning" size={64} color="#ff6b6b" style={{ marginBottom: 16 }} />
           <Text style={[mapStyles.mapLoadingText, { fontSize: 18, fontWeight: 'bold', marginBottom: 8 }]}>
-            Error Loading Data
+            {t.map.errorLoadingData}
           </Text>
           <Text style={[mapStyles.mapLoadingText, { fontSize: 14, textAlign: 'center', marginBottom: 24 }]}>
-            {dataError || 'Unable to load map data. Please check your connection and try again.'}
+            {dataError || t.map.unableToLoadMapData}
           </Text>
           <TouchableOpacity
             style={{
@@ -1008,7 +996,7 @@ const MapScreen = () => {
             onPress={handleRetry}
           >
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-              Retry
+              {t.common.retry}
             </Text>
           </TouchableOpacity>
         </View>
@@ -1071,14 +1059,14 @@ const MapScreen = () => {
             />
             <View style={mapStyles.mapInstructions}>
               <Text style={mapStyles.mapInstructionsText}>
-                💡 Drag the red pin to explore different areas
+                {t.map.dragPinInstruction}
               </Text>
             </View>
           </View>
           <OfflineIndicator />
           <MapLegend selectedCrop={state.selectedCrop} radius={state.radius} />
           <View style={mapStyles.priceDisplaySection}>
-            <Text style={mapStyles.priceSectionTitle}>Price Information</Text>
+            <Text style={mapStyles.priceSectionTitle}>{t.map.priceInformation}</Text>
             <View style={{ marginBottom: 16 }}>
               <TouchableOpacity
                 style={[
@@ -1096,12 +1084,12 @@ const MapScreen = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-            <View style={mapStyles.priceCardsContainer}>
+            {/* <View style={mapStyles.priceCardsContainer}>
               {[
-                { key: 'min', title: 'Min Price', color: '#ff6b6b' },
-                { key: 'max', title: 'Max Price', color: '#4ecdc4' },
-                { key: 'average', title: 'Avg Price', color: '#45b7d1' },
-                { key: 'modal', title: 'Modal Price', color: '#96ceb4' }
+                { key: 'min', title: t.map.minPrice, color: '#ff6b6b' },
+                { key: 'max', title: t.map.maxPrice, color: '#4ecdc4' },
+                { key: 'average', title: t.map.avgPrice, color: '#45b7d1' },
+                { key: 'modal', title: t.map.modalPrice, color: '#96ceb4' }
               ].map(({ key, title, color }) => (
                 <View key={key} style={[mapStyles.priceCard, { borderLeftColor: color, borderLeftWidth: 4 }]}>
                   <Text style={mapStyles.priceCardTitle}>{title}</Text>
@@ -1112,11 +1100,11 @@ const MapScreen = () => {
                       <Text style={mapStyles.priceCardValue}>
                         {state.priceData.custom?.[key as keyof PriceData] > 0
                           ? `₹${state.priceData.custom[key as keyof PriceData]}`
-                          : 'No data'
+                          : t.map.noData
                         }
                       </Text>
                       <Text style={mapStyles.priceCardCount}>
-                        {state.priceData.custom?.count || 0} data points
+                        {state.priceData.custom?.count || 0} {t.map.dataPoints}
                       </Text>
                     </>
                   )}
@@ -1127,19 +1115,19 @@ const MapScreen = () => {
               <View style={mapStyles.noDataMessage}>
                 <Ionicons name="information-circle-outline" size={24} color="#666" />
                 <Text style={mapStyles.noDataText}>
-                  No price data available for the selected date range. Try adjusting your date range.
+                  {t.map.noPriceDataAvailable}
                 </Text>
               </View>
-            )}
+            )} */}
           </View>
           <View style={mapStyles.radiusSection}>
-            <Text style={mapStyles.radiusSectionTitle}>Location & Radius Control</Text>
+            <Text style={mapStyles.radiusSectionTitle}>{t.map.locationRadiusControl}</Text>
             <Text style={mapStyles.radiusSectionSubtitle}>
-              Drag the marker on the map to change location, then adjust radius below
+              {t.map.locationRadiusSubtitle}
             </Text>
             {state.favoriteLocations.length > 0 && (
               <View style={mapStyles.favoriteLocationsContainer}>
-                <Text style={mapStyles.favoriteLocationsTitle}>Favorite Locations</Text>
+                <Text style={mapStyles.favoriteLocationsTitle}>{t.map.favoriteLocations}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={mapStyles.favoriteLocationsList}>
                     {state.favoriteLocations.map((location, index) => (
@@ -1171,7 +1159,7 @@ const MapScreen = () => {
                 <Text style={[
                   mapStyles.radiusTypeButtonText,
                   state.radius <= 0.5 && mapStyles.radiusTypeButtonTextActive
-                ]}>Meters</Text>
+                ]}>{t.map.meters}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1186,7 +1174,7 @@ const MapScreen = () => {
                 <Text style={[
                   mapStyles.radiusTypeButtonText,
                   state.radius > 0.5 && mapStyles.radiusTypeButtonTextActive
-                ]}>Kilometers</Text>
+                ]}>{t.map.kilometers}</Text>
               </TouchableOpacity>
             </View>
             <View style={mapStyles.radiusSliderContainer}>
@@ -1198,32 +1186,26 @@ const MapScreen = () => {
                   }
                 </Text>
                 <Text style={mapStyles.radiusDataCount}>
-                  {filteredCrops.length} items in range
+                  {filteredCrops.length} {t.map.itemsInRange}
                 </Text>
               </View>
               {state.radius <= 0.5 && (
                 <View style={mapStyles.sliderContainer}>
                   <Text style={mapStyles.sliderHint}>
-                    Drag the slider or tap steps below to adjust radius
+                    {t.map.dragSliderHint}
                   </Text>
-                  <View
-                    ref={sliderContainerRef}
-                    style={mapStyles.sliderTrack}
-                    {...panResponder.panHandlers}
-                  >
-                    <View
-                      style={[
-                        mapStyles.sliderFill,
-                        { width: `${(state.radius * 1000 / 500) * 100}%` }
-                      ]}
-                    />
-                    <View
-                      style={[
-                        mapStyles.sliderThumb,
-                        { left: `${(state.radius * 1000 / 500) * 100}%` }
-                      ]}
-                    />
-                  </View>
+                  <Slider
+                    style={{ width: '100%', height: 40 }}
+                    minimumValue={0.05}
+                    maximumValue={0.5}
+                    step={0.05}
+                    value={state.radius}
+                    onValueChange={setRadius}
+                    onSlidingComplete={setRadius}
+                    minimumTrackTintColor="#49A760"
+                    maximumTrackTintColor="#e0e0e0"
+                    thumbTintColor="#49A760"
+                  />
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -1237,7 +1219,7 @@ const MapScreen = () => {
                             mapStyles.sliderStep,
                             Math.round(state.radius * 1000) === step && mapStyles.sliderStepActive
                           ]}
-                          onPress={() => debouncedSetRadius(step / 1000)}
+                          onPress={() => setRadius(step / 1000)}
                         >
                           <Text style={[
                             mapStyles.sliderStepText,
@@ -1283,14 +1265,14 @@ const MapScreen = () => {
               chartData={consumerChartData}
               selectedCrop={state.selectedCrop}
               priceUnit={state.priceUnit}
-              title="Consumer Buying Price Trends"
+              title={t.map.consumerBuyingPriceTrends}
               isConsumerChart={true}
             />
           ) : (
             <View style={mapStyles.noChartDataContainer}>
               <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
               <Text style={mapStyles.noChartDataText}>
-                No consumer chart data available for {state.selectedCrop}
+                {t.map.noConsumerChartData} {state.selectedCrop}
               </Text>
             </View>
           )}
@@ -1299,45 +1281,45 @@ const MapScreen = () => {
               chartData={farmerChartData}
               selectedCrop={state.selectedCrop}
               priceUnit={state.priceUnit}
-              title="Farmer Selling Price Trends"
+              title={t.map.farmerSellingPriceTrends}
               isConsumerChart={false}
             />
           ) : (
             <View style={mapStyles.noChartDataContainer}>
               <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
               <Text style={mapStyles.noChartDataText}>
-                No farmer chart data available for {state.selectedCrop}
+                {t.map.noFarmerChartData} {state.selectedCrop}
               </Text>
             </View>
           )}
           <View style={mapStyles.marketInsightsSection}>
-            <Text style={mapStyles.marketInsightsTitle}>Market Insights</Text>
+            <Text style={mapStyles.marketInsightsTitle}>{t.map.marketInsights}</Text>
             <View style={mapStyles.insightsContainer}>
               {state.priceData.custom.count > 0 ? (
                 <>
                   <View style={mapStyles.insightCard}>
-                    <Text style={mapStyles.insightTitle}>Best Time to Buy</Text>
+                    <Text style={mapStyles.insightTitle}>{t.map.bestTimeToBuy}</Text>
                     <Text style={mapStyles.insightText}>
-                      Based on current trends, the optimal buying time appears to be when prices are closest to ₹{state.priceData.custom.min}
+                      {t.map.bestTimeToBuyDesc} ₹{state.priceData.custom.min}
                     </Text>
                   </View>
 
                   <View style={mapStyles.insightCard}>
-                    <Text style={mapStyles.insightTitle}>Price Stability</Text>
+                    <Text style={mapStyles.insightTitle}>{t.map.priceStability}</Text>
                     <Text style={mapStyles.insightText}>
                       {state.priceData.custom.average > 0 && ((state.priceData.custom.max - state.priceData.custom.min) / state.priceData.custom.average) < 0.2
-                        ? 'Market shows stable pricing with low volatility'
-                        : 'Market shows high volatility - prices vary significantly'
+                        ? t.map.stablePricing
+                        : t.map.highVolatility
                       }
                     </Text>
                   </View>
 
                   <View style={mapStyles.insightCard}>
-                    <Text style={mapStyles.insightTitle}>Data Quality</Text>
+                    <Text style={mapStyles.insightTitle}>{t.map.dataQuality}</Text>
                     <Text style={mapStyles.insightText}>
                       {state.priceData.custom.count > 10
-                        ? `Good data coverage with ${state.priceData.custom.count} data points`
-                        : `Limited data available (${state.priceData.custom.count} points) - insights may be less reliable`
+                        ? `${t.map.goodDataCoverage} ${state.priceData.custom.count} ${t.map.dataPoints}`
+                        : `${t.map.limitedDataAvailable} (${state.priceData.custom.count} ${t.map.points}) - ${t.map.insightsMayBeLessReliable}`
                       }
                     </Text>
                   </View>
@@ -1346,7 +1328,7 @@ const MapScreen = () => {
                 <View style={mapStyles.noInsightsContainer}>
                   <Ionicons name="bulb-outline" size={48} color="#ccc" />
                   <Text style={mapStyles.noInsightsText}>
-                    No data available for market insights. Try a different date range or crop.
+                    {t.map.noDataForInsights}
                   </Text>
                 </View>
               )}
@@ -1369,14 +1351,14 @@ const MapScreen = () => {
           <View style={mapStyles.modalOverlay}>
             <View style={mapStyles.modalContent}>
               <View style={mapStyles.modalHeader}>
-                <Text style={mapStyles.modalTitle}>Select Date Range</Text>
+                <Text style={mapStyles.modalTitle}>{t.map.selectDateRange}</Text>
                 <TouchableOpacity onPress={() => updateState({ showCustomDateModal: false })}>
                   <Ionicons name="close" size={24} color="#666" />
                 </TouchableOpacity>
               </View>
               <View style={mapStyles.datePickerContainer}>
                 <View style={mapStyles.datePickerRow}>
-                  <Text style={mapStyles.datePickerLabel}>From Date:</Text>
+                  <Text style={mapStyles.datePickerLabel}>{t.map.fromDate}:</Text>
                   <TouchableOpacity
                     style={mapStyles.datePickerButton}
                     onPress={() => {
@@ -1394,7 +1376,7 @@ const MapScreen = () => {
                 </View>
 
                 <View style={mapStyles.datePickerRow}>
-                  <Text style={mapStyles.datePickerLabel}>To Date:</Text>
+                  <Text style={mapStyles.datePickerLabel}>{t.map.toDate}:</Text>
                   <TouchableOpacity
                     style={mapStyles.datePickerButton}
                     onPress={() => {
@@ -1411,12 +1393,12 @@ const MapScreen = () => {
                   </TouchableOpacity>
                 </View>
                 <View style={mapStyles.quickDateRanges}>
-                  <Text style={mapStyles.quickDateRangesTitle}>Quick Select:</Text>
+                  <Text style={mapStyles.quickDateRangesTitle}>{t.map.quickSelect}:</Text>
                   <View style={mapStyles.quickDateButtons}>
                     {[
-                      { label: 'Last 7 days', days: 7 },
-                      { label: 'Last 30 days', days: 30 },
-                      { label: 'Last 3 months', days: 90 }
+                      { label: t.map.last7Days, days: 7 },
+                      { label: t.map.last30Days, days: 30 },
+                      { label: t.map.last3Months, days: 90 }
                     ].map(({ label, days }) => (
                       <TouchableOpacity
                         key={days}
@@ -1445,7 +1427,7 @@ const MapScreen = () => {
                     if (state.customEndDate >= state.customStartDate) {
                       updateState({ showCustomDateModal: false });
                     } else {
-                      Alert.alert('Invalid Date Range', 'End date must be after start date');
+                      Alert.alert(t.map.invalidDateRange, t.map.endDateMustBeAfterStartDate);
                     }
                   }}
                   disabled={state.customEndDate < state.customStartDate}
@@ -1454,7 +1436,7 @@ const MapScreen = () => {
                     mapStyles.applyDateButtonText,
                     state.customEndDate < state.customStartDate && mapStyles.applyDateButtonTextDisabled
                   ]}>
-                    {state.customEndDate < state.customStartDate ? 'Invalid Date Range' : 'Apply Date Range'}
+                    {state.customEndDate < state.customStartDate ? t.map.invalidDateRange : t.map.applyDateRange}
                   </Text>
                 </TouchableOpacity>
               </View>

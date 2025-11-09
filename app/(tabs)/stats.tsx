@@ -16,6 +16,7 @@ import { fetchCrops } from '@/components/crud';
 import { useGlobal } from '@/context/global-provider';
 import { useOrientation } from '@/utils/orientationUtils';
 import { createStatsStyles } from '@/utils/responsiveStyles';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Type definitions
 interface CropLocation {
@@ -59,6 +60,7 @@ interface CropChartProps {
     height: number;
   };
   isLandscape: boolean;
+  t: any;
 }
 
 interface CropSelectorProps {
@@ -101,6 +103,7 @@ const GRADIENT_COLORS = {
 const Stats: React.FC = () => {
   // Global context
   const { setIsLoading } = useGlobal();
+  const { t } = useTranslation();
 
   // State management
   const [state, setState] = useState<MarketAnalyticsState>({
@@ -240,6 +243,7 @@ const Stats: React.FC = () => {
     onToggleAnalytics,
     screenData,
     isLandscape,
+    t,
   }) => {
     try {
       // Validation checks
@@ -247,7 +251,7 @@ const Stats: React.FC = () => {
         return (
           <View style={styles.noDataContainer}>
             <Ionicons name="refresh-outline" size={48} color="#ccc" />
-            <Text style={styles.noDataText}>Loading crop data...</Text>
+            <Text style={styles.noDataText}>{t.stats.loadingCropData}</Text>
           </View>
         );
       }
@@ -256,7 +260,7 @@ const Stats: React.FC = () => {
         return (
           <View style={styles.noDataContainer}>
             <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
-            <Text style={styles.noDataText}>Select a crop to view statistics</Text>
+            <Text style={styles.noDataText}>{t.stats.selectCropToView}</Text>
           </View>
         );
       }
@@ -288,8 +292,8 @@ const Stats: React.FC = () => {
         return (
           <View style={styles.noDataContainer}>
             <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
-            <Text style={styles.noDataText}>No data available for {cropName}</Text>
-            <Text style={styles.noDataSubtext}>Try selecting a different crop</Text>
+            <Text style={styles.noDataText}>{t.stats.noDataAvailableFor} {cropName}</Text>
+            <Text style={styles.noDataSubtext}>{t.stats.trySelectingDifferentCrop}</Text>
           </View>
         );
       }
@@ -320,8 +324,8 @@ const Stats: React.FC = () => {
         return (
           <View style={styles.noDataContainer}>
             <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
-            <Text style={styles.noDataText}>No valid price data for {cropName}</Text>
-            <Text style={styles.noDataSubtext}>Check if price information is available</Text>
+            <Text style={styles.noDataText}>{t.stats.noValidPriceDataFor} {cropName}</Text>
+            <Text style={styles.noDataSubtext}>{t.stats.checkIfPriceInfoAvailable}</Text>
           </View>
         );
       }
@@ -395,7 +399,7 @@ const Stats: React.FC = () => {
       return (
         <View style={styles.noDataContainer}>
           <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
-          <Text style={styles.noDataText}>Error loading chart</Text>
+          <Text style={styles.noDataText}>{t.stats.errorLoadingChart}</Text>
         </View>
       );
     }
@@ -411,7 +415,7 @@ const Stats: React.FC = () => {
       if (!selectedValue || !onValueChange || !type) {
         return (
           <View style={styles.selectorContainer}>
-            <Text style={styles.noDataText}>Loading crop options...</Text>
+            <Text style={styles.noDataText}>{t.stats.loadingCropOptions}</Text>
           </View>
         );
       }
@@ -423,13 +427,13 @@ const Stats: React.FC = () => {
       return (
         <View style={styles.selectorContainer}>
           <Text style={styles.selectorLabel}>
-            {type === 'consumer' ? 'Consumer' : 'Farmer'} Crop Analysis
+            {type === 'consumer' ? t.stats.consumerCropAnalysis : t.stats.farmerCropAnalysis}
           </Text>
           <View style={styles.pickerContainer}>
             <View style={styles.selectedCropDisplay}>
               <Text style={styles.cropIcon}>{selectedCrop?.icon || '🌾'}</Text>
               <Text style={styles.selectedCropText}>
-                {selectedCrop?.label || 'Select Crop'}
+                {selectedCrop?.label || t.stats.selectCrop}
               </Text>
             </View>
             <Picker
@@ -458,7 +462,7 @@ const Stats: React.FC = () => {
               ) : (
                 <Picker.Item
                   key="default"
-                  label="🌾 Loading..."
+                  label={`🌾 ${t.common.loading}`}
                   value="loading"
                   style={styles.pickerItem}
                 />
@@ -471,7 +475,7 @@ const Stats: React.FC = () => {
       console.error(`CropSelector ${type} error:`, error);
       return (
         <View style={styles.selectorContainer}>
-          <Text style={styles.noDataText}>Error loading selector</Text>
+          <Text style={styles.noDataText}>{t.stats.errorLoadingSelector}</Text>
         </View>
       );
     }
@@ -522,7 +526,7 @@ const Stats: React.FC = () => {
 
     } catch (error) {
       console.error('Error fetching crops:', error);
-      Alert.alert('Error', 'Failed to fetch crop data. Please try again.');
+      Alert.alert(t.common.error, t.stats.failedToFetchCropData);
 
       setState(prev => ({
         ...prev,
@@ -593,9 +597,9 @@ const Stats: React.FC = () => {
               style={styles.headerGradient}
             >
               <Ionicons name="analytics" size={32} color="#fff" />
-              <Text style={styles.headerTitle}>Market Analytics</Text>
+              <Text style={styles.headerTitle}>{t.stats.marketAnalytics}</Text>
               <Text style={styles.headerSubtitle}>
-                Track and analyze crop price trends over time
+                {t.stats.trackAndAnalyzeCropPrices}
               </Text>
             </LinearGradient>
           </View>
@@ -625,7 +629,7 @@ const Stats: React.FC = () => {
                 style={styles.sectionHeaderGradient}
               >
                 <Ionicons name="person" size={24} color="#fff" />
-                <Text style={styles.sectionTitle}>Consumer Market</Text>
+                <Text style={styles.sectionTitle}>{t.stats.consumerMarket}</Text>
               </LinearGradient>
             </View>
 
@@ -648,6 +652,7 @@ const Stats: React.FC = () => {
               }
               screenData={screenData}
               isLandscape={isLandscape}
+              t={t}
             />
           </View>
 
@@ -659,7 +664,7 @@ const Stats: React.FC = () => {
                 style={styles.sectionHeaderGradient}
               >
                 <Ionicons name="leaf" size={24} color="#fff" />
-                <Text style={styles.sectionTitle}>Farmer Market</Text>
+                <Text style={styles.sectionTitle}>{t.stats.farmerMarket}</Text>
               </LinearGradient>
             </View>
 
@@ -682,6 +687,7 @@ const Stats: React.FC = () => {
               }
               screenData={screenData}
               isLandscape={isLandscape}
+              t={t}
             />
           </View>
         </ScrollView>
