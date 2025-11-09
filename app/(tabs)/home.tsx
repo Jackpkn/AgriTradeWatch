@@ -338,7 +338,7 @@ const Home: React.FC = React.memo(() => {
           </View>
 
           {/* Quick Actions */}
-          <View style={styles.quickActionsSection}>
+          {/* <View style={styles.quickActionsSection}>
             <Text style={styles.sectionTitle} testID="quick-actions-title">
               {t.home.quickActions}
             </Text>
@@ -359,7 +359,7 @@ const Home: React.FC = React.memo(() => {
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
+          </View> */}
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>
