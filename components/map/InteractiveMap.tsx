@@ -151,12 +151,12 @@ const InteractiveMap = React.forwardRef((
             ${tileLayer}.addTo(map);
             console.log('Map initialized successfully');
 
-            // Add draggable search location marker (red pin)
+            // Add draggable search location marker (blue pin)
             var searchMarker = L.marker([${latitude}, ${longitude}], {
               draggable: true,
               icon: L.divIcon({
                 className: 'user-location-marker',
-                html: '<div style="position: relative; width: 20px; height: 20px;"><div style="background: #ff4444; width: 16px; height: 16px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.5); position: absolute; top: 0; left: 2px;"></div><div style="background: white; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 3px; left: 7px; z-index: 1;"></div></div>',
+                html: '<div style="position: relative; width: 20px; height: 20px;"><div style="background: #4A90E2; width: 16px; height: 16px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.5); position: absolute; top: 0; left: 2px;"></div><div style="background: white; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 3px; left: 7px; z-index: 1;"></div></div>',
                 iconSize: [20, 20],
                 iconAnchor: [10, 20]
               })
