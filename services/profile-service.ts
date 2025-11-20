@@ -3,6 +3,7 @@
  * Handles user profile data fetching and updates
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiWithRetry, APIError, HTTP_STATUS } from "./api-pro";
 
 // ========================================================================
@@ -55,7 +56,18 @@ class ProfileService {
      */
     async getProfile(): Promise<EnhancedProfileData> {
         try {
-            const response = await apiWithRetry.get<ProfileData>("/profile/");
+            // Get the stored username from AsyncStorage
+            const username = await AsyncStorage.getItem("username");
+
+            if (!username) {
+                throw new APIError(
+                    "No username found. Please login again.",
+                    HTTP_STATUS.UNAUTHORIZED
+                );
+            }
+
+            // Use the correct API endpoint with username in the path
+            const response = await apiWithRetry.get<ProfileData>(`/profile/${username}/`);
 
             if (!response.data) {
                 throw new APIError("No profile data received", HTTP_STATUS.NOT_FOUND);
@@ -103,7 +115,18 @@ class ProfileService {
      */
     async updateProfile(updateData: ProfileUpdateData): Promise<EnhancedProfileData> {
         try {
-            const response = await apiWithRetry.patch<ProfileData>("/profile/", updateData);
+            // Get the stored username from AsyncStorage
+            const username = await AsyncStorage.getItem("username");
+
+            if (!username) {
+                throw new APIError(
+                    "No username found. Please login again.",
+                    HTTP_STATUS.UNAUTHORIZED
+                );
+            }
+
+            // Use the correct API endpoint with username in the path
+            const response = await apiWithRetry.patch<ProfileData>(`/profile/${username}/`, updateData);
 
             if (!response.data) {
                 throw new APIError("No profile data received after update", HTTP_STATUS.BAD_REQUEST);
