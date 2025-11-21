@@ -1,0 +1,55 @@
+// App-wide Constants for AgriTradeWatch/MandiGo
+
+// Crop Units
+export const CROP_UNITS = [
+  { id: "kg", label: "Kg", name: "Kilogram" },
+  { id: "quintal", label: "Quintal", name: "Quintal" },
+  { id: "tonn", label: "Tonn", name: "Metric Ton" },
+  { id: "250gm", label: "250 gm", name: "250 Grams" },
+  { id: "bundle", label: "Bundle", name: "Bundle" },
+  { id: "piece", label: "Piece", name: "Piece" },
+  { id: "dozen", label: "Dozen", name: "Dozen" },
+];
+
+// Damage Crop Units
+export const DAMAGE_UNITS = [
+  { id: "ACRES", label: "ACRES", name: "Acres" },
+  { id: "TONN", label: "TONN", name: "Ton" },
+];
+
+// Damage Place Options
+export const DAMAGE_PLACE = [
+  { id: "on_field", label: "On Field", name: "On Field" },
+  { id: "on_market", label: "On Market", name: "On Market" },
+];
+
+// Production Methods
+export const PRODUCTION_METHODS = [
+  { id: "organic", label: "Organic", name: "Organic" },
+  { id: "inorganic", label: "Inorganic", name: "Inorganic" },
+];
+
+// Production Levels
+export const PRODUCTION_LEVELS = [
+  { id: "selling_surplus", label: "Selling Surplus", name: "Selling Surplus" },
+  { id: "selling_surplus_with_value_addition", label: "Selling Surplus with Value Addition", name: "Selling Surplus with Value Addition" },
+];
+
+// Common Commodities (can be expanded)
+export const COMMODITIES = [
+  "Garlic",
+  "Wheat",
+  "Sugarcane",
+  "Maize",
+  "Ghee",
+  "Honey",
+  "Onion",
+  "Tomato",
+  "Potato",
+  "Drumstick",
+  "Carrot",
+  "Ginger",
+  "Green Chilli",
+  "Lemon",
+  "Banana",
+];

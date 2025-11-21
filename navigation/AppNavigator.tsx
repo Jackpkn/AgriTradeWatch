@@ -15,6 +15,8 @@ import MapScreen from '../app/(tabs)/map';
 import StatsScreen from '../app/(tabs)/stats';
 import ProfileScreen from '../app/(tabs)/profile';
 import CropsScreen from '../app/crops';
+import DamageCropScreen from '../app/damage-crop';
+import DigitalThelaScreen from '../app/digital-thela';
 import LoginScreen from '../app/(auth)/login';
 import SignupScreen from '../app/(auth)/signup';
 import ForgotPasswordScreen from '../app/(auth)/forgot-password';
@@ -137,16 +139,46 @@ export default function AppNavigator() {
         <NavigationContainer>
             <Stack.Navigator>
                 {isLogged ? (
-                    // Authenticated user - only show Main screen
-                    <Stack.Screen
-                        name="Main"
-                        component={TabNavigator}
-                        options={{
-                            headerShown: false,
-                            // Prevent going back to auth screens
-                            gestureEnabled: false
-                        }}
-                    />
+                    // Authenticated user - show Main screen and additional screens
+                    <>
+                        <Stack.Screen
+                            name="Main"
+                            component={TabNavigator}
+                            options={{
+                                headerShown: false,
+                                // Prevent going back to auth screens
+                                gestureEnabled: false
+                            }}
+                        />
+                        <Stack.Screen
+                            name="damage-crop"
+                            component={DamageCropScreen}
+                            options={{
+                                title: t.damageCrop?.header || 'Report Crop Damage',
+                                headerStyle: {
+                                    backgroundColor: '#FF6B6B',
+                                },
+                                headerTintColor: '#fff',
+                                headerTitleStyle: {
+                                    fontWeight: 'bold',
+                                },
+                            }}
+                        />
+                        <Stack.Screen
+                            name="digital-thela"
+                            component={DigitalThelaScreen}
+                            options={{
+                                title: t.digitalThela?.header || 'Digital Thela',
+                                headerStyle: {
+                                    backgroundColor: '#9C27B0',
+                                },
+                                headerTintColor: '#fff',
+                                headerTitleStyle: {
+                                    fontWeight: 'bold',
+                                },
+                            }}
+                        />
+                    </>
                 ) : (
                     // Not authenticated - show auth flow
                     <>

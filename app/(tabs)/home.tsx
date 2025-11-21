@@ -60,6 +60,16 @@ const getFeatures = (t: any): Feature[] => [
   },
   {
     id: 2,
+    title: t.home.reportDamage,
+    description: t.home.reportDamageDesc,
+    icon: "warning",
+    route: "damage-crop",
+    gradient: ["#FF6B6B", "#E63946"],
+    bgColor: "#fff0f0",
+    isEnabled: true,
+  },
+  {
+    id: 3,
     title: t.home.priceMap,
     description: t.home.priceMapDesc,
     icon: "map",
@@ -69,15 +79,14 @@ const getFeatures = (t: any): Feature[] => [
     isEnabled: true,
   },
   {
-    id: 3,
+    id: 4,
     title: t.home.digitalThela,
     description: t.home.digitalThelaDesc,
     icon: "cart",
-    route: null,
+    route: "digital-thela",
     gradient: ["#9C27B0", "#7B1FA2"],
     bgColor: "#f8f0ff",
-    isEnabled: false,
-    comingSoon: true,
+    isEnabled: true,
   },
 ];
 
@@ -100,12 +109,10 @@ const useNetworkStatus = (): boolean => {
 // ---------- Component ----------
 
 const Home: React.FC = React.memo(() => {
-  // Navigation
-  const navigation = useNavigation();
-
   // Context
   const { mainUser } = useGlobal();
   const { t } = useTranslation();
+  const navigation = useNavigation();
 
   // Hooks
   const isConnected = useNetworkStatus();
@@ -136,13 +143,15 @@ const Home: React.FC = React.memo(() => {
         // Map route names to React Navigation screen names
         const routeMap: Record<string, string> = {
           'crops': 'Crops',
+          'damage-crop': 'damage-crop',
+          'digital-thela': 'digital-thela',
           'map': 'Map',
           'stats': 'Stats',
           'profile': 'Profile',
         };
 
         const screenName = routeMap[route] || route;
-        navigation.navigate(screenName as never);
+        navigation.navigate(screenName as any, params);
       } catch (error) {
         console.error("Navigation error:", error);
         Alert.alert(t.common.error, "Unable to navigate. Please try again.");
