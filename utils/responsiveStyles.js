@@ -634,6 +634,108 @@ export const createCropsStyles = createOrientationStyles(
       alignItems: "center",
       justifyContent: "center",
     },
+    // Date picker styles
+    datePickerButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: "#e0e0e0",
+      borderRadius: 12,
+      backgroundColor: "#fff",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      gap: 10,
+    },
+    dateText: {
+      fontSize: 16,
+      color: "#333",
+      flex: 1,
+    },
+    // Photo/Video styles
+    photoButtonsContainer: {
+      flexDirection: isLandscape ? "row" : "column",
+      gap: 12,
+      marginTop: 12,
+    },
+    photoButton: {
+      flex: isLandscape ? 1 : undefined,
+      backgroundColor: "#f0f9f1",
+      borderWidth: 2,
+      borderColor: "#49A760",
+      borderStyle: "dashed",
+      borderRadius: 12,
+      padding: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      gap: 8,
+      minHeight: 60,
+    },
+    photoButtonText: {
+      color: "#49A760",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    photoPreview: {
+      marginTop: 12,
+      padding: 12,
+      backgroundColor: "#f0f9f1",
+      borderRadius: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    photoAttachedText: {
+      fontSize: 14,
+      color: "#49A760",
+      flex: 1,
+    },
+    // Helper text
+    helperText: {
+      fontSize: 13,
+      color: "#666",
+      marginTop: 4,
+      fontStyle: "italic",
+    },
+    // Labels
+    label: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#2E7D32",
+      marginBottom: 8,
+    },
+    // Form section
+    formSection: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    // Submit button container
+    submitButtonContainer: {
+      marginTop: 24,
+      marginBottom: 8,
+    },
+    // Required fields note
+    requiredFieldsNote: {
+      fontSize: 13,
+      color: "#666",
+      textAlign: "center",
+      fontStyle: "italic",
+      marginTop: 12,
+    },
+    // Gradient background
+    gradientBackground: {
+      flex: 1,
+    },
+    // Welcome card
+    welcomeCard: {
+      borderRadius: 20,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
   })
 );
 

@@ -12,7 +12,7 @@ import { TextInput } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -25,6 +25,7 @@ import { COMMODITIES, DAMAGE_UNITS, DAMAGE_PLACE } from "@/constants/appConstant
 import { DamageCropFormData } from "@/types/api";
 
 const DamageCrop: React.FC = () => {
+  const navigation = useNavigation();
   const { mainUser, setIsLoading } = useGlobal();
   const { t } = useTranslation();
   const { isLandscape, width } = useOrientation() as any;
@@ -172,10 +173,10 @@ const DamageCrop: React.FC = () => {
         remarks: formData.remarks,
         photo: photo
           ? {
-              uri: photo.uri,
-              name: photo.name,
-              type: photo.type,
-            }
+            uri: photo.uri,
+            name: photo.name,
+            type: photo.type,
+          }
           : undefined,
       };
 
@@ -185,7 +186,7 @@ const DamageCrop: React.FC = () => {
         Alert.alert(t.common.success, t.damageCrop.submissionSuccess, [
           {
             text: t.common.ok,
-            onPress: () => router.back(),
+            onPress: () => navigation.goBack(),
           },
         ]);
 

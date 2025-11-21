@@ -1,4 +1,5 @@
-import { apiWithRetry } from './api-pro';
+import axios from 'axios';
+import { getStoredToken } from './api-pro';
 import { ProducePayload, APIResponse } from '@/types/api';
 
 /**
@@ -6,7 +7,7 @@ import { ProducePayload, APIResponse } from '@/types/api';
  */
 export class ProduceService {
   private static instance: ProduceService;
-  private readonly BASE_URL = '/create-produce/';
+  private readonly BASE_URL = 'https://mandigo.in/api/create-produce/';
 
   private constructor() {}
 
@@ -24,6 +25,13 @@ export class ProduceService {
    */
   async submitProduce(produceData: ProducePayload): Promise<APIResponse> {
     try {
+      console.log('🛒 Preparing produce submission');
+
+      const token = await getStoredToken();
+      if (!token) {
+        throw new Error('Authentication token not found.');
+      }
+
       const formData = new FormData();
 
       // Add all required fields
@@ -49,14 +57,27 @@ export class ProduceService {
 
       // Add photo/video if provided
       if (produceData.photo_or_video) {
-        formData.append('photo_or_video', produceData.photo_or_video as any);
+        console.log('📸 Adding photo/video to produce listing');
+        formData.append('photo_or_video', {
+          uri: produceData.photo_or_video.uri,
+          type: 'image/jpeg',
+          name: 'produce_photo.jpg',
+        } as any);
       }
 
-      const response = await apiWithRetry.post(this.BASE_URL, formData, {
+      const config = {
         headers: {
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
-      });
+        timeout: 30000,
+      };
+
+      console.log(`📤 Sending POST to: ${this.BASE_URL}`);
+
+      const response = await axios.post(this.BASE_URL, formData, config);
+
+      console.log('✅ Produce submitted successfully:', response.data);
 
       return {
         success: true,
@@ -64,7 +85,13 @@ export class ProduceService {
         message: 'Produce details submitted successfully',
       };
     } catch (error: any) {
-      console.error('Error submitting produce:', error);
+      console.error('❌ Produce submission error:', error);
+
+      if (error.response) {
+        console.error('Status:', error.response.status);
+        console.error('Data:', error.response.data);
+      }
+
       return {
         success: false,
         error: error.response?.data?.message || error.message || 'Failed to submit produce details',
@@ -78,7 +105,19 @@ export class ProduceService {
    */
   async getProduceListings(): Promise<APIResponse> {
     try {
-      const response = await apiWithRetry.get(this.BASE_URL);
+      const token = await getStoredToken();
+      if (!token) {
+        throw new Error('Authentication token not found.');
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 30000,
+      };
+
+      const response = await axios.get(this.BASE_URL, config);
       return {
         success: true,
         data: response.data,
