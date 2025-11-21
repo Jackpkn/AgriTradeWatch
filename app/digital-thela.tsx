@@ -12,7 +12,7 @@ import { TextInput } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -30,6 +30,7 @@ import {
 import { ProduceFormData } from "@/types/api";
 
 const DigitalThela: React.FC = () => {
+  const navigation = useNavigation();
   const { mainUser, setIsLoading, currentLocation } = useGlobal();
   const { t } = useTranslation();
   const { isLandscape, width } = useOrientation() as any;
@@ -222,10 +223,10 @@ const DigitalThela: React.FC = () => {
         longitude: formData.longitude,
         photo_or_video: photo
           ? {
-              uri: photo.uri,
-              name: photo.name,
-              type: photo.type,
-            }
+            uri: photo.uri,
+            name: photo.name,
+            type: photo.type,
+          }
           : undefined,
       };
 
@@ -235,7 +236,7 @@ const DigitalThela: React.FC = () => {
         Alert.alert(t.common.success, t.digitalThela.submissionSuccess, [
           {
             text: t.common.ok,
-            onPress: () => router.back(),
+            onPress: () => navigation.goBack(),
           },
         ]);
 

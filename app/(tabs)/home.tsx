@@ -86,7 +86,7 @@ const getFeatures = (t: any): Feature[] => [
     route: "digital-thela",
     gradient: ["#9C27B0", "#7B1FA2"],
     bgColor: "#f8f0ff",
-    isEnabled: true,
+    isEnabled: false,
   },
 ];
 

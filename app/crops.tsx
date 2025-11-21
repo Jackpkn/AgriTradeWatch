@@ -30,17 +30,45 @@ const ADD_IMAGE_ENABLED = true;
 
 // Crop items will be generated dynamically using translations
 const getCropItems = (t: any) => [
-  { labelKey: "cropOnion", value: "onion", icon: "🧅" },
-  { labelKey: "cropTomato", value: "tomato", icon: "🍅" },
-  { labelKey: "cropPotato", value: "potato", icon: "🥔" },
-  { labelKey: "cropDrumstick", value: "drumstick", icon: "🥬" },
-  { labelKey: "cropCarrot", value: "carrot", icon: "🥕" },
+  // Vegetables
+  { labelKey: "cropAmbatChukka", value: "ambat chukka", icon: "🥬" },
   { labelKey: "cropGinger", value: "ginger", icon: "🫚" },
+  { labelKey: "cropOnion", value: "onion", icon: "🧅" },
+  { labelKey: "cropCucumber", value: "cucumber", icon: "🥒" },
+  { labelKey: "cropBitterGourd", value: "bitter gourd", icon: "🥒" },
+  { labelKey: "cropCorianderLeaves", value: "coriander leaves", icon: "🌿" },
+  { labelKey: "cropCabbage", value: "cabbage", icon: "🥬" },
+  { labelKey: "cropClusterBeans", value: "cluster beans", icon: "🫘" },
+  { labelKey: "cropCarrot", value: "carrot", icon: "🥕" },
+  { labelKey: "cropCowpea", value: "cowpea", icon: "🫘" },
+  { labelKey: "cropTomato", value: "tomato", icon: "🍅" },
+  { labelKey: "cropCapsicum", value: "capsicum", icon: "🫑" },
+  { labelKey: "cropBottleGourd", value: "bottle gourd", icon: "🥒" },
+  { labelKey: "cropRidgeGourd", value: "ridge gourd", icon: "🥒" },
+  { labelKey: "cropSpinach", value: "spinach", icon: "🥬" },
+  { labelKey: "cropCauliflower", value: "cauliflower", icon: "🥦" },
+  { labelKey: "cropPotato", value: "potato", icon: "🥔" },
+  { labelKey: "cropBeetroot", value: "beetroot", icon: "🥕" },
+  { labelKey: "cropLadiesFinger", value: "ladies finger", icon: "🌱" },
+  { labelKey: "cropPumpkin", value: "pumpkin", icon: "🎃" },
+  { labelKey: "cropRadish", value: "radish", icon: "🥕" },
+  { labelKey: "cropFenugreekLeaves", value: "fenugreek leaves", icon: "🌿" },
   { labelKey: "cropGarlic", value: "garlic", icon: "🧄" },
-  { labelKey: "cropGreenChilli", value: "green chilli", icon: "🌶️" },
   { labelKey: "cropLemon", value: "lemon", icon: "🍋" },
+  { labelKey: "cropBrinjal", value: "brinjal", icon: "🍆" },
+  { labelKey: "cropDrumstick", value: "drumstick", icon: "🥬" },
+  { labelKey: "cropGreenChilli", value: "green chilli", icon: "🌶️" },
+
+  // Fruits
+  { labelKey: "cropPomegranate", value: "pomegranate", icon: "🍎" },
+  { labelKey: "cropCustardApple", value: "custard apple", icon: "🍏" },
+  { labelKey: "cropDragonFruit", value: "dragon fruit", icon: "🐉" },
+  { labelKey: "cropGrapes", value: "grapes", icon: "🍇" },
+  { labelKey: "cropGuava", value: "guava", icon: "🍐" },
+  { labelKey: "cropOrange", value: "orange", icon: "🍊" },
+  { labelKey: "cropPapaya", value: "papaya", icon: "🥭" },
+  { labelKey: "cropSapota", value: "sapota", icon: "🥔" },
   { labelKey: "cropBanana", value: "banana", icon: "🍌" },
-  // Add more crops as needed
 ];
 
 // Represents the state of the form in the UI
@@ -372,6 +400,7 @@ const CropsScreen = () => {
                           key={item.value}
                           label={`${item.icon} ${t.crops[item.labelKey as keyof typeof t.crops]}`}
                           value={item.value}
+                          color="#000"
                         />
                       ))}
                     </Picker>

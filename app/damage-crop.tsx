@@ -388,12 +388,14 @@ const DamageCrop: React.FC = () => {
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity style={styles.submitButtonContainer} onPress={handleSubmit}>
-              <LinearGradient colors={["#FF6B6B", "#E63946"]} style={styles.submitButton}>
-                <Text style={styles.submitButtonText}>{t.damageCrop.submitDamageReport}</Text>
-                <Ionicons name="checkmark-circle" size={24} color="#fff" />
-              </LinearGradient>
-            </TouchableOpacity>
+            <View style={styles.submitButtonContainer}>
+              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+                <LinearGradient colors={["#FF6B6B", "#E63946"]} style={styles.submitGradient}>
+                  <Text style={styles.submitButtonText}>{t.damageCrop.submitDamageReport}</Text>
+                  <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
             <Text style={styles.requiredFieldsNote}>{t.damageCrop.requiredFields}</Text>
           </View>

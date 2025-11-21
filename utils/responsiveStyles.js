@@ -713,6 +713,8 @@ export const createCropsStyles = createOrientationStyles(
     submitButtonContainer: {
       marginTop: 24,
       marginBottom: 8,
+      alignItems: "center",
+      justifyContent: "center",
     },
     // Required fields note
     requiredFieldsNote: {
