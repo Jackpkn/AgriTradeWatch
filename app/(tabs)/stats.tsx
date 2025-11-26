@@ -484,7 +484,9 @@ const Stats: React.FC = () => {
                   console.error('Picker onValueChange error:', error);
                 }
               }}
-              dropdownIconColor="#49A760"
+              dropdownIconColor="#333"
+              itemStyle={{ fontSize: 16, color: "#000" }}
+              mode="dropdown"
             >
               {cropOptions.length > 0 ? (
                 cropOptions.map((item, index) => (
@@ -492,7 +494,7 @@ const Stats: React.FC = () => {
                     key={item.value || `item-${index}`}
                     label={`${item.icon} ${item.label}`}
                     value={item.value}
-                    style={styles.pickerItem}
+                    color="#000"
                   />
                 ))
               ) : (
@@ -500,7 +502,7 @@ const Stats: React.FC = () => {
                   key="default"
                   label={`🌾 ${t.common.loading}`}
                   value="loading"
-                  style={styles.pickerItem}
+                  color="#666"
                 />
               )}
             </Picker>

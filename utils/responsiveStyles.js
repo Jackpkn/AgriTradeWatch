@@ -535,12 +535,15 @@ export const createCropsStyles = createOrientationStyles(
     },
     pickerContainer: {
       borderWidth: 1,
-      borderColor: "#e0e0e0",
+      borderColor: "#d0d0d0",
       borderRadius: 12,
       backgroundColor: "#fff",
+      overflow: 'hidden',
     },
     picker: {
       height: 50,
+      color: "#000",
+      backgroundColor: "#fff",
     },
     imageSection: {
       marginBottom: 20,

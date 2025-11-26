@@ -49,6 +49,15 @@ const DamageCrop: React.FC = () => {
   const [showDamageDatePicker, setShowDamageDatePicker] = useState(false);
   const [showReportDatePicker, setShowReportDatePicker] = useState(false);
 
+  // Memoize commodity list to ensure it's available in production
+  const commodityList = useMemo(() => {
+    const list = Array.isArray(COMMODITIES) ? [...COMMODITIES] : [];
+    if (__DEV__) {
+      console.log('Commodities loaded:', list.length, 'items');
+    }
+    return list;
+  }, []);
+
   // Request permissions on mount
   useEffect(() => {
     (async () => {
@@ -235,19 +244,31 @@ const DamageCrop: React.FC = () => {
             {/* Commodity Picker */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t.damageCrop.selectCommodity}</Text>
-              <View style={styles.pickerContainer}>
+              <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                 <Picker
                   selectedValue={formData.commodity}
                   onValueChange={(value) => updateField("commodity", value)}
-                  style={styles.picker}
+                  style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                  dropdownIconColor="#000"
+                  itemStyle={{ fontSize: 16, color: "#000", backgroundColor: "#fff" }}
+                  mode="dropdown"
+                  dropdownIconRippleColor="#fff"
                 >
                   <Picker.Item
                     label={t.damageCrop.chooseCommodity}
                     value=""
                     enabled={false}
+                    color="#666"
+                    style={{ backgroundColor: "#fff" }}
                   />
-                  {COMMODITIES.map((commodity) => (
-                    <Picker.Item key={commodity} label={commodity} value={commodity.toLowerCase()} />
+                  {commodityList.map((commodity, index) => (
+                    <Picker.Item
+                      key={`${commodity}-${index}`}
+                      label={commodity}
+                      value={commodity.toLowerCase()}
+                      color="#000"
+                      style={{ backgroundColor: "#fff" }}
+                    />
                   ))}
                 </Picker>
               </View>
@@ -271,14 +292,24 @@ const DamageCrop: React.FC = () => {
             {/* Unit Picker */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t.damageCrop.selectUnit}</Text>
-              <View style={styles.pickerContainer}>
+              <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                 <Picker
                   selectedValue={formData.unit}
                   onValueChange={(value) => updateField("unit", value)}
-                  style={styles.picker}
+                  style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                  dropdownIconColor="#000"
+                  itemStyle={{ fontSize: 16, color: "#000", backgroundColor: "#fff" }}
+                  mode="dropdown"
+                  dropdownIconRippleColor="#fff"
                 >
                   {DAMAGE_UNITS.map((unit) => (
-                    <Picker.Item key={unit.id} label={unit.label} value={unit.id} />
+                    <Picker.Item
+                      key={unit.id}
+                      label={unit.label}
+                      value={unit.id}
+                      color="#000"
+                      style={{ backgroundColor: "#fff" }}
+                    />
                   ))}
                 </Picker>
               </View>
@@ -287,14 +318,24 @@ const DamageCrop: React.FC = () => {
             {/* Place Damage Picker */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{t.damageCrop.placeDamage}</Text>
-              <View style={styles.pickerContainer}>
+              <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                 <Picker
                   selectedValue={formData.place_damage}
                   onValueChange={(value) => updateField("place_damage", value)}
-                  style={styles.picker}
+                  style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                  dropdownIconColor="#000"
+                  itemStyle={{ fontSize: 16, color: "#000", backgroundColor: "#fff" }}
+                  mode="dropdown"
+                  dropdownIconRippleColor="#fff"
                 >
                   {DAMAGE_PLACE.map((place) => (
-                    <Picker.Item key={place.id} label={place.label} value={place.id} />
+                    <Picker.Item
+                      key={place.id}
+                      label={place.label}
+                      value={place.id}
+                      color="#000"
+                      style={{ backgroundColor: "#fff" }}
+                    />
                   ))}
                 </Picker>
               </View>

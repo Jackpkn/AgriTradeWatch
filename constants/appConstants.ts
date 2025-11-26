@@ -83,4 +83,7 @@ export const COMMODITIES = [
   "Papaya",
   "Sapota",
   "Banana",
-];
+] as const;
+
+// Ensure the array is frozen to prevent modifications
+export const COMMODITIES_LIST = Object.freeze([...COMMODITIES]);

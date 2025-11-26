@@ -313,17 +313,22 @@ const DigitalThela: React.FC = () => {
                   selectedValue={formData.sale_commodity}
                   onValueChange={(value) => updateField("sale_commodity", value)}
                   style={styles.picker}
+                  dropdownIconColor="#333"
+                  itemStyle={{ fontSize: 16, color: "#000" }}
+                  mode="dropdown"
                 >
                   <Picker.Item
                     label={t.digitalThela.chooseCommodity}
                     value=""
                     enabled={false}
+                    color="#666"
                   />
                   {COMMODITIES.map((commodity) => (
                     <Picker.Item
                       key={commodity}
                       label={commodity}
                       value={commodity.toLowerCase()}
+                      color="#000"
                     />
                   ))}
                 </Picker>
@@ -354,12 +359,16 @@ const DigitalThela: React.FC = () => {
                   selectedValue={formData.method}
                   onValueChange={(value) => updateField("method", value)}
                   style={styles.picker}
+                  dropdownIconColor="#333"
+                  itemStyle={{ fontSize: 16, color: "#000" }}
+                  mode="dropdown"
                 >
                   {PRODUCTION_METHODS.map((method) => (
                     <Picker.Item
                       key={method.id}
                       label={method.label}
                       value={method.id}
+                      color="#000"
                     />
                   ))}
                 </Picker>
@@ -376,12 +385,16 @@ const DigitalThela: React.FC = () => {
                     updateField("level_of_produce", value)
                   }
                   style={styles.picker}
+                  dropdownIconColor="#333"
+                  itemStyle={{ fontSize: 16, color: "#000" }}
+                  mode="dropdown"
                 >
                   {PRODUCTION_LEVELS.map((level) => (
                     <Picker.Item
                       key={level.id}
                       label={level.label}
                       value={level.id}
+                      color="#000"
                     />
                   ))}
                 </Picker>
@@ -473,17 +486,22 @@ const DigitalThela: React.FC = () => {
                   selectedValue={formData.unit}
                   onValueChange={(value) => updateField("unit", value)}
                   style={styles.picker}
+                  dropdownIconColor="#333"
+                  itemStyle={{ fontSize: 16, color: "#000" }}
+                  mode="dropdown"
                 >
                   <Picker.Item
                     label={t.digitalThela.chooseUnit}
                     value=""
                     enabled={false}
+                    color="#666"
                   />
                   {CROP_UNITS.map((unit) => (
                     <Picker.Item
                       key={unit.id}
                       label={unit.label}
                       value={unit.id}
+                      color="#000"
                     />
                   ))}
                 </Picker>

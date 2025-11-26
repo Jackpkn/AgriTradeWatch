@@ -387,6 +387,10 @@ const CropsScreen = () => {
                       onValueChange={(itemValue) =>
                         setForm((f) => ({ ...f, name: itemValue }))
                       }
+                      style={styles.picker}
+                      dropdownIconColor="#666"
+                      itemStyle={{ fontSize: 16, color: "#333" }}
+                      mode="dropdown"
                       accessible={true}
                       accessibilityLabel="Select crop commodity"
                     >
@@ -394,13 +398,14 @@ const CropsScreen = () => {
                         label={t.crops.chooseCrop}
                         value=""
                         color="#888"
+                        enabled={false}
                       />
                       {cropItems.map((item) => (
                         <Picker.Item
                           key={item.value}
                           label={`${item.icon} ${t.crops[item.labelKey as keyof typeof t.crops]}`}
                           value={item.value}
-                          color="#000"
+                          color="#333"
                         />
                       ))}
                     </Picker>

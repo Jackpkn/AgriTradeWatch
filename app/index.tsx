@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Local assets, styles, and context
-import logo from "@/assets/images/logo2.jpg";
+import logo from "@/assets/images/logo2.png";
 import { indexStyles as styles } from "@/components/IndexCss";
 import { useGlobal } from "@/context/global-provider";
 import { useTranslation } from "@/hooks/useTranslation";
