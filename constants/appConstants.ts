@@ -87,3 +87,56 @@ export const COMMODITIES = [
 
 // Ensure the array is frozen to prevent modifications
 export const COMMODITIES_LIST = Object.freeze([...COMMODITIES]);
+
+// Crop emojis for map markers
+export const CROP_EMOJIS: Record<string, string> = {
+  // Vegetables
+  "ambat chukka": "🥬",
+  "ginger": "🫚",
+  "onion": "🧅",
+  "cucumber": "🥒",
+  "bitter gourd": "🥒",
+  "coriander leaves": "🌿",
+  "cabbage": "🥬",
+  "cluster beans": "🫘",
+  "carrot": "🥕",
+  "cowpea": "🫘",
+  "tomato": "🍅",
+  "capsicum": "🫑",
+  "bottle gourd": "🥒",
+  "ridge gourd": "🥒",
+  "spinach": "🥬",
+  "cauliflower": "🥦",
+  "potato": "🥔",
+  "beetroot": "🥕",
+  "ladies finger": "🌱",
+  "pumpkin": "🎃",
+  "radish": "🥕",
+  "fenugreek leaves": "🌿",
+  "garlic": "🧄",
+  "lemon": "🍋",
+  "brinjal": "🍆",
+  "drumstick": "🥬",
+  "green chilli": "🌶️",
+
+  // Fruits
+  "pomegranate": "🍎",
+  "custard apple": "🍏",
+  "dragon fruit": "🐉",
+  "grapes": "🍇",
+  "guava": "🍐",
+  "orange": "🍊",
+  "papaya": "🥭",
+  "sapota": "🥔",
+  "banana": "🍌",
+
+  // Grains and others
+  "wheat": "🌾",
+  "sugarcane": "🎋",
+  "maize": "🌽",
+  "ghee": "🧈",
+  "honey": "🍯",
+
+  // Default
+  "default": "📍",
+};

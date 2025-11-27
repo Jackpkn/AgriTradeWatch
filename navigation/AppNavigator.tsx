@@ -17,6 +17,7 @@ import ProfileScreen from '../app/(tabs)/profile';
 import CropsScreen from '../app/crops';
 import DamageCropScreen from '../app/damage-crop';
 import DigitalThelaScreen from '../app/digital-thela';
+import AddProduceScreen from '../app/add-produce';
 import LoginScreen from '../app/(auth)/login';
 import SignupScreen from '../app/(auth)/signup';
 import ForgotPasswordScreen from '../app/(auth)/forgot-password';
@@ -169,6 +170,20 @@ export default function AppNavigator() {
                             component={DigitalThelaScreen}
                             options={{
                                 title: t.digitalThela?.header || 'Digital Thela',
+                                headerStyle: {
+                                    backgroundColor: '#9C27B0',
+                                },
+                                headerTintColor: '#fff',
+                                headerTitleStyle: {
+                                    fontWeight: 'bold',
+                                },
+                            }}
+                        />
+                        <Stack.Screen
+                            name="add-produce"
+                            component={AddProduceScreen}
+                            options={{
+                                title: t.digitalThela?.addProduce || 'Add Produce',
                                 headerStyle: {
                                     backgroundColor: '#9C27B0',
                                 },

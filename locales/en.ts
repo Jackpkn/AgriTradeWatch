@@ -433,7 +433,7 @@ export const en = {
 
   // Digital Thela Screen
   digitalThela: {
-    header: "Add Produce Details",
+    header: "Digital Thela",
     welcomeMessage: "Welcome {{username}}",
     produceInformation: "Produce Information",
     selectCommodity: "Select Commodity *",

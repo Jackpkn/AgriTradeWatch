@@ -7,7 +7,8 @@ import { ProducePayload, APIResponse } from '@/types/api';
  */
 export class ProduceService {
   private static instance: ProduceService;
-  private readonly BASE_URL = 'https://mandigo.in/api/create-produce/';
+  private readonly CREATE_PRODUCE_URL = 'https://mandigo.in/api/create-produce/';
+  private readonly DT_ENTRIES_URL = 'https://mandigo.in/api/DtEntries/';
 
   private constructor() { }
 
@@ -16,6 +17,45 @@ export class ProduceService {
       ProduceService.instance = new ProduceService();
     }
     return ProduceService.instance;
+  }
+
+  /**
+   * Get all Digital Thela entries (no filtering)
+   * @returns Promise with the API response containing all entries
+   */
+  async getAllDTEntries(): Promise<APIResponse> {
+    try {
+      const token = await getStoredToken();
+      if (!token) {
+        throw new Error('Authentication token not found.');
+      }
+
+      console.log('🛒 Fetching all DT Entries from:', this.DT_ENTRIES_URL);
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Accept': '*/*',
+          'Referer': 'https://mandigo.in/dtDashboard/',
+        },
+        timeout: 30000,
+      };
+
+      const response = await axios.get(this.DT_ENTRIES_URL, config);
+
+      console.log('✅ DT Entries fetched successfully:', response.data?.length || 0, 'entries');
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error: any) {
+      console.error('❌ Error fetching DT entries:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to fetch Digital Thela entries',
+      };
+    }
   }
 
   /**
@@ -116,13 +156,6 @@ export class ProduceService {
           name: 'produce_photo.jpg',
         } as any);
       } else {
-        // If no photo, we might need to send an empty field or not send it at all.
-        // The curl sent: Content-Disposition: form-data; name="photo_or_video"; filename=""
-        // Content-Type: application/octet-stream
-        // In RN FormData, appending a file with empty uri might not work as expected.
-        // Usually, if it's optional, omitting it is safer, but the curl showed it present.
-        // Let's try omitting it first if it's truly optional, as RN FormData can be finicky with empty files.
-        // If that fails, we can try to simulate an empty file.
         console.log('📸 No photo provided, skipping photo_or_video field');
       }
 
@@ -143,7 +176,7 @@ export class ProduceService {
 
       console.log('=====================================');
       console.log('🚀 DEBUG REQUEST INFO');
-      console.log('URL:', this.BASE_URL);
+      console.log('URL:', this.CREATE_PRODUCE_URL);
       console.log('Headers:', JSON.stringify(config.headers, null, 2));
       console.log('CSRF Token Variable:', csrfToken);
       console.log('Produce Data:', JSON.stringify(produceData, null, 2));
@@ -153,10 +186,10 @@ export class ProduceService {
       console.log('- variety_name:', produceData.variety_name);
       console.log('=====================================');
 
-      console.log(`📤 Sending POST to: ${this.BASE_URL}`);
+      console.log(`📤 Sending POST to: ${this.CREATE_PRODUCE_URL}`);
 
       // Use fetch instead of axios for better FormData handling
-      const response = await fetch(this.BASE_URL, {
+      const response = await fetch(this.CREATE_PRODUCE_URL, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -204,7 +237,7 @@ export class ProduceService {
   }
 
   /**
-   * Get all produce listings (if API supports it)
+   * Get all produce listings
    * @returns Promise with the list of produce
    */
   async getProduceListings(): Promise<APIResponse> {
@@ -221,7 +254,7 @@ export class ProduceService {
         timeout: 30000,
       };
 
-      const response = await axios.get(this.BASE_URL, config);
+      const response = await axios.get(this.CREATE_PRODUCE_URL, config);
       return {
         success: true,
         data: response.data,
