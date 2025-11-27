@@ -316,6 +316,9 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
           bounces={false}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
+          androidLayerType="hardware"
+          startInLoadingState={false}
+          renderToHardwareTextureAndroid={true}
         />
       </View>
     );
@@ -334,4 +337,4 @@ const styles = StyleSheet.create({
 
 DigitalThelaMap.displayName = "DigitalThelaMap";
 
-export default DigitalThelaMap;
+export default React.memo(DigitalThelaMap);

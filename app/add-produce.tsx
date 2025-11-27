@@ -46,9 +46,8 @@ interface PhotoState {
   type?: string;
 }
 
-// Styles
-const createAddProduceStyles = (isLandscape: boolean, width: number) =>
-  StyleSheet.create({
+// Styles - created once for better performance
+const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#f8fffe" },
     gradient: { flex: 1 },
     scrollContent: { paddingBottom: 24 },
@@ -230,11 +229,6 @@ const createAddProduceStyles = (isLandscape: boolean, width: number) =>
 const AddProduce: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { isLandscape, width } = useOrientation() as any;
-  const styles = useMemo(
-    () => createAddProduceStyles(isLandscape, width),
-    [isLandscape, width]
-  );
 
   const { currentLocation, setIsLoading, isLogged } = useGlobal();
 
@@ -252,15 +246,16 @@ const AddProduce: React.FC = () => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
-  useEffect(() => {
-    (async () => {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      const mediaStatus = await MediaLibrary.requestPermissionsAsync();
-      setHasPermission(
-        cameraStatus.status === "granted" && mediaStatus.status === "granted"
-      );
-    })();
-  }, []);
+  // Lazy load permissions only when needed
+  const requestPermissions = useCallback(async () => {
+    if (hasPermission !== null) return hasPermission;
+
+    const cameraStatus = await Camera.requestCameraPermissionsAsync();
+    const mediaStatus = await MediaLibrary.requestPermissionsAsync();
+    const granted = cameraStatus.status === "granted" && mediaStatus.status === "granted";
+    setHasPermission(granted);
+    return granted;
+  }, [hasPermission]);
 
   const handleTakePicture = useCallback(async () => {
     if (cameraRef.current) {
@@ -292,7 +287,8 @@ const AddProduce: React.FC = () => {
   }, [formData.sale_commodity]);
 
   const handlePickImage = useCallback(async () => {
-    if (!hasPermission) {
+    const granted = await requestPermissions();
+    if (!granted) {
       Alert.alert(
         t.common.required,
         "Please grant camera and media library access in your device settings."
@@ -320,13 +316,13 @@ const AddProduce: React.FC = () => {
         type: mimeType,
       });
     }
-  }, [hasPermission, formData.sale_commodity, t]);
+  }, [requestPermissions, formData.sale_commodity, t]);
 
-  const updateField = (field: keyof ProduceFormState, value: string) => {
+  const updateField = useCallback((field: keyof ProduceFormState, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     if (
       !formData.sale_commodity ||
       !formData.variety_name ||
@@ -349,7 +345,7 @@ const AddProduce: React.FC = () => {
     }
 
     return true;
-  };
+  }, [formData, t]);
 
   const handleSubmit = useCallback(async () => {
     if (!isLogged) {
@@ -646,7 +642,17 @@ const AddProduce: React.FC = () => {
                 <View style={styles.imageButtons}>
                   <TouchableOpacity
                     style={styles.imageButton}
-                    onPress={() => setIsCameraOpen(true)}
+                    onPress={async () => {
+                      const granted = await requestPermissions();
+                      if (granted) {
+                        setIsCameraOpen(true);
+                      } else {
+                        Alert.alert(
+                          t.common.required,
+                          "Please grant camera access in your device settings."
+                        );
+                      }
+                    }}
                   >
                     <Ionicons name="camera" size={24} color="#9C27B0" />
                     <Text style={styles.imageButtonText}>

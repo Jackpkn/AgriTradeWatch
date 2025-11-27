@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  InteractionManager,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
   pickerContainer: {
     marginHorizontal: 16,
     marginBottom: 12,
+    marginTop: -22,
     backgroundColor: "#fff",
     borderRadius: 8,
     borderWidth: 2,
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 0,
     fontSize: 16,
     color: "#666",
   },
@@ -85,7 +87,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
-    marginTop: 12,
+    marginTop: 0,
   },
   errorContainer: {
     flex: 1,
@@ -112,9 +114,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   fabButton: {
-    position: "absolute",
-    bottom: 24,
-    left: 24,
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -124,7 +123,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+  },
+  fabContainer: {
+    position: "absolute",
+    bottom: 36,
+    left: 12,
+    zIndex: 1000,
+    elevation: 10,
   },
   detailsContainer: {
     marginHorizontal: 16,
@@ -238,8 +243,20 @@ const DigitalThela: React.FC = () => {
     }
   };
 
+  // Use ref to prevent duplicate navigation calls
+  const navigatingRef = React.useRef(false);
+
   const handleAddProduce = useCallback(() => {
-    navigation.navigate("add-produce" as never);
+    if (navigatingRef.current) return;
+
+    navigatingRef.current = true;
+    requestAnimationFrame(() => {
+      navigation.navigate("add-produce" as never);
+      // Reset after navigation
+      setTimeout(() => {
+        navigatingRef.current = false;
+      }, 1000);
+    });
   }, [navigation]);
 
   // Filter entries based on selected commodity
@@ -359,14 +376,21 @@ const DigitalThela: React.FC = () => {
       )}
 
       {/* Floating Add Button */}
-      <TouchableOpacity onPress={handleAddProduce}>
-        <LinearGradient
-          colors={["#9C27B0", "#7B1FA2"]}
-          style={styles.fabButton}
+      <View style={styles.fabContainer} collapsable={false}>
+        <TouchableOpacity
+          onPress={handleAddProduce}
+          activeOpacity={0.7}
+          delayPressIn={0}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="add" size={32} color="#fff" />
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={["#9C27B0", "#7B1FA2"]}
+            style={styles.fabButton}
+          >
+            <Ionicons name="add" size={32} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
