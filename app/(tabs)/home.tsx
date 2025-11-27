@@ -265,34 +265,36 @@ const Home: React.FC = React.memo(() => {
         accessibilityRole="button"
         accessibilityState={{ disabled: !feature.isEnabled }}
       >
-        <View
-          style={[
-            styles.featureIconContainer,
-            { backgroundColor: feature.bgColor },
-          ]}
-        >
-          <Ionicons
-            name={feature.icon}
-            size={32}
-            color={feature.isEnabled ? feature.gradient[0] : "#BDBDBD"}
-          />
+        <View style={styles.featureContent}>
+          <View
+            style={[
+              styles.featureIconContainer,
+              { backgroundColor: feature.bgColor },
+            ]}
+          >
+            <Ionicons
+              name={feature.icon}
+              size={32}
+              color={feature.isEnabled ? feature.gradient[0] : "#BDBDBD"}
+            />
+          </View>
+          <Text
+            style={[
+              styles.featureTitle,
+              !feature.isEnabled && { color: "#BDBDBD" },
+            ]}
+          >
+            {feature.title}
+          </Text>
+          <Text
+            style={[
+              styles.featureDescription,
+              !feature.isEnabled && { color: "#BDBDBD" },
+            ]}
+          >
+            {feature.description}
+          </Text>
         </View>
-        <Text
-          style={[
-            styles.featureTitle,
-            !feature.isEnabled && { color: "#BDBDBD" },
-          ]}
-        >
-          {feature.title}
-        </Text>
-        <Text
-          style={[
-            styles.featureDescription,
-            !feature.isEnabled && { color: "#BDBDBD" },
-          ]}
-        >
-          {feature.description}
-        </Text>
 
         {feature.comingSoon ? (
           <View style={styles.comingSoonButton}>

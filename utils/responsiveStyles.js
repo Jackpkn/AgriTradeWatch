@@ -332,9 +332,15 @@ export const createHomeStyles = createOrientationStyles(
       shadowRadius: 8,
       elevation: 4,
       alignItems: "center",
+      justifyContent: "space-between",
+      minHeight: 200,
     },
     comingSoonCard: {
       opacity: 0.7,
+    },
+    featureContent: {
+      alignItems: "center",
+      flex: 1,
     },
     featureIconContainer: {
       width: 44,
