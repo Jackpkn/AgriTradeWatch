@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useLanguage } from "@/context/language-provider";
 
 import profileService, { FarmerProfileData, DTEntry } from "@/services/profile-service";
 
@@ -241,6 +242,7 @@ const FarmerProfile: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<FarmerProfileRouteProp>();
   const { username } = route.params;
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<FarmerProfileData | null>(null);
   const [entries, setEntries] = useState<DTEntry[]>([]);
@@ -302,7 +304,7 @@ const FarmerProfile: React.FC = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#9C27B0" />
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <Text style={styles.loadingText}>{t.farmerProfile.loadingProfile}</Text>
         </View>
       </SafeAreaView>
     );
@@ -313,9 +315,9 @@ const FarmerProfile: React.FC = () => {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color="#ff6b6b" />
-          <Text style={styles.errorText}>{error || "Profile not found"}</Text>
+          <Text style={styles.errorText}>{error || t.farmerProfile.profileNotFound}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchFarmerData}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t.farmerProfile.retry}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -370,7 +372,7 @@ const FarmerProfile: React.FC = () => {
         <View style={styles.sectionHeader}>
           <Ionicons name="list-outline" size={24} color="#9C27B0" />
           <Text style={styles.sectionTitle}>
-            Produce Listings ({entries.length})
+            {t.farmerProfile.produceListings} ({entries.length})
           </Text>
         </View>
 
@@ -379,7 +381,7 @@ const FarmerProfile: React.FC = () => {
             <View style={styles.noEntriesContainer}>
               <Ionicons name="leaf-outline" size={64} color="#ccc" />
               <Text style={styles.noEntriesText}>
-                No produce listings yet
+                {t.farmerProfile.noProduceListings}
               </Text>
             </View>
           ) : (
@@ -394,27 +396,27 @@ const FarmerProfile: React.FC = () => {
                   </View>
                   <View style={styles.priceContainer}>
                     <Text style={styles.priceText}>₹{entry.cost}</Text>
-                    <Text style={styles.unitText}>per {entry.unit}</Text>
+                    <Text style={styles.unitText}>{t.farmerProfile.per} {entry.unit}</Text>
                   </View>
                 </View>
 
                 <View style={styles.entryDetails}>
                   <View style={styles.entryDetailRow}>
-                    <Text style={styles.entryDetailLabel}>Quantity:</Text>
+                    <Text style={styles.entryDetailLabel}>{t.farmerProfile.quantity}</Text>
                     <Text style={styles.entryDetailValue}>
                       {entry.quantity_for_sale} {entry.unit}
                     </Text>
                   </View>
                   <View style={styles.entryDetailRow}>
                     <Text style={styles.entryDetailLabel}>
-                      Level of Produce:
+                      {t.farmerProfile.levelOfProduce}
                     </Text>
                     <Text style={styles.entryDetailValue}>
-                      {entry.level_of_produce.replace(/_/g, " ")}
+                      {entry.level_of_produce?.replace(/_/g, " ") || "N/A"}
                     </Text>
                   </View>
                   <View style={styles.entryDetailRow}>
-                    <Text style={styles.entryDetailLabel}>Listed:</Text>
+                    <Text style={styles.entryDetailLabel}>{t.farmerProfile.listed}</Text>
                     <Text style={styles.entryDetailValue}>
                       {formatDate(entry.created_at)}
                     </Text>

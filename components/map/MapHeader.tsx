@@ -29,7 +29,7 @@ const MapHeader = ({
   return (
     <View style={mapStyles.header}>
       <View style={mapStyles.headerTop}>
-        <Text style={mapStyles.headerTitle}>{t.map.cropMap}</Text>
+        <Text style={mapStyles.headerTitle}>{t.map.priceMap}</Text>
         <View style={mapStyles.headerControls}>
           <View style={mapStyles.cropSelectorContainer}>
             <Text style={mapStyles.cropSelectorLabel}>{t.map.selectCrop}:</Text>

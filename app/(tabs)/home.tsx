@@ -214,7 +214,7 @@ const Home: React.FC = React.memo(() => {
             style={styles.headerGradient}
           >
             <Text style={styles.welcomeTitle} testID="welcome-title">
-              {t.home.welcomeBack.replace('{{username}}', (mainUser as any)?.username || "User")}
+              {t.home.welcomeBack?.replace('{{username}}', (mainUser as any)?.username || "User") || "Welcome back!"}
             </Text>
             <Text style={styles.welcomeSubtitle} testID="welcome-subtitle">
               {t.branding.tagline}

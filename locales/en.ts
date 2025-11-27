@@ -126,7 +126,7 @@ export const en = {
     addCropDataDesc: "Submit new crop prices and market information",
     reportDamage: "Report Crop Damage",
     reportDamageDesc: "Report damaged crops from field or market",
-    priceMap: "Price Map & Trends",
+    priceMap: "Price Map",
     priceMapDesc: "View real-time prices with location and analytics",
     digitalThela: "Digital Thela",
     digitalThelaDesc: "Sell your produce directly to buyers",
@@ -142,7 +142,7 @@ export const en = {
   // Map Screen
   map: {
     header: "Price Information",
-    cropMap: "Crop Map",
+    priceMap: "Price Map",
     selectCrop: "Select Crop",
     satelliteMap: "Satellite Map",
     streetMap: "Street Map",
@@ -434,6 +434,7 @@ export const en = {
   // Digital Thela Screen
   digitalThela: {
     header: "Digital Thela",
+    loadingEntries: "Loading entries...",
     welcomeMessage: "Welcome {{username}}",
     produceInformation: "Produce Information",
     selectCommodity: "Select Commodity *",
@@ -480,6 +481,20 @@ export const en = {
     submissionSuccess: "Produce details submitted successfully!",
     submissionError: "Submission Error",
     submissionFailed: "Failed to submit produce details. Please try again.",
+  },
+
+  // Farmer Profile Screen
+  farmerProfile: {
+    header: "Farmer Profile",
+    loadingProfile: "Loading profile...",
+    profileNotFound: "Profile not found",
+    retry: "Retry",
+    produceListings: "Produce Listings",
+    noProduceListings: "No produce listings yet",
+    quantity: "Quantity:",
+    levelOfProduce: "Level of Produce:",
+    listed: "Listed:",
+    per: "per",
   },
 
   // Network & Connectivity

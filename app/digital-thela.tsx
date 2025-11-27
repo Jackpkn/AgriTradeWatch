@@ -358,7 +358,7 @@ const DigitalThela: React.FC = () => {
                 <View style={styles.detailItemLeft}>
                   <Text style={styles.detailSeller}>{entry.username_id}</Text>
                   <Text style={styles.detailVariety}>
-                    {entry.variety_name} • {entry.level_of_produce.replace(/_/g, ' ')}
+                    {entry.variety_name} • {entry.level_of_produce?.replace(/_/g, ' ') || 'N/A'}
                   </Text>
                 </View>
                 <View style={styles.detailItemRight}>

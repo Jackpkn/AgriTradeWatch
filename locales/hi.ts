@@ -144,7 +144,7 @@ export const hi: TranslationKeys = {
   // Map Screen
   map: {
     header: "मूल्य जानकारी",
-    cropMap: "फसल मानचित्र",
+    priceMap: "मूल्य मानचित्र",
     selectCrop: "फसल चुनें",
     satelliteMap: "उपग्रह मानचित्र",
     streetMap: "सड़क मानचित्र",
@@ -436,6 +436,7 @@ export const hi: TranslationKeys = {
   // Digital Thela Screen
   digitalThela: {
     header: "उपज विवरण जोड़ें",
+    loadingEntries: "प्रविष्टियां लोड हो रही हैं...",
     welcomeMessage: "स्वागत है {{username}}",
     produceInformation: "उपज जानकारी",
     selectCommodity: "वस्तु चुनें *",
@@ -482,6 +483,20 @@ export const hi: TranslationKeys = {
     submissionSuccess: "उपज विवरण सफलतापूर्वक जमा किया गया!",
     submissionError: "सबमिशन त्रुटि",
     submissionFailed: "उपज विवरण जमा करने में विफल। कृपया पुनः प्रयास करें।",
+  },
+
+  // Farmer Profile Screen
+  farmerProfile: {
+    header: "किसान प्रोफ़ाइल",
+    loadingProfile: "प्रोफ़ाइल लोड हो रही है...",
+    profileNotFound: "प्रोफ़ाइल नहीं मिली",
+    retry: "पुनः प्रयास करें",
+    produceListings: "उपज सूचियाँ",
+    noProduceListings: "अभी तक कोई उपज सूची नहीं",
+    quantity: "मात्रा:",
+    levelOfProduce: "उपज का स्तर:",
+    listed: "सूचीबद्ध:",
+    per: "प्रति",
   },
 
   // Network & Connectivity

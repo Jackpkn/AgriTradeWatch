@@ -542,7 +542,7 @@ export const createCropsStyles = createOrientationStyles(
     },
     picker: {
       height: 50,
-      color: "#000",
+      color: "#333",
       backgroundColor: "#fff",
     },
     imageSection: {

@@ -198,7 +198,7 @@ export default function AppNavigator() {
                             name="farmer-profile"
                             component={FarmerProfileScreen}
                             options={{
-                                title: 'Farmer Profile',
+                                title: t.farmerProfile?.header || 'Farmer Profile',
                                 headerStyle: {
                                     backgroundColor: '#9C27B0',
                                 },

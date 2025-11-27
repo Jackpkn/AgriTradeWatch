@@ -405,45 +405,6 @@ const createMapStyles = (isLandscape: boolean, width: number) => StyleSheet.crea
     color: '#49A760',
     fontWeight: '600',
   },
-  marketInsightsSection: {
-    padding: 16,
-    backgroundColor: '#fff',
-    marginTop: 8,
-  },
-  marketInsightsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  insightsContainer: {
-    gap: 12,
-  },
-  insightCard: {
-    backgroundColor: '#F8F9FA',
-    padding: 16,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#49A760',
-  },
-  insightTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  insightText: {
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
-  },
-  noInsightsContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  noInsightsText: {
-    marginTop: 8,
-    color: '#888',
-    textAlign: 'center',
-  },
   noChartDataContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -1292,48 +1253,6 @@ const MapScreen = () => {
               </Text>
             </View>
           )}
-          <View style={mapStyles.marketInsightsSection}>
-            <Text style={mapStyles.marketInsightsTitle}>{t.map.marketInsights}</Text>
-            <View style={mapStyles.insightsContainer}>
-              {state.priceData.custom.count > 0 ? (
-                <>
-                  <View style={mapStyles.insightCard}>
-                    <Text style={mapStyles.insightTitle}>{t.map.bestTimeToBuy}</Text>
-                    <Text style={mapStyles.insightText}>
-                      {t.map.bestTimeToBuyDesc} ₹{state.priceData.custom.min}
-                    </Text>
-                  </View>
-
-                  <View style={mapStyles.insightCard}>
-                    <Text style={mapStyles.insightTitle}>{t.map.priceStability}</Text>
-                    <Text style={mapStyles.insightText}>
-                      {state.priceData.custom.average > 0 && ((state.priceData.custom.max - state.priceData.custom.min) / state.priceData.custom.average) < 0.2
-                        ? t.map.stablePricing
-                        : t.map.highVolatility
-                      }
-                    </Text>
-                  </View>
-
-                  <View style={mapStyles.insightCard}>
-                    <Text style={mapStyles.insightTitle}>{t.map.dataQuality}</Text>
-                    <Text style={mapStyles.insightText}>
-                      {state.priceData.custom.count > 10
-                        ? `${t.map.goodDataCoverage} ${state.priceData.custom.count} ${t.map.dataPoints}`
-                        : `${t.map.limitedDataAvailable} (${state.priceData.custom.count} ${t.map.points}) - ${t.map.insightsMayBeLessReliable}`
-                      }
-                    </Text>
-                  </View>
-                </>
-              ) : (
-                <View style={mapStyles.noInsightsContainer}>
-                  <Ionicons name="bulb-outline" size={48} color="#ccc" />
-                  <Text style={mapStyles.noInsightsText}>
-                    {t.map.noDataForInsights}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
           <View style={{ height: 50 }} />
         </ScrollView>
         <CropSelectionModal

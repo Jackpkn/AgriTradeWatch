@@ -4,11 +4,65 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { GlobalProvider } from '@/context/global-provider';
-import { LanguageProvider } from '@/context/language-provider';
+import { LanguageProvider, useLanguage } from '@/context/language-provider';
 import Loader from '@/components/Loader';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+function RootStack() {
+  const { t } = useLanguage();
+
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="crops"
+        options={{
+          headerShown: true,
+          title: t.crops.header,
+          headerStyle: {
+            backgroundColor: '#49A760',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <Stack.Screen
+        name="damage-crop"
+        options={{
+          headerShown: true,
+          title: t.damageCrop.header,
+          headerStyle: {
+            backgroundColor: '#FF6B6B',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+      <Stack.Screen
+        name="digital-thela"
+        options={{
+          headerShown: true,
+          title: t.digitalThela.header,
+          headerStyle: {
+            backgroundColor: '#9C27B0',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -29,53 +83,7 @@ export default function RootLayout() {
     <LanguageProvider>
       <GlobalProvider>
         <Loader />
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="crops"
-            options={{
-              headerShown: true,
-              title: 'Add Crop Data',
-              headerStyle: {
-                backgroundColor: '#49A760',
-              },
-              headerTintColor: '#fff',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
-            }}
-          />
-          <Stack.Screen
-            name="damage-crop"
-            options={{
-              headerShown: true,
-              title: 'Report Crop Damage',
-              headerStyle: {
-                backgroundColor: '#FF6B6B',
-              },
-              headerTintColor: '#fff',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
-            }}
-          />
-          <Stack.Screen
-            name="digital-thela"
-            options={{
-              headerShown: true,
-              title: 'Digital Thela',
-              headerStyle: {
-                backgroundColor: '#9C27B0',
-              },
-              headerTintColor: '#fff',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
-            }}
-          />
-        </Stack>
+        <RootStack />
       </GlobalProvider>
     </LanguageProvider>
   );

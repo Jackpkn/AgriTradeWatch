@@ -388,8 +388,7 @@ const CropsScreen = () => {
                         setForm((f) => ({ ...f, name: itemValue }))
                       }
                       style={styles.picker}
-                      dropdownIconColor="#666"
-                      itemStyle={{ fontSize: 16, color: "#333" }}
+                      dropdownIconColor="#49A760"
                       mode="dropdown"
                       accessible={true}
                       accessibilityLabel="Select crop commodity"
@@ -405,7 +404,7 @@ const CropsScreen = () => {
                           key={item.value}
                           label={`${item.icon} ${t.crops[item.labelKey as keyof typeof t.crops]}`}
                           value={item.value}
-                          color="#333"
+                          color="#1a1a1a"
                         />
                       ))}
                     </Picker>

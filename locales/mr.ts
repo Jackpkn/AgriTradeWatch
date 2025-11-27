@@ -129,7 +129,7 @@ export const mr: TranslationKeys = {
     addCropDataDesc: "नव्या पिकांच्या किंमती आणि बाजार माहिती सबमिट करा",
     reportDamage: "पिक नुकसान नोंदवा",
     reportDamageDesc: "शेतातून किंवा बाजारातून नुकसान झालेल्या पिकांची माहिती द्या",
-    priceMap: "किंमत नकाशा आणि ट्रेंड",
+    priceMap: "किंमत नकाशा",
     priceMapDesc: "स्थान आणि विश्लेषणासह रिअल-टाइम किंमती पहा",
     digitalThela: "डिजिटल ठेला",
     digitalThelaDesc: "तुमची उपज थेट खरेदीदारांना विका",
@@ -145,7 +145,7 @@ export const mr: TranslationKeys = {
   // Map Screen
   map: {
     header: "किंमत माहिती",
-    cropMap: "पिक नकाशा",
+    priceMap: "किंमत नकाशा",
     selectCrop: "पिक निवडा",
     satelliteMap: "उपग्रह नकाशा",
     streetMap: "रस्ता नकाशा",
@@ -438,6 +438,7 @@ export const mr: TranslationKeys = {
   // Digital Thela Screen
   digitalThela: {
     header: "उपज तपशील जोडा",
+    loadingEntries: "नोंदी लोड होत आहेत...",
     welcomeMessage: "स्वागत आहे {{username}}",
     produceInformation: "उपज माहिती",
     selectCommodity: "वस्तू निवडा *",
@@ -484,6 +485,20 @@ export const mr: TranslationKeys = {
     submissionSuccess: "उपज तपशील यशस्वीरित्या सबमिट झाला!",
     submissionError: "सबमिशन त्रुटी",
     submissionFailed: "उपज तपशील सबमिट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+  },
+
+  // Farmer Profile Screen
+  farmerProfile: {
+    header: "शेतकरी प्रोफाइल",
+    loadingProfile: "प्रोफाइल लोड होत आहे...",
+    profileNotFound: "प्रोफाइल सापडले नाही",
+    retry: "पुन्हा प्रयत्न करा",
+    produceListings: "उपज सूची",
+    noProduceListings: "अद्याप कोणतीही उपज सूची नाही",
+    quantity: "मात्रा:",
+    levelOfProduce: "उपजाची पातळी:",
+    listed: "सूचीबद्ध:",
+    per: "प्रति",
   },
 
   // Network & Connectivity
