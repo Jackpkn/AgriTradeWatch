@@ -57,11 +57,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 0,
     paddingBottom: 4,
+    marginBottom: -4,
     backgroundColor: "#f3e5f5",
   },
   picker: {
     color: "#333",
-    height: 50,
+    height: 56,
   },
   loadingContainer: {
     flex: 1,
@@ -259,6 +260,19 @@ const DigitalThela: React.FC = () => {
     });
   }, [navigation]);
 
+  const handleUsernamePress = useCallback((username: string) => {
+    if (navigatingRef.current) return;
+
+    navigatingRef.current = true;
+    requestAnimationFrame(() => {
+      navigation.navigate("farmer-profile" as never, { username } as never);
+      // Reset after navigation
+      setTimeout(() => {
+        navigatingRef.current = false;
+      }, 500);
+    });
+  }, [navigation]);
+
   // Filter entries based on selected commodity
   const filteredEntries = useMemo(() => {
     if (!selectedCommodity) {
@@ -335,7 +349,12 @@ const DigitalThela: React.FC = () => {
           </View>
           <ScrollView style={styles.detailsList}>
             {filteredEntries.map((entry) => (
-              <View key={entry.id} style={styles.detailItem}>
+              <TouchableOpacity
+                key={entry.id}
+                style={styles.detailItem}
+                onPress={() => handleUsernamePress(entry.username_id)}
+                activeOpacity={0.7}
+              >
                 <View style={styles.detailItemLeft}>
                   <Text style={styles.detailSeller}>{entry.username_id}</Text>
                   <Text style={styles.detailVariety}>
@@ -350,7 +369,7 @@ const DigitalThela: React.FC = () => {
                     ₹{entry.cost}/{entry.unit}
                   </Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -371,6 +390,7 @@ const DigitalThela: React.FC = () => {
           <DigitalThelaMap
             entries={filteredEntries}
             selectedCommodity={selectedCommodity}
+            onUsernamePress={handleUsernamePress}
           />
         </View>
       )}

@@ -29,6 +29,30 @@ export interface ProfileData {
     username: string;
 }
 
+export interface FarmerProfileData {
+    id: string;
+    username: string;
+    email: string;
+    mobile: string;
+    job: string;
+    profile_pic: string | null;
+}
+
+export interface DTEntry {
+    id: number;
+    username_id: string;
+    sale_commodity: string;
+    variety_name: string;
+    latitude: number;
+    longitude: number;
+    created_at: string;
+    level_of_produce: string;
+    quantity_for_sale: number;
+    cost: number;
+    unit: string;
+    photo_or_video?: string;
+}
+
 export interface EnhancedProfileData extends Omit<ProfileData, 'password'> {
     displayName: string;
     role: string;
@@ -232,6 +256,68 @@ class ProfileService {
             return this.formatDate(lastLoginString);
         } catch (error) {
             return "Unknown";
+        }
+    }
+
+    /**
+     * Fetch farmer profile by username
+     */
+    async getFarmerProfile(username: string): Promise<FarmerProfileData> {
+        try {
+            const response = await apiWithRetry.get<FarmerProfileData>(`/profile/${username}/`);
+
+            if (!response.data) {
+                throw new APIError("No profile data received", HTTP_STATUS.NOT_FOUND);
+            }
+
+            if (__DEV__) {
+                console.log("✅ Farmer profile data fetched successfully:", response.data.username);
+            }
+
+            return response.data;
+        } catch (error: any) {
+            console.error("Farmer profile fetch error:", error);
+
+            if (error instanceof APIError) {
+                throw error;
+            }
+
+            throw new APIError(
+                "Failed to fetch farmer profile",
+                error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                error.data
+            );
+        }
+    }
+
+    /**
+     * Fetch all entries by a specific farmer
+     */
+    async getFarmerEntries(username: string): Promise<DTEntry[]> {
+        try {
+            const response = await apiWithRetry.get<DTEntry[]>(`/DtEntries/?username_id=${username}`);
+
+            if (!response.data) {
+                throw new APIError("No entries data received", HTTP_STATUS.NOT_FOUND);
+            }
+
+            if (__DEV__) {
+                console.log("✅ Farmer entries fetched successfully:", response.data.length, "entries");
+            }
+
+            return response.data;
+        } catch (error: any) {
+            console.error("Farmer entries fetch error:", error);
+
+            if (error instanceof APIError) {
+                throw error;
+            }
+
+            throw new APIError(
+                "Failed to fetch farmer entries",
+                error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                error.data
+            );
         }
     }
 }

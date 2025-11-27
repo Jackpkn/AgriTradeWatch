@@ -21,10 +21,11 @@ interface DigitalThelaMapProps {
   entries: DTEntry[];
   selectedCommodity: string | null;
   onEntrySelect?: (entry: DTEntry | null) => void;
+  onUsernamePress?: (username: string) => void;
 }
 
 const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
-  ({ entries, selectedCommodity, onEntrySelect }, ref) => {
+  ({ entries, selectedCommodity, onEntrySelect, onUsernamePress }, ref) => {
     const webViewRef = useRef<WebView>(null);
     const [mapReady, setMapReady] = useState(false);
 
@@ -75,6 +76,8 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
           onEntrySelect?.(selectedEntry || null);
         } else if (data.type === "mapClicked") {
           onEntrySelect?.(null);
+        } else if (data.type === "usernameClicked") {
+          onUsernamePress?.(data.username);
         }
       } catch (error) {
         console.error("Error parsing message from WebView:", error);
@@ -160,6 +163,16 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
       text-align: center;
       font-size: 12px;
       color: #7B1FA2;
+      cursor: pointer;
+    }
+    .popup-seller:hover {
+      background: #e1bee7;
+    }
+    .username-link {
+      color: #9C27B0;
+      font-weight: bold;
+      text-decoration: underline;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -168,6 +181,15 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
   <script>
     let map;
     let markers = [];
+
+    // Handle username click
+    function handleUsernameClick(username, event) {
+      event.stopPropagation();
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'usernameClicked',
+        username: username
+      }));
+    }
 
     // Initialize map
     map = L.map('map', {
@@ -216,7 +238,9 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
             <span class="popup-label">Production:</span>
             <span class="popup-value">\${entry.level_of_produce.replace(/_/g, ' ')}</span>
           </div>
-          <div class="popup-seller">Seller: \${entry.username_id}</div>
+          <div class="popup-seller" onclick="handleUsernameClick('\${entry.username_id}', event)">
+            Seller: <span class="username-link">\${entry.username_id}</span>
+          </div>
         </div>
       \`;
     }
