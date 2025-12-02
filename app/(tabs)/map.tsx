@@ -1107,112 +1107,55 @@ const MapScreen = () => {
                 </ScrollView>
               </View>
             )}
-            <View style={mapStyles.radiusTypeToggle}>
-              <TouchableOpacity
-                style={[
-                  mapStyles.radiusTypeButton,
-                  state.radius <= 0.5 && mapStyles.radiusTypeButtonActive
-                ]}
-                onPress={() => {
-                  if (state.radius > 0.5) updateState({ radius: 0.1 });
-                }}
-              >
-                <Text style={[
-                  mapStyles.radiusTypeButtonText,
-                  state.radius <= 0.5 && mapStyles.radiusTypeButtonTextActive
-                ]}>{t.map.meters}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  mapStyles.radiusTypeButton,
-                  state.radius > 0.5 && mapStyles.radiusTypeButtonActive
-                ]}
-                onPress={() => {
-                  if (state.radius <= 0.5) updateState({ radius: 2 });
-                }}
-              >
-                <Text style={[
-                  mapStyles.radiusTypeButtonText,
-                  state.radius > 0.5 && mapStyles.radiusTypeButtonTextActive
-                ]}>{t.map.kilometers}</Text>
-              </TouchableOpacity>
-            </View>
             <View style={mapStyles.radiusSliderContainer}>
               <View style={mapStyles.radiusValueContainer}>
                 <Text style={mapStyles.radiusValue}>
-                  {state.radius <= 0.5
-                    ? `${Math.round(state.radius * 1000)}m`
-                    : `${state.radius}km`
-                  }
+                  {state.radius}km
                 </Text>
                 <Text style={mapStyles.radiusDataCount}>
                   {filteredCrops.length} {t.map.itemsInRange}
                 </Text>
               </View>
-              {state.radius <= 0.5 && (
-                <View style={mapStyles.sliderContainer}>
-                  <Text style={mapStyles.sliderHint}>
-                    {t.map.dragSliderHint}
-                  </Text>
-                  <Slider
-                    style={{ width: '100%', height: 40 }}
-                    minimumValue={0.05}
-                    maximumValue={0.5}
-                    step={0.05}
-                    value={state.radius}
-                    onValueChange={setRadius}
-                    onSlidingComplete={setRadius}
-                    minimumTrackTintColor="#49A760"
-                    maximumTrackTintColor="#e0e0e0"
-                    thumbTintColor="#49A760"
-                  />
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={mapStyles.sliderStepsScroll}
-                  >
-                    <View style={mapStyles.sliderSteps}>
-                      {[0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500].map((step) => (
-                        <TouchableOpacity
-                          key={step}
-                          style={[
-                            mapStyles.sliderStep,
-                            Math.round(state.radius * 1000) === step && mapStyles.sliderStepActive
-                          ]}
-                          onPress={() => setRadius(step / 1000)}
-                        >
-                          <Text style={[
-                            mapStyles.sliderStepText,
-                            Math.round(state.radius * 1000) === step && mapStyles.sliderStepTextActive
-                          ]}>{step}m</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </ScrollView>
-                </View>
-              )}
-              {state.radius > 0.5 && (
-                <View style={mapStyles.kmSliderContainer}>
-                  <View style={mapStyles.kmButtonsGrid}>
-                    {[1, 2, 3, 4, 5, 10, 20, 50].map((km) => (
+              <View style={mapStyles.sliderContainer}>
+                <Text style={mapStyles.sliderHint}>
+                  {t.map.dragSliderHint}
+                </Text>
+                <Slider
+                  style={{ width: '100%', height: 40 }}
+                  minimumValue={0}
+                  maximumValue={500}
+                  step={5}
+                  value={state.radius}
+                  onValueChange={setRadius}
+                  onSlidingComplete={setRadius}
+                  minimumTrackTintColor="#49A760"
+                  maximumTrackTintColor="#e0e0e0"
+                  thumbTintColor="#49A760"
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={mapStyles.sliderStepsScroll}
+                >
+                  <View style={mapStyles.sliderSteps}>
+                    {[0, 10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500].map((step) => (
                       <TouchableOpacity
-                        key={km}
+                        key={step}
                         style={[
-                          mapStyles.kmButton,
-                          state.radius === km && mapStyles.kmButtonActive
+                          mapStyles.sliderStep,
+                          state.radius === step && mapStyles.sliderStepActive
                         ]}
-                        onPress={() => debouncedSetRadius(km)}
+                        onPress={() => setRadius(step)}
                       >
                         <Text style={[
-                          mapStyles.kmButtonText,
-                          state.radius === km && mapStyles.kmButtonTextActive
-                        ]}>{km}km</Text>
+                          mapStyles.sliderStepText,
+                          state.radius === step && mapStyles.sliderStepTextActive
+                        ]}>{step}km</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-                </View>
-              )}
+                </ScrollView>
+              </View>
             </View>
           </View>
           
