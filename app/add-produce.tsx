@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Linking,
   StyleSheet,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView } from "expo-camera";
@@ -32,11 +33,15 @@ import {
 // Types
 interface ProduceFormState {
   sale_commodity: string;
+  new_commodity: string;
   variety_name: string;
   level_of_produce: string;
   quantity_for_sale: string;
   cost: string;
   unit: string;
+  state: string;
+  district: string;
+  tehsil: string;
 }
 
 interface PhotoState {
@@ -44,6 +49,18 @@ interface PhotoState {
   base64?: string;
   fileName?: string;
   type?: string;
+}
+
+interface VoiceState {
+  uri: string;
+  fileName?: string;
+  type?: string;
+}
+
+interface LocationData {
+  [state: string]: {
+    [district: string]: string[];
+  };
 }
 
 // Styles - created once for better performance
@@ -224,7 +241,79 @@ const styles = StyleSheet.create({
       borderRadius: 20,
       padding: 8,
     },
+    mapContainer: {
+      marginTop: 8,
+      height: 300,
+      borderRadius: 8,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: "#e0e0e0",
+    },
+    confirmLocationButton: {
+      marginTop: 12,
+      borderRadius: 8,
+      overflow: "hidden",
+    },
+    confirmLocationGradient: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 12,
+      gap: 8,
+    },
+    confirmLocationText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: "#fff",
+    },
+    locationConfirmedText: {
+      fontSize: 12,
+      color: "#4caf50",
+      marginTop: 8,
+      textAlign: "center",
+      fontWeight: "600",
+    },
+    voiceButton: {
+      marginTop: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 12,
+      borderWidth: 1,
+      borderColor: "#9C27B0",
+      borderRadius: 8,
+      gap: 8,
+    },
+    voiceButtonRecording: {
+      backgroundColor: "#ffebee",
+      borderColor: "#f44336",
+    },
+    voiceButtonText: {
+      color: "#9C27B0",
+      fontWeight: "600",
+      fontSize: 14,
+    },
+    voiceButtonTextRecording: {
+      color: "#f44336",
+    },
+    voiceInfo: {
+      padding: 8,
+      backgroundColor: "#f8f9fa",
+      borderRadius: 4,
+      marginTop: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    voiceInfoText: {
+      fontSize: 12,
+      color: "#666",
+      flex: 1,
+    },
   });
+
+// Location data from Django
+const LOCATION_DATA: LocationData = JSON.parse('{\u0022Maharashtra\u0022: {\u0022Pune\u0022: [\u0022Haveli\u0022, \u0022Khed\u0022, \u0022Mawal\u0022, \u0022Mulshi\u0022, \u0022Baramati\u0022, \u0022Indapur\u0022, \u0022Junnar\u0022, \u0022Shirur\u0022, \u0022Purandar\u0022, \u0022Ambegaon\u0022], \u0022Satara\u0022: [\u0022Satara\u0022, \u0022Wai\u0022, \u0022Karad\u0022, \u0022Koregaon\u0022, \u0022Jaoli\u0022, \u0022Khatav\u0022, \u0022Man\u0022, \u0022Phaltan\u0022, \u0022Mahabaleshwar\u0022, \u0022Patan\u0022], \u0022Ahmednagar\u0022: [\u0022Nagar\u0022, \u0022Sangamner\u0022, \u0022Shrigonda\u0022, \u0022Pathardi\u0022, \u0022Parner\u0022, \u0022Rahata\u0022, \u0022Rahuri\u0022, \u0022Shevgaon\u0022, \u0022Akole\u0022, \u0022Kopargaon\u0022], \u0022Nashik\u0022: [\u0022Nashik\u0022, \u0022Trimbakeshwar\u0022, \u0022Igatpuri\u0022, \u0022Dindori\u0022, \u0022Peth\u0022, \u0022Kalwan\u0022, \u0022Baglan (Satana)\u0022, \u0022Niphad\u0022, \u0022Sinnar\u0022, \u0022Yeola\u0022, \u0022Chandwad\u0022, \u0022Deola\u0022], \u0022Aurangabad (Chhatrapati Sambhajinagar)\u0022: [\u0022Aurangabad\u0022, \u0022Phulambri\u0022, \u0022Sillod\u0022, \u0022Kannad\u0022, \u0022Vaijapur\u0022, \u0022Gangapur\u0022, \u0022Paithan\u0022, \u0022Khuldabad\u0022, \u0022Soegaon\u0022], \u0022Nagpur\u0022: [\u0022Nagpur\u0022, \u0022Hingna\u0022, \u0022Kalameshwar\u0022, \u0022Kamptee\u0022, \u0022Katol\u0022, \u0022Narkhed\u0022, \u0022Ramtek\u0022, \u0022Mouda\u0022, \u0022Parseoni\u0022, \u0022Umred\u0022, \u0022Kuhi\u0022, \u0022Bhiwapur\u0022], \u0022Amravati\u0022: [\u0022Amravati\u0022, \u0022Bhatkuli\u0022, \u0022Daryapur\u0022, \u0022Nandgaon Khandeshwar\u0022, \u0022Chandur Railway\u0022, \u0022Chandur Bazar\u0022, \u0022Morshi\u0022, \u0022Warud\u0022, \u0022Achalpur\u0022, \u0022Anjangaon Surji\u0022, \u0022Dharni\u0022, \u0022Chikhaldara\u0022], \u0022Kolhapur\u0022: [\u0022Karvir\u0022, \u0022Panhala\u0022, \u0022Shahuwadi\u0022, \u0022Kagal\u0022, \u0022Hatkanangale\u0022, \u0022Shirol\u0022, \u0022Radhanagari\u0022, \u0022Gaganbawada\u0022, \u0022Ajra\u0022, \u0022Bhudargad\u0022, \u0022Chandgad\u0022, \u0022Gadhinglaj\u0022], \u0022Solapur\u0022: [\u0022Solapur North\u0022, \u0022Solapur South\u0022, \u0022Barshi\u0022, \u0022Akkalkot\u0022, \u0022Mohol\u0022, \u0022Pandharpur\u0022, \u0022Malshiras\u0022, \u0022Sangole\u0022, \u0022Mangalwedha\u0022, \u0022Madha\u0022, \u0022Karmala\u0022], \u0022Thane\u0022: [\u0022Thane\u0022, \u0022Kalyan\u0022, \u0022Murbad\u0022, \u0022Bhiwandi\u0022, \u0022Shahapur\u0022, \u0022Ulhasnagar\u0022, \u0022Ambarnath\u0022, \u0022Palghar (old tehsil, now district)\u0022, \u0022Vasai\u0022], \u0022Mumbai Suburban\u0022: [\u0022Andheri\u0022, \u0022Borivali\u0022, \u0022Kurla\u0022], \u0022Raigad\u0022: [\u0022Alibag\u0022, \u0022Panvel\u0022, \u0022Uran\u0022, \u0022Karjat\u0022, \u0022Khalapur\u0022, \u0022Pen\u0022, \u0022Sudhagad (Pali)\u0022, \u0022Roha\u0022, \u0022Tala\u0022, \u0022Mangaon\u0022, \u0022Mahad\u0022, \u0022Murud\u0022, \u0022Shrivardhan\u0022, \u0022Poladpur\u0022], \u0022Sangli\u0022: [\u0022Miraj\u0022, \u0022Walwa (Islampur)\u0022, \u0022Shirala\u0022, \u0022Khanapur (Vita)\u0022, \u0022Atpadi\u0022, \u0022Tasgaon\u0022, \u0022Palus\u0022, \u0022Kadegaon\u0022, \u0022Jath\u0022], \u0022Jalgaon\u0022: [\u0022Jalgaon\u0022, \u0022Jamner\u0022, \u0022Erandol\u0022, \u0022Dharangaon\u0022, \u0022Bhusawal\u0022, \u0022Raver\u0022, \u0022Muktainagar\u0022, \u0022Bodwad\u0022, \u0022Chopda\u0022, \u0022Yawal\u0022, \u0022Amalner\u0022, \u0022Parola\u0022, \u0022Pachora\u0022, \u0022Bhadgaon\u0022, \u0022Chalisgaon\u0022], \u0022Jalna\u0022: [\u0022Jalna\u0022, \u0022Bhokardan\u0022, \u0022Jafrabad\u0022, \u0022Badnapur\u0022, \u0022Ambad\u0022, \u0022Partur\u0022, \u0022Mantha\u0022, \u0022Ghansawangi\u0022], \u0022Parbhani\u0022: [\u0022Parbhani\u0022, \u0022Gangakhed\u0022, \u0022Sonpeth\u0022, \u0022Pathri\u0022, \u0022Manwat\u0022, \u0022Purna\u0022, \u0022Palam\u0022, \u0022Jintur\u0022, \u0022Selu\u0022], \u0022Nanded\u0022: [\u0022Nanded\u0022, \u0022Ardhapur\u0022, \u0022Mudkhed\u0022, \u0022Bhokar\u0022, \u0022Umri\u0022, \u0022Loha\u0022, \u0022Kandhar\u0022, \u0022Kinwat\u0022, \u0022Himayatnagar\u0022, \u0022Hadgaon\u0022, \u0022Mahur\u0022, \u0022Deglur\u0022, \u0022Mukhed\u0022, \u0022Dharmabad\u0022, \u0022Biloli\u0022], \u0022Beed\u0022: [\u0022Beed\u0022, \u0022Ashti\u0022, \u0022Patoda\u0022, \u0022Shirur Kasar\u0022, \u0022Georai\u0022, \u0022Manjlegaon\u0022, \u0022Wadwani\u0022, \u0022Kaij\u0022, \u0022Dharur\u0022, \u0022Parli\u0022, \u0022Ambejogai\u0022], \u0022Latur\u0022: [\u0022Latur\u0022, \u0022Renapur\u0022, \u0022Ahmadpur\u0022, \u0022Jalkot\u0022, \u0022Chakur\u0022, \u0022Shirur Anantpal\u0022, \u0022Ausa\u0022, \u0022Nilanga\u0022, \u0022Deoni\u0022, \u0022Udgir\u0022], \u0022Dhule\u0022: [\u0022Dhule\u0022, \u0022Sakri\u0022, \u0022Shirpur\u0022, \u0022Sindkheda\u0022], \u0022Bhandara\u0022: [\u0022Bhandara\u0022, \u0022Tumsar\u0022, \u0022Pauni\u0022, \u0022Mohadi\u0022, \u0022Sakoli\u0022, \u0022Lakhani\u0022, \u0022Lakhandur\u0022], \u0022Gondia\u0022: [\u0022Gondia\u0022, \u0022Tirora\u0022, \u0022Goregaon\u0022, \u0022Arjuni Morgaon\u0022, \u0022Deori\u0022, \u0022Sadak Arjuni\u0022, \u0022Amgaon\u0022, \u0022Salekasa\u0022], \u0022Chandrapur\u0022: [\u0022Chandrapur\u0022, \u0022Ballarpur\u0022, \u0022Mul\u0022, \u0022Saoli\u0022, \u0022Sindewahi\u0022, \u0022Brahmapuri\u0022, \u0022Nagbhir\u0022, \u0022Chimur\u0022, \u0022Bhadravati\u0022, \u0022Warora\u0022, \u0022Rajura\u0022, \u0022Korpana\u0022, \u0022Jiwati\u0022, \u0022Pombhurna\u0022, \u0022Gondpipri\u0022], \u0022Yavatmal\u0022: [\u0022Yavatmal\u0022, \u0022Arni\u0022, \u0022Babhulgaon\u0022, \u0022Kalamb\u0022, \u0022Darwha\u0022, \u0022Digras\u0022, \u0022Ner\u0022, \u0022Pusad\u0022, \u0022Umarkhed\u0022, \u0022Maregaon\u0022, \u0022Zari Jamani\u0022, \u0022Wani\u0022, \u0022Ralegaon\u0022, \u0022Ghatanji\u0022, \u0022Kelapur (Pandharkawada)\u0022]}}');
 
 const AddProduce: React.FC = () => {
   const navigation = useNavigation();
@@ -234,17 +323,58 @@ const AddProduce: React.FC = () => {
 
   const [formData, setFormData] = useState<ProduceFormState>({
     sale_commodity: "",
+    new_commodity: "",
     variety_name: "",
     level_of_produce: "selling_surplus",
     quantity_for_sale: "",
     cost: "",
     unit: "",
+    state: "",
+    district: "",
+    tehsil: "",
   });
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [photo, setPhoto] = useState<PhotoState | null>(null);
+  const [voiceDescription, setVoiceDescription] = useState<VoiceState | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [locationConfirmed, setLocationConfirmed] = useState(false);
+  const [markerPosition, setMarkerPosition] = useState<{latitude: number; longitude: number} | null>(null);
   const cameraRef = useRef<CameraView>(null);
+
+  // Computed values for location dropdowns
+  const availableStates = useMemo(() => Object.keys(LOCATION_DATA), []);
+
+  const availableDistricts = useMemo(() => {
+    if (!formData.state || !LOCATION_DATA[formData.state]) return [];
+    return Object.keys(LOCATION_DATA[formData.state]);
+  }, [formData.state]);
+
+  const availableTehsils = useMemo(() => {
+    if (!formData.state || !formData.district || !LOCATION_DATA[formData.state]?.[formData.district]) return [];
+    return LOCATION_DATA[formData.state][formData.district];
+  }, [formData.state, formData.district]);
+
+  // Initialize marker position from current location
+  useEffect(() => {
+    if (currentLocation && !markerPosition) {
+      setMarkerPosition({
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+      });
+    }
+  }, [currentLocation, markerPosition]);
+
+  // Handle hardware back button - navigate to Home instead of exiting app
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      // Navigate to Main (Home) screen instead of exiting the app
+      navigation.navigate('Main' as never);
+      return true; // Prevent default back behavior
+    });
+
+    return () => backHandler.remove();
+  }, [navigation]);
 
   // Lazy load permissions only when needed
   const requestPermissions = useCallback(async () => {
@@ -319,8 +449,37 @@ const AddProduce: React.FC = () => {
   }, [requestPermissions, formData.sale_commodity, t]);
 
   const updateField = useCallback((field: keyof ProduceFormState, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // Reset dependent fields when parent changes
+      if (field === 'state') {
+        updated.district = '';
+        updated.tehsil = '';
+      } else if (field === 'district') {
+        updated.tehsil = '';
+      }
+
+      return updated;
+    });
   }, []);
+
+  const handleConfirmLocation = useCallback(() => {
+    if (markerPosition) {
+      setLocationConfirmed(true);
+      Alert.alert(
+        t.common.success || "Success",
+        "Location confirmed successfully!",
+        [{ text: t.common.ok || "OK" }]
+      );
+    } else {
+      Alert.alert(
+        t.common.error || "Error",
+        "Please select a location on the map",
+        [{ text: t.common.ok || "OK" }]
+      );
+    }
+  }, [markerPosition, t]);
 
   const validateForm = useCallback((): boolean => {
     if (
@@ -377,20 +536,29 @@ const AddProduce: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Use confirmed location or current location
+      const finalLatitude = markerPosition?.latitude || currentLocation.latitude;
+      const finalLongitude = markerPosition?.longitude || currentLocation.longitude;
+
       const payload: any = {
-        sale_commodity: formData.sale_commodity,
-        variety_name: formData.variety_name,
+        sale_commodity: formData.sale_commodity || "",
+        new_commodity: formData.new_commodity || "",
+        variety_name: formData.variety_name || "",
         method: "organic", // Default
-        level_of_produce: formData.level_of_produce,
+        level_of_produce: formData.level_of_produce || "",
         sowing_date: new Date().toISOString().split("T")[0],
         harvest_date: new Date().toISOString().split("T")[0],
-        quantity_for_sale: parseFloat(formData.quantity_for_sale),
-        cost: parseFloat(formData.cost),
-        unit: formData.unit,
+        quantity_for_sale: formData.quantity_for_sale ? parseFloat(formData.quantity_for_sale) : "",
+        cost: formData.cost ? parseFloat(formData.cost) : "",
+        unit: formData.unit || "",
         produce_expense: 0,
         profit_expectation: 0,
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
+        latitude: finalLatitude,
+        longitude: finalLongitude,
+        location_confirmed: locationConfirmed,
+        state: formData.state || "",
+        district: formData.district || "",
+        tehsil: formData.tehsil || "",
       };
 
       if (photo) {
@@ -407,6 +575,17 @@ const AddProduce: React.FC = () => {
         };
       } else {
         console.log("📸 No photo selected, submitting without image");
+      }
+
+      if (voiceDescription) {
+        console.log("🎤 Voice description available, adding to payload");
+        payload.description_voice = {
+          uri: voiceDescription.uri,
+          name: voiceDescription.fileName || `voice_${Date.now()}.webm`,
+          type: voiceDescription.type || "audio/webm",
+        };
+      } else {
+        console.log("🎤 No voice description, submitting without audio");
       }
 
       const response = await produceService.submitProduce(payload);
@@ -439,7 +618,7 @@ const AddProduce: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, currentLocation, isLogged, setIsLoading, photo, t, navigation]);
+  }, [formData, currentLocation, isLogged, setIsLoading, photo, voiceDescription, t, navigation, markerPosition, locationConfirmed, validateForm]);
 
   if (isCameraOpen) {
     return (
@@ -519,6 +698,22 @@ const AddProduce: React.FC = () => {
                     ))}
                   </Picker>
                 </View>
+              </View>
+
+              {/* New Commodity (Optional) */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  New Commodity (Optional)
+                </Text>
+                <TextInput
+                  style={styles.textInput}
+                  mode="outlined"
+                  value={formData.new_commodity}
+                  onChangeText={(value) => updateField("new_commodity", value)}
+                  placeholder="Enter new commodity if not in list"
+                  outlineColor="#E0E0E0"
+                  activeOutlineColor="#9C27B0"
+                />
               </View>
 
               {/* Variety Name */}
@@ -629,6 +824,98 @@ const AddProduce: React.FC = () => {
                 </View>
               </View>
 
+              {/* State Picker */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>State</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={formData.state}
+                    onValueChange={(value) => updateField("state", value)}
+                    style={styles.picker}
+                    dropdownIconColor="#666"
+                  >
+                    <Picker.Item label="-- Select State --" value="" color="#888" />
+                    {availableStates.map((state) => (
+                      <Picker.Item key={state} label={state} value={state} color="#333" />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+
+              {/* District Picker */}
+              {formData.state && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>District</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={formData.district}
+                      onValueChange={(value) => updateField("district", value)}
+                      style={styles.picker}
+                      dropdownIconColor="#666"
+                    >
+                      <Picker.Item label="-- Select District --" value="" color="#888" />
+                      {availableDistricts.map((district) => (
+                        <Picker.Item key={district} label={district} value={district} color="#333" />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+              )}
+
+              {/* Tehsil Picker */}
+              {formData.district && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Tehsil</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={formData.tehsil}
+                      onValueChange={(value) => updateField("tehsil", value)}
+                      style={styles.picker}
+                      dropdownIconColor="#666"
+                    >
+                      <Picker.Item label="-- Select Tehsil --" value="" color="#888" />
+                      {availableTehsils.map((tehsil) => (
+                        <Picker.Item key={tehsil} label={tehsil} value={tehsil} color="#333" />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+              )}
+
+              {/* Location Map */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  Drag the marker OR choose district and Tehsil to change the location
+                </Text>
+                {currentLocation && (
+                  <>
+                    <View style={styles.mapContainer}>
+                      {/* Map component will go here - using react-native-maps */}
+                      <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
+                        Map placeholder - Lat: {markerPosition?.latitude.toFixed(4)}, Lng: {markerPosition?.longitude.toFixed(4)}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.confirmLocationButton}
+                      onPress={handleConfirmLocation}
+                    >
+                      <LinearGradient
+                        colors={["#4caf50", "#388e3c"]}
+                        style={styles.confirmLocationGradient}
+                      >
+                        <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                        <Text style={styles.confirmLocationText}>Confirm Location</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                    {locationConfirmed && (
+                      <Text style={styles.locationConfirmedText}>
+                        ✓ Location confirmed
+                      </Text>
+                    )}
+                  </>
+                )}
+              </View>
+
               {/* Photo Section */}
               <View style={styles.imageSection}>
                 <Text style={styles.inputLabel}>
@@ -695,6 +982,41 @@ const AddProduce: React.FC = () => {
                         ) || `Photo: ${photo.fileName || "selected"}`}
                       </Text>
                     </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Voice Description Section */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  Voice Description (Optional)
+                </Text>
+                <Text style={styles.imageHelpText}>
+                  Record a voice description of your produce
+                </Text>
+                <TouchableOpacity
+                  style={styles.voiceButton}
+                  onPress={() => {
+                    Alert.alert(
+                      "Voice Recording",
+                      "Voice recording feature coming soon!",
+                      [{ text: "OK" }]
+                    );
+                  }}
+                >
+                  <Ionicons name="mic" size={24} color="#9C27B0" />
+                  <Text style={styles.voiceButtonText}>
+                    Record Voice Description
+                  </Text>
+                </TouchableOpacity>
+                {voiceDescription && (
+                  <View style={styles.voiceInfo}>
+                    <Text style={styles.voiceInfoText}>
+                      Voice: {voiceDescription.fileName || "recorded"}
+                    </Text>
+                    <TouchableOpacity onPress={() => setVoiceDescription(null)}>
+                      <Ionicons name="close-circle" size={20} color="#ff6b6b" />
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>

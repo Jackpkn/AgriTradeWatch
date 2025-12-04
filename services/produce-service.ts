@@ -1,4 +1,5 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStoredToken } from './api-pro';
 import { ProducePayload, APIResponse } from '@/types/api';
 
@@ -7,7 +8,7 @@ import { ProducePayload, APIResponse } from '@/types/api';
  */
 export class ProduceService {
   private static instance: ProduceService;
-  private readonly CREATE_PRODUCE_URL = 'https://mandigo.in/api/create-produce/';
+  private readonly CREATE_PRODUCE_URL = 'https://mandigo.in/api/create-produce-api/';
   private readonly DT_ENTRIES_URL = 'https://mandigo.in/api/DtEntries/';
 
   private constructor() { }
@@ -75,8 +76,8 @@ export class ProduceService {
       // Fetch CSRF token first
       let csrfToken = null;
       try {
-        // Use a known working endpoint to fetch the CSRF token
-        const csrfResponse = await axios.get('https://mandigo.in/api/damage/crop/', {
+        // Fetch CSRF token from the same endpoint we're going to POST to
+        const csrfResponse = await axios.get(this.CREATE_PRODUCE_URL, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -107,7 +108,7 @@ export class ProduceService {
         if (csrfToken) {
           console.log('🔑 Found CSRF Token:', csrfToken);
         } else {
-          console.log('⚠️ No CSRF token found in headers');
+          console.log('⚠️ No CSRF token found in headers, proceeding without explicit token header');
         }
 
       } catch (csrfError) {
@@ -116,36 +117,15 @@ export class ProduceService {
 
       const formData = new FormData();
 
-      // Add CSRF token to body if found (Required based on working curl)
-      if (csrfToken) {
-        formData.append('csrfmiddlewaretoken', csrfToken);
-      }
-
-      // Add all required fields
+      // Add required fields matching the curl command
       formData.append('sale_commodity', produceData.sale_commodity || '');
       formData.append('variety_name', produceData.variety_name || '');
-      formData.append('method', produceData.method || '');
-      formData.append('level_of_produce', produceData.level_of_produce || '');
-
-      // Send empty strings for optional dates if not provided
-      formData.append('sowing_date', produceData.sowing_date || '');
-      formData.append('harvest_date', produceData.harvest_date || '');
-
       formData.append('quantity_for_sale', produceData.quantity_for_sale?.toString() || '');
       formData.append('cost', produceData.cost?.toString() || '');
       formData.append('unit', produceData.unit || '');
-
-      // Send empty strings for optional expenses if not provided
-      formData.append('produce_expense', produceData.produce_expense?.toString() || '');
-      formData.append('profit_expectation', produceData.profit_expectation?.toString() || '');
-
-      // Add location if provided
-      if (produceData.latitude !== undefined) {
-        formData.append('latitude', produceData.latitude.toString());
-      }
-      if (produceData.longitude !== undefined) {
-        formData.append('longitude', produceData.longitude.toString());
-      }
+      formData.append('latitude', produceData.latitude?.toString() || '');
+      formData.append('longitude', produceData.longitude?.toString() || '');
+      formData.append('location_confirmed', (produceData as any).location_confirmed ? 'true' : 'false');
 
       // Add photo/video if provided
       if (produceData.photo_or_video) {
@@ -155,20 +135,19 @@ export class ProduceService {
           type: 'image/jpeg',
           name: 'produce_photo.jpg',
         } as any);
-      } else {
-        console.log('📸 No photo provided, skipping photo_or_video field');
       }
 
       const config: any = {
         headers: {
           Authorization: `Bearer ${token}`,
-          // 'Content-Type': 'multipart/form-data', // Let axios set this with boundary
-          'Referer': 'https://mandigo.in/api/create-produce/',
+          'Content-Type': 'multipart/form-data',
+          'Referer': 'https://mandigo.in/api/create-produce-api/',
           'Origin': 'https://mandigo.in',
         },
         timeout: 30000,
       };
 
+      // Add CSRF token to headers if found
       if (csrfToken) {
         config.headers['X-CSRFToken'] = csrfToken;
         config.headers['Cookie'] = `csrftoken=${csrfToken}`;
@@ -177,61 +156,42 @@ export class ProduceService {
       console.log('=====================================');
       console.log('🚀 DEBUG REQUEST INFO');
       console.log('URL:', this.CREATE_PRODUCE_URL);
+      console.log('CSRF Token:', csrfToken);
       console.log('Headers:', JSON.stringify(config.headers, null, 2));
-      console.log('CSRF Token Variable:', csrfToken);
       console.log('Produce Data:', JSON.stringify(produceData, null, 2));
-      console.log('FormData Parts (Manual Log):');
-      console.log('- csrfmiddlewaretoken:', csrfToken);
+      console.log('FormData Parts:');
       console.log('- sale_commodity:', produceData.sale_commodity);
       console.log('- variety_name:', produceData.variety_name);
+      console.log('- quantity_for_sale:', produceData.quantity_for_sale);
+      console.log('- cost:', produceData.cost);
+      console.log('- unit:', produceData.unit);
+      console.log('- latitude:', produceData.latitude);
+      console.log('- longitude:', produceData.longitude);
+      console.log('- location_confirmed:', (produceData as any).location_confirmed);
       console.log('=====================================');
 
       console.log(`📤 Sending POST to: ${this.CREATE_PRODUCE_URL}`);
 
-      // Use fetch instead of axios for better FormData handling
-      const response = await fetch(this.CREATE_PRODUCE_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Content-Type is automatically set by fetch with the correct boundary
-          'Referer': 'https://mandigo.in/api/create-produce/',
-          'Origin': 'https://mandigo.in',
-          ...(csrfToken ? {
-            'X-CSRFToken': csrfToken,
-            'Cookie': `csrftoken=${csrfToken}`
-          } : {})
-        },
-        body: formData,
-      });
+      // Use axios for better React Native compatibility
+      const response = await axios.post(this.CREATE_PRODUCE_URL, formData, config);
 
-      const responseText = await response.text();
       console.log('📥 Response Status:', response.status);
-      console.log('📥 Response Text:', responseText);
+      console.log('📥 Response Data:', response.data);
 
-      let responseData;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (e) {
-        responseData = responseText;
-      }
-
-      if (!response.ok) {
-        throw new Error(responseData.message || `Request failed with status ${response.status}`);
-      }
-
-      console.log('✅ Produce submitted successfully:', responseData);
+      console.log('✅ Produce submitted successfully:', response.data);
 
       return {
         success: true,
-        data: responseData,
+        data: response.data,
         message: 'Produce details submitted successfully',
       };
     } catch (error: any) {
       console.error('❌ Produce submission error:', error);
+      console.error('Error response:', error.response?.data);
 
       return {
         success: false,
-        error: error.message || 'Failed to submit produce details',
+        error: error.response?.data?.message || error.message || 'Failed to submit produce details',
       };
     }
   }

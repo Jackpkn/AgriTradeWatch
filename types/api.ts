@@ -118,6 +118,7 @@ export interface ProducePayload {
   photo_or_video?: File | Blob;
   latitude?: number;
   longitude?: number;
+  username?: string;
 }
 
 export interface APIResponse<T = any> {
