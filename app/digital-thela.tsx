@@ -7,11 +7,12 @@ import {
   StyleSheet,
   ScrollView,
   InteractionManager,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 
 import { produceService } from "@/services";
@@ -209,6 +210,23 @@ const DigitalThela: React.FC = () => {
   useEffect(() => {
     fetchAllEntries();
   }, []);
+
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        navigation.goBack();
+        return true; // Prevent default behavior
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [navigation])
+  );
 
   const fetchAllEntries = async () => {
     setLoading(true);

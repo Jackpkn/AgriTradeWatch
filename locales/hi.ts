@@ -164,8 +164,8 @@ export const hi: TranslationKeys = {
     prices: "मूल्य",
     to: "से",
     reports: "रिपोर्ट",
-    dragPinTip: "💡 विभिन्न क्षेत्रों का अन्वेषण करने के लिए लाल पिन को खींचें",
-    dragPinInstruction: "💡 विभिन्न क्षेत्रों का अन्वेषण करने के लिए लाल पिन को खींचें",
+    dragPinTip: "💡 विभिन्न क्षेत्रों का अन्वेषण करने के लिए नीला पिन को खींचें",
+    dragPinInstruction: "💡 विभिन्न क्षेत्रों का अन्वेषण करने के लिए नीला पिन को खींचें",
     noPriceData: "{{range}} के लिए कोई मूल्य डेटा उपलब्ध नहीं है।",
     noData: "कोई डेटा नहीं",
     loadingCropData: "फसल डेटा लोड हो रहा है...",
@@ -435,7 +435,7 @@ export const hi: TranslationKeys = {
 
   // Digital Thela Screen
   digitalThela: {
-    header: "उपज विवरण जोड़ें",
+    header: "डिजिटल ठेला",
     loadingEntries: "प्रविष्टियां लोड हो रही हैं...",
     welcomeMessage: "स्वागत है {{username}}",
     produceInformation: "उपज जानकारी",

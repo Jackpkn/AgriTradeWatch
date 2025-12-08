@@ -19,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
+import WebView from "react-native-webview";
 
 import { useGlobal } from "@/context/global-provider";
 import { produceService } from "@/services";
@@ -51,11 +52,6 @@ interface PhotoState {
   type?: string;
 }
 
-interface VoiceState {
-  uri: string;
-  fileName?: string;
-  type?: string;
-}
 
 interface LocationData {
   [state: string]: {
@@ -273,43 +269,6 @@ const styles = StyleSheet.create({
       textAlign: "center",
       fontWeight: "600",
     },
-    voiceButton: {
-      marginTop: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 12,
-      borderWidth: 1,
-      borderColor: "#9C27B0",
-      borderRadius: 8,
-      gap: 8,
-    },
-    voiceButtonRecording: {
-      backgroundColor: "#ffebee",
-      borderColor: "#f44336",
-    },
-    voiceButtonText: {
-      color: "#9C27B0",
-      fontWeight: "600",
-      fontSize: 14,
-    },
-    voiceButtonTextRecording: {
-      color: "#f44336",
-    },
-    voiceInfo: {
-      padding: 8,
-      backgroundColor: "#f8f9fa",
-      borderRadius: 4,
-      marginTop: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    voiceInfoText: {
-      fontSize: 12,
-      color: "#666",
-      flex: 1,
-    },
   });
 
 // Location data from Django
@@ -336,7 +295,6 @@ const AddProduce: React.FC = () => {
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [photo, setPhoto] = useState<PhotoState | null>(null);
-  const [voiceDescription, setVoiceDescription] = useState<VoiceState | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [locationConfirmed, setLocationConfirmed] = useState(false);
   const [markerPosition, setMarkerPosition] = useState<{latitude: number; longitude: number} | null>(null);
@@ -376,16 +334,16 @@ const AddProduce: React.FC = () => {
     return () => backHandler.remove();
   }, [navigation]);
 
-  // Lazy load permissions only when needed
-  const requestPermissions = useCallback(async () => {
-    if (hasPermission !== null) return hasPermission;
-
-    const cameraStatus = await Camera.requestCameraPermissionsAsync();
-    const mediaStatus = await MediaLibrary.requestPermissionsAsync();
-    const granted = cameraStatus.status === "granted" && mediaStatus.status === "granted";
-    setHasPermission(granted);
-    return granted;
-  }, [hasPermission]);
+  // Request permissions on mount
+  useEffect(() => {
+    (async () => {
+      const cameraStatus = await Camera.requestCameraPermissionsAsync();
+      const mediaStatus = await MediaLibrary.requestPermissionsAsync();
+      setHasPermission(
+        cameraStatus.status === "granted" && mediaStatus.status === "granted"
+      );
+    })();
+  }, []);
 
   const handleTakePicture = useCallback(async () => {
     if (cameraRef.current) {
@@ -417,8 +375,7 @@ const AddProduce: React.FC = () => {
   }, [formData.sale_commodity]);
 
   const handlePickImage = useCallback(async () => {
-    const granted = await requestPermissions();
-    if (!granted) {
+    if (!hasPermission) {
       Alert.alert(
         t.common.required,
         "Please grant camera and media library access in your device settings."
@@ -446,7 +403,7 @@ const AddProduce: React.FC = () => {
         type: mimeType,
       });
     }
-  }, [requestPermissions, formData.sale_commodity, t]);
+  }, [hasPermission, formData.sale_commodity, t]);
 
   const updateField = useCallback((field: keyof ProduceFormState, value: string) => {
     setFormData((prev) => {
@@ -462,6 +419,85 @@ const AddProduce: React.FC = () => {
 
       return updated;
     });
+  }, []);
+
+  // Generate map HTML
+  const mapHtml = useMemo(() => {
+    if (!markerPosition) return "";
+
+    const { latitude, longitude } = markerPosition;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <style>
+            body { margin: 0; }
+            #map { height: 100vh; width: 100vw; }
+            .location-marker {
+              background: transparent !important;
+              border: none !important;
+              z-index: 1000 !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            var map = L.map('map', {
+              zoomControl: true
+            }).setView([${latitude}, ${longitude}], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+              maxZoom: 20,
+              attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            var locationMarker = L.marker([${latitude}, ${longitude}], {
+              draggable: true,
+              icon: L.divIcon({
+                className: 'location-marker',
+                html: '<div style="position: relative; width: 30px; height: 30px;"><div style="background: #9C27B0; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.6); position: absolute; top: 0; left: 3px;"></div><div style="background: white; width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 5px; left: 11px; z-index: 1;"></div></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+              })
+            }).addTo(map);
+
+            locationMarker.bindPopup('<div style="font-family: Arial, sans-serif; text-align: center;"><strong>📍 Your Location</strong><br><small>Drag to adjust</small></div>');
+
+            locationMarker.on('dragend', function(event) {
+              var position = locationMarker.getLatLng();
+              locationMarker.bindPopup('<div style="font-family: Arial, sans-serif; text-align: center;"><strong>📍 Location Updated</strong><br><small>Lat: ' + position.lat.toFixed(4) + '</small><br><small>Lng: ' + position.lng.toFixed(4) + '</small></div>').openPopup();
+
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'markerMoved',
+                latitude: position.lat,
+                longitude: position.lng
+              }));
+            });
+          </script>
+        </body>
+      </html>
+    `;
+  }, [markerPosition]);
+
+  // Handle messages from WebView
+  const handleWebViewMessage = useCallback((event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === "markerMoved") {
+        setMarkerPosition({
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
+        setLocationConfirmed(false); // Reset confirmation when marker moves
+      }
+    } catch (error) {
+      console.error("Error parsing WebView message:", error);
+    }
   }, []);
 
   const handleConfirmLocation = useCallback(() => {
@@ -533,12 +569,23 @@ const AddProduce: React.FC = () => {
       return;
     }
 
+    // If photo is attached, location must be confirmed
+    if (photo && !locationConfirmed) {
+      Alert.alert(
+        "Location Required",
+        "Please confirm your location on the map before uploading a photo.",
+        [{ text: t.common.ok || "OK" }]
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // Use confirmed location or current location
-      const finalLatitude = markerPosition?.latitude || currentLocation.latitude;
-      const finalLongitude = markerPosition?.longitude || currentLocation.longitude;
+      // Round to 6 decimal places (approx 0.11m precision) to avoid "too many digits" error
+      const finalLatitude = parseFloat((markerPosition?.latitude || currentLocation.latitude).toFixed(6));
+      const finalLongitude = parseFloat((markerPosition?.longitude || currentLocation.longitude).toFixed(6));
 
       const payload: any = {
         sale_commodity: formData.sale_commodity || "",
@@ -577,17 +624,6 @@ const AddProduce: React.FC = () => {
         console.log("📸 No photo selected, submitting without image");
       }
 
-      if (voiceDescription) {
-        console.log("🎤 Voice description available, adding to payload");
-        payload.description_voice = {
-          uri: voiceDescription.uri,
-          name: voiceDescription.fileName || `voice_${Date.now()}.webm`,
-          type: voiceDescription.type || "audio/webm",
-        };
-      } else {
-        console.log("🎤 No voice description, submitting without audio");
-      }
-
       const response = await produceService.submitProduce(payload);
 
       if (response.success) {
@@ -618,7 +654,7 @@ const AddProduce: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, currentLocation, isLogged, setIsLoading, photo, voiceDescription, t, navigation, markerPosition, locationConfirmed, validateForm]);
+  }, [formData, currentLocation, isLogged, setIsLoading, photo, t, navigation, markerPosition, locationConfirmed, validateForm]);
 
   if (isCameraOpen) {
     return (
@@ -675,25 +711,27 @@ const AddProduce: React.FC = () => {
                 <Text style={styles.inputLabel}>
                   {t.digitalThela.selectCommodity || "Commodity"} *
                 </Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                   <Picker
                     selectedValue={formData.sale_commodity}
                     onValueChange={(value) => updateField("sale_commodity", value)}
-                    style={styles.picker}
-                    dropdownIconColor="#666"
+                    style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                    dropdownIconColor="#000"
                   >
                     <Picker.Item
                       label={t.digitalThela.chooseCommodity || "Select a commodity"}
                       value=""
-                      color="#888"
+                      color="#666"
                       enabled={false}
+                      style={{ backgroundColor: "#fff" }}
                     />
                     {COMMODITIES.map((commodity) => (
                       <Picker.Item
                         key={commodity}
                         label={commodity}
                         value={commodity.toLowerCase()}
-                        color="#333"
+                        color="#000"
+                        style={{ backgroundColor: "#fff" }}
                       />
                     ))}
                   </Picker>
@@ -737,21 +775,22 @@ const AddProduce: React.FC = () => {
                 <Text style={styles.inputLabel}>
                   {t.digitalThela.productionLevel || "Production Level"} *
                 </Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                   <Picker
                     selectedValue={formData.level_of_produce}
                     onValueChange={(value) =>
                       updateField("level_of_produce", value)
                     }
-                    style={styles.picker}
-                    dropdownIconColor="#666"
+                    style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                    dropdownIconColor="#000"
                   >
                     {PRODUCTION_LEVELS.map((level) => (
                       <Picker.Item
                         key={level.id}
                         label={level.label}
                         value={level.id}
-                        color="#333"
+                        color="#000"
+                        style={{ backgroundColor: "#fff" }}
                       />
                     ))}
                   </Picker>
@@ -799,25 +838,27 @@ const AddProduce: React.FC = () => {
                 <Text style={styles.inputLabel}>
                   {t.digitalThela.selectUnit || "Unit"} *
                 </Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                   <Picker
                     selectedValue={formData.unit}
                     onValueChange={(value) => updateField("unit", value)}
-                    style={styles.picker}
-                    dropdownIconColor="#666"
+                    style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                    dropdownIconColor="#000"
                   >
                     <Picker.Item
                       label={t.digitalThela.chooseUnit || "Select a unit"}
                       value=""
                       enabled={false}
-                      color="#888"
+                      color="#666"
+                      style={{ backgroundColor: "#fff" }}
                     />
                     {CROP_UNITS.map((unit) => (
                       <Picker.Item
                         key={unit.id}
                         label={unit.label}
                         value={unit.id}
-                        color="#333"
+                        color="#000"
+                        style={{ backgroundColor: "#fff" }}
                       />
                     ))}
                   </Picker>
@@ -827,16 +868,16 @@ const AddProduce: React.FC = () => {
               {/* State Picker */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>State</Text>
-                <View style={styles.pickerContainer}>
+                <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                   <Picker
                     selectedValue={formData.state}
                     onValueChange={(value) => updateField("state", value)}
-                    style={styles.picker}
-                    dropdownIconColor="#666"
+                    style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                    dropdownIconColor="#000"
                   >
-                    <Picker.Item label="-- Select State --" value="" color="#888" />
+                    <Picker.Item label="-- Select State --" value="" color="#666" style={{ backgroundColor: "#fff" }} />
                     {availableStates.map((state) => (
-                      <Picker.Item key={state} label={state} value={state} color="#333" />
+                      <Picker.Item key={state} label={state} value={state} color="#000" style={{ backgroundColor: "#fff" }} />
                     ))}
                   </Picker>
                 </View>
@@ -846,16 +887,16 @@ const AddProduce: React.FC = () => {
               {formData.state && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>District</Text>
-                  <View style={styles.pickerContainer}>
+                  <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                     <Picker
                       selectedValue={formData.district}
                       onValueChange={(value) => updateField("district", value)}
-                      style={styles.picker}
-                      dropdownIconColor="#666"
+                      style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                      dropdownIconColor="#000"
                     >
-                      <Picker.Item label="-- Select District --" value="" color="#888" />
+                      <Picker.Item label="-- Select District --" value="" color="#666" style={{ backgroundColor: "#fff" }} />
                       {availableDistricts.map((district) => (
-                        <Picker.Item key={district} label={district} value={district} color="#333" />
+                        <Picker.Item key={district} label={district} value={district} color="#000" style={{ backgroundColor: "#fff" }} />
                       ))}
                     </Picker>
                   </View>
@@ -866,16 +907,16 @@ const AddProduce: React.FC = () => {
               {formData.district && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Tehsil</Text>
-                  <View style={styles.pickerContainer}>
+                  <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
                     <Picker
                       selectedValue={formData.tehsil}
                       onValueChange={(value) => updateField("tehsil", value)}
-                      style={styles.picker}
-                      dropdownIconColor="#666"
+                      style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
+                      dropdownIconColor="#000"
                     >
-                      <Picker.Item label="-- Select Tehsil --" value="" color="#888" />
+                      <Picker.Item label="-- Select Tehsil --" value="" color="#666" style={{ backgroundColor: "#fff" }} />
                       {availableTehsils.map((tehsil) => (
-                        <Picker.Item key={tehsil} label={tehsil} value={tehsil} color="#333" />
+                        <Picker.Item key={tehsil} label={tehsil} value={tehsil} color="#000" style={{ backgroundColor: "#fff" }} />
                       ))}
                     </Picker>
                   </View>
@@ -887,13 +928,18 @@ const AddProduce: React.FC = () => {
                 <Text style={styles.inputLabel}>
                   Drag the marker OR choose district and Tehsil to change the location
                 </Text>
-                {currentLocation && (
+                {currentLocation && markerPosition && (
                   <>
                     <View style={styles.mapContainer}>
-                      {/* Map component will go here - using react-native-maps */}
-                      <Text style={{ padding: 20, textAlign: "center", color: "#666" }}>
-                        Map placeholder - Lat: {markerPosition?.latitude.toFixed(4)}, Lng: {markerPosition?.longitude.toFixed(4)}
-                      </Text>
+                      <WebView
+                        originWhitelist={["*"]}
+                        source={{ html: mapHtml }}
+                        style={{ flex: 1 }}
+                        onMessage={handleWebViewMessage}
+                        javaScriptEnabled={true}
+                        domStorageEnabled={true}
+                        startInLoadingState={true}
+                      />
                     </View>
                     <TouchableOpacity
                       style={styles.confirmLocationButton}
@@ -929,31 +975,13 @@ const AddProduce: React.FC = () => {
                 <View style={styles.imageButtons}>
                   <TouchableOpacity
                     style={styles.imageButton}
-                    onPress={async () => {
-                      const granted = await requestPermissions();
-                      if (granted) {
-                        setIsCameraOpen(true);
-                      } else {
-                        Alert.alert(
-                          t.common.required,
-                          "Please grant camera access in your device settings."
-                        );
-                      }
-                    }}
+                    onPress={() => setIsCameraOpen(true)}
+                    accessible={true}
+                    accessibilityLabel="Take photo with camera"
                   >
                     <Ionicons name="camera" size={24} color="#9C27B0" />
                     <Text style={styles.imageButtonText}>
                       {t.digitalThela.takePhoto || "Take Photo"}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.imageButton}
-                    onPress={handlePickImage}
-                  >
-                    <Ionicons name="images" size={24} color="#9C27B0" />
-                    <Text style={styles.imageButtonText}>
-                      {t.digitalThela.fromGallery || "From Gallery"}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -982,41 +1010,6 @@ const AddProduce: React.FC = () => {
                         ) || `Photo: ${photo.fileName || "selected"}`}
                       </Text>
                     </View>
-                  </View>
-                )}
-              </View>
-
-              {/* Voice Description Section */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  Voice Description (Optional)
-                </Text>
-                <Text style={styles.imageHelpText}>
-                  Record a voice description of your produce
-                </Text>
-                <TouchableOpacity
-                  style={styles.voiceButton}
-                  onPress={() => {
-                    Alert.alert(
-                      "Voice Recording",
-                      "Voice recording feature coming soon!",
-                      [{ text: "OK" }]
-                    );
-                  }}
-                >
-                  <Ionicons name="mic" size={24} color="#9C27B0" />
-                  <Text style={styles.voiceButtonText}>
-                    Record Voice Description
-                  </Text>
-                </TouchableOpacity>
-                {voiceDescription && (
-                  <View style={styles.voiceInfo}>
-                    <Text style={styles.voiceInfoText}>
-                      Voice: {voiceDescription.fileName || "recorded"}
-                    </Text>
-                    <TouchableOpacity onPress={() => setVoiceDescription(null)}>
-                      <Ionicons name="close-circle" size={20} color="#ff6b6b" />
-                    </TouchableOpacity>
                   </View>
                 )}
               </View>

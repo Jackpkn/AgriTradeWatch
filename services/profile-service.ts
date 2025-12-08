@@ -99,6 +99,8 @@ class ProfileService {
 
             // Enhance the profile data with computed fields
             const profileData = response.data;
+            console.log("🔍 Raw Profile Data from API:", JSON.stringify(profileData, null, 2));
+
             const enhancedProfile: EnhancedProfileData = {
                 ...profileData,
                 password: undefined, // Remove password from the response

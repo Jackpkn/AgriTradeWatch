@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,14 @@ import {
   Alert,
   TouchableOpacity,
   Platform,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -47,7 +48,6 @@ const DamageCrop: React.FC = () => {
 
   const [photo, setPhoto] = useState<any>(null);
   const [showDamageDatePicker, setShowDamageDatePicker] = useState(false);
-  const [showReportDatePicker, setShowReportDatePicker] = useState(false);
 
   // Memoize commodity list to ensure it's available in production
   const commodityList = useMemo(() => {
@@ -70,6 +70,23 @@ const DamageCrop: React.FC = () => {
       }
     })();
   }, []);
+
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        navigation.goBack();
+        return true; // Prevent default behavior
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [navigation])
+  );
 
   // Update form field
   const updateField = (field: keyof DamageCropFormData, value: any) => {
@@ -136,11 +153,10 @@ const DamageCrop: React.FC = () => {
   const handleDateChange = (
     event: any,
     selectedDate: Date | undefined,
-    field: "damage_date" | "report_date"
+    field: "damage_date"
   ) => {
     if (Platform.OS === "android") {
       setShowDamageDatePicker(false);
-      setShowReportDatePicker(false);
     }
 
     if (selectedDate) {
@@ -178,7 +194,7 @@ const DamageCrop: React.FC = () => {
         unit: formData.unit,
         place_damage: formData.place_damage,
         damage_date: formData.damage_date,
-        report_date: formData.report_date,
+        report_date: new Date().toISOString().split("T")[0], // Always use today's date
         remarks: formData.remarks,
         photo: photo
           ? {
@@ -357,27 +373,6 @@ const DamageCrop: React.FC = () => {
                   mode="date"
                   display="default"
                   onChange={(e, date) => handleDateChange(e, date, "damage_date")}
-                  maximumDate={new Date()}
-                />
-              )}
-            </View>
-
-            {/* Report Date */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t.damageCrop.reportDate}</Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowReportDatePicker(true)}
-              >
-                <Ionicons name="calendar" size={20} color="#666" />
-                <Text style={styles.dateText}>{formData.report_date}</Text>
-              </TouchableOpacity>
-              {showReportDatePicker && (
-                <DateTimePicker
-                  value={new Date(formData.report_date)}
-                  mode="date"
-                  display="default"
-                  onChange={(e, date) => handleDateChange(e, date, "report_date")}
                   maximumDate={new Date()}
                 />
               )}

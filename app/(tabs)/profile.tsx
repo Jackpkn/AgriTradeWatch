@@ -24,7 +24,7 @@ import { EnhancedProfileData } from "@/services/profile-service";
 import GlobalLoader from "@/components/Loader";
 import { useTranslation } from "@/hooks/useTranslation";
 
-// = a======================================================================
+// ========================================================================
 // Type Definitions
 // ========================================================================
 
@@ -269,12 +269,18 @@ const Profile = () => {
     setRefreshing(false);
   }, [refetch]);
 
-  const profileFields = useMemo(() => user ? [
-    { label: t.profile.username, value: user.username, icon: "👤" },
-    { label: t.profile.email, value: user.email, icon: "📧" },
-    { label: t.profile.mobile, value: user.mobile, icon: "📱" },
-    { label: t.profile.memberSince, value: profileService.formatDate(user.date_joined), icon: "📅" },
-  ] : [], [user, t]);
+  const profileFields = useMemo(() => {
+    if (user) {
+      console.log("User date_joined:", user.date_joined);
+      return [
+        { label: t.profile.username, value: user.username, icon: "👤" },
+        { label: t.profile.email, value: user.email, icon: "📧" },
+        { label: t.profile.mobile, value: user.mobile, icon: "📱" },
+        { label: t.profile.memberSince, value: profileService.formatDate(user.date_joined), icon: "📅" },
+      ];
+    }
+    return [];
+  }, [user, t]);
 
   // Get current language display name
   const currentLanguageName = useMemo(() => {

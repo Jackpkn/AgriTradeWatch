@@ -70,22 +70,22 @@ const getFeatures = (t: any): Feature[] => [
   },
   {
     id: 3,
-    title: t.home.priceMap,
-    description: t.home.priceMapDesc,
-    icon: "map",
-    route: "map",
-    gradient: ["#FF9800", "#F57C00"],
-    bgColor: "#fff8f0",
-    isEnabled: true,
-  },
-  {
-    id: 4,
     title: t.home.digitalThela,
     description: t.home.digitalThelaDesc,
     icon: "cart",
     route: "digital-thela",
     gradient: ["#9C27B0", "#7B1FA2"],
     bgColor: "#f8f0ff",
+    isEnabled: true,
+  },
+  {
+    id: 4,
+    title: t.home.priceMap,
+    description: t.home.priceMapDesc,
+    icon: "map",
+    route: "map",
+    gradient: ["#FF9800", "#F57C00"],
+    bgColor: "#fff8f0",
     isEnabled: true,
   },
 ];
@@ -202,53 +202,6 @@ const Home: React.FC = React.memo(() => {
     [handleNavigation, t]
   );
 
-
-
-  // Render welcome
-  const renderWelcomeSection = useMemo(
-    () => (
-      <View style={styles.headerSection}>
-        <View style={styles.welcomeCard}>
-          <LinearGradient
-            colors={["#49A760", "#3d8b4f"] as const}
-            style={styles.headerGradient}
-          >
-            <Text style={styles.welcomeTitle} testID="welcome-title">
-              {t.home.welcomeBack?.replace('{{username}}', (mainUser as any)?.username || "User") || "Welcome back!"}
-            </Text>
-            <Text style={styles.welcomeSubtitle} testID="welcome-subtitle">
-              {t.branding.tagline}
-            </Text>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>
-                    {FEATURES.filter((f) => f.isEnabled).length}
-                  </Text>
-                  <Text style={styles.statLabel}>{t.home.activeFeatures}</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>24/7</Text>
-                  <Text style={styles.statLabel}>{t.home.priceUpdates}</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>
-                    {isConnected ? t.home.online : t.home.offline}
-                  </Text>
-                  <Text style={styles.statLabel}>{t.home.status}</Text>
-                </View>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-      </View>
-    ),
-    [(mainUser as any)?.username, styles, isConnected, t, FEATURES]
-  );
-
   // Render feature card
   const renderFeatureCard = useCallback(
     (feature: Feature) => (
@@ -332,8 +285,6 @@ const Home: React.FC = React.memo(() => {
           showsVerticalScrollIndicator={false}
           testID="home-scroll-view"
         >
-          {/* Header Section */}
-          {renderWelcomeSection}
 
           {/* Offline Indicator */}
           <OfflineIndicator />

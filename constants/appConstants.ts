@@ -13,8 +13,8 @@ export const CROP_UNITS = [
 
 // Damage Crop Units
 export const DAMAGE_UNITS = [
-  { id: "ACRES", label: "ACRES", name: "Acres" },
-  { id: "TONN", label: "TONN", name: "Ton" },
+  { id: "ACRES", label: "Acres", name: "Acres" },
+  { id: "TONN", label: "Ton", name: "Ton" },
 ];
 
 // Damage Place Options

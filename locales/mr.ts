@@ -165,8 +165,8 @@ export const mr: TranslationKeys = {
     prices: "किंमती",
     to: "ते",
     reports: "अहवाल",
-    dragPinTip: "💡 वेगवेगळे भाग पाहण्यासाठी लाल पिन ओढा",
-    dragPinInstruction: "💡 वेगवेगळे भाग पाहण्यासाठी लाल पिन ओढा",
+    dragPinTip: "💡 वेगवेगळे भाग पाहण्यासाठी निळा पिन ओढा",
+    dragPinInstruction: "💡 वेगवेगळे भाग पाहण्यासाठी निळा पिन ओढा",
     noPriceData: "{{range}} साठी किंमत डेटा उपलब्ध नाही.",
     noData: "डेटा नाही",
     loadingCropData: "पिक डेटा लोड होत आहे...",
@@ -437,7 +437,7 @@ export const mr: TranslationKeys = {
 
   // Digital Thela Screen
   digitalThela: {
-    header: "उपज तपशील जोडा",
+    header: "डिजिटल ठेला",
     loadingEntries: "नोंदी लोड होत आहेत...",
     welcomeMessage: "स्वागत आहे {{username}}",
     produceInformation: "उपज माहिती",

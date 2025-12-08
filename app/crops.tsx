@@ -7,6 +7,7 @@ import {
   Alert,
   TouchableOpacity,
   Linking,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView } from "expo-camera";
@@ -16,7 +17,7 @@ import { TextInput } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 import { useGlobal } from "@/context/global-provider";
 import { addCrop } from "@/components/cropsController";
@@ -322,7 +323,7 @@ const CropsScreen = () => {
       Alert.alert(
         t.crops.submissionError,
         error.message ||
-          "Failed to submit crop data. Please check your internet connection and try again."
+        "Failed to submit crop data. Please check your internet connection and try again."
       );
     } finally {
       setIsLoading(false);
@@ -387,8 +388,8 @@ const CropsScreen = () => {
                       onValueChange={(itemValue) =>
                         setForm((f) => ({ ...f, name: itemValue }))
                       }
-                      style={styles.picker}
-                      dropdownIconColor="#49A760"
+                      style={[styles.picker, { color: '#000000', backgroundColor: '#ffffff' }]}
+                      dropdownIconColor="#000000"
                       mode="dropdown"
                       accessible={true}
                       accessibilityLabel="Select crop commodity"
@@ -396,7 +397,6 @@ const CropsScreen = () => {
                       <Picker.Item
                         label={t.crops.chooseCrop}
                         value=""
-                        color="#888"
                         enabled={false}
                       />
                       {cropItems.map((item) => (
@@ -404,7 +404,6 @@ const CropsScreen = () => {
                           key={item.value}
                           label={`${item.icon} ${t.crops[item.labelKey as keyof typeof t.crops]}`}
                           value={item.value}
-                          color="#1a1a1a"
                         />
                       ))}
                     </Picker>
