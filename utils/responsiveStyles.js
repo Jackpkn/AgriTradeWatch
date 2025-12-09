@@ -541,15 +541,15 @@ export const createCropsStyles = createOrientationStyles(
     },
     pickerContainer: {
       borderWidth: 1,
-      borderColor: "#d0d0d0",
-      borderRadius: 12,
+      borderColor: "#e0e0e0",
+      borderRadius: 4,
       backgroundColor: "#fff",
-      overflow: 'hidden',
+      overflow: "hidden",
     },
     picker: {
       height: 50,
-      color: "#333",
       backgroundColor: "#fff",
+      color: "#000",
     },
     imageSection: {
       marginBottom: 20,
@@ -829,10 +829,10 @@ export const createStatsStyles = createOrientationStyles(
       marginBottom: 12,
     },
     pickerContainer: {
-      backgroundColor: "#f8f9fa",
-      borderRadius: 16,
       borderWidth: 1,
-      borderColor: "#e9ecef",
+      borderColor: "#e0e0e0",
+      borderRadius: 4,
+      backgroundColor: "#fff",
       overflow: "hidden",
     },
     selectedCropDisplay: {
@@ -855,7 +855,8 @@ export const createStatsStyles = createOrientationStyles(
     },
     picker: {
       height: 50,
-      color: "#1F4E3D",
+      backgroundColor: "#fff",
+      color: "#000",
     },
     pickerItem: {
       fontSize: 14,

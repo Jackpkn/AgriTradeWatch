@@ -484,7 +484,7 @@ const Stats: React.FC = () => {
                   console.error('Picker onValueChange error:', error);
                 }
               }}
-              dropdownIconColor="#333"
+              dropdownIconColor="#000"
               itemStyle={{ fontSize: 16, color: "#000" }}
               mode="dropdown"
             >
@@ -495,6 +495,7 @@ const Stats: React.FC = () => {
                     label={`${item.icon} ${item.label}`}
                     value={item.value}
                     color="#000"
+                    style={{ backgroundColor: "#fff" }}
                   />
                 ))
               ) : (
@@ -503,6 +504,7 @@ const Stats: React.FC = () => {
                   label={`🌾 ${t.common.loading}`}
                   value="loading"
                   color="#666"
+                  style={{ backgroundColor: "#fff" }}
                 />
               )}
             </Picker>
