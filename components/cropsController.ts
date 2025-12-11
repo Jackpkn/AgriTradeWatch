@@ -4,30 +4,24 @@ import { getStoredToken } from "@/services";
 // --- Interfaces ---
 interface AddCropPayload {
   commodity: string;
-  buyingprice: number;
-  quantitybought: number;
-  unit: string;
+  quantity: number;
+  price: number;
   latitude: number;
   longitude: number;
   date?: string;
-  image?: {
-    uri: string;
-    name: string;
-    type: string;
-  };
+  variety?: string;
 }
 
 interface CropApiResponse {
   id: string;
   commodity: string;
-  buyingprice: number;
-  quantitybought: number;
-  unit: string;
+  quantity: number;
+  price: number;
   date: string;
   latitude: number;
   longitude: number;
+  variety?: string;
   userid: string;
-  image?: string;
 }
 
 // --- Main function ---
@@ -37,56 +31,48 @@ export const addCrop = async (
   const API_URL = "https://mandigo.in/api/crops/add/";
 
   try {
-    console.log("🌾 Preparing Axios request");
+    console.log("Preparing Axios request");
 
     const token = await getStoredToken();
     if (!token) throw new Error("Authentication token not found.");
 
-    // --- Create FormData ---
-    const formData = new FormData();
-
-    // Append fields exactly as your Consumer1 model expects
-    formData.append("commodity", cropData.commodity);
-    formData.append("buyingprice", cropData.buyingprice.toString());
-    formData.append("quantitybought", cropData.quantitybought.toString());
-    formData.append("unit", cropData.unit);
-    formData.append("latitude", cropData.latitude.toString());
-    formData.append("longitude", cropData.longitude.toString());
+    // --- Create JSON payload ---
+    const payload: Record<string, any> = {
+      commodity: cropData.commodity,
+      quantity: cropData.quantity,
+      price: cropData.price,
+      latitude: cropData.latitude,
+      longitude: cropData.longitude,
+    };
 
     if (cropData.date) {
-      formData.append("date", cropData.date);
+      payload.date = cropData.date;
     }
 
-    // --- SIMPLE Image Handling ---
-    if (cropData.image?.uri) {
-      console.log("📸 Adding image file");
-
-      // Simple approach - just append the file directly
-      formData.append("image", {
-        uri: cropData.image.uri,
-        type: "image/jpeg",
-        name: "photo.jpg",
-      } as any);
+    if (cropData.variety) {
+      payload.variety = cropData.variety;
     }
+
+    console.log("Payload:", JSON.stringify(payload, null, 2));
 
     // --- Axios config ---
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "application/json",
       },
       timeout: 30000,
     };
 
-    console.log(`📤 Sending POST to: ${API_URL}`);
+    console.log(`Sending POST to: ${API_URL}`);
 
     // --- API Call ---
-    const response = await axios.post(API_URL, formData, config);
+    const response = await axios.post(API_URL, payload, config);
 
-    console.log("✅ Crop added successfully:", response.data);
+    console.log("Crop added successfully. Response:", JSON.stringify(response.data, null, 2));
     return response.data as CropApiResponse;
   } catch (error: any) {
-    console.error("❌ Crop submission error:", error);
+    console.error("Crop submission error:", error);
 
     if (error.response) {
       console.error("Status:", error.response.status);

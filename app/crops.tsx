@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Linking,
   BackHandler,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView } from "expo-camera";
@@ -90,17 +91,12 @@ interface PhotoState {
 // Represents the exact data structure sent to the API
 interface AddCropPayload {
   commodity: string;
-  buyingprice: number;
-  quantitybought: number;
-  unit: string;
+  quantity: number;
+  price: number;
   latitude: number;
   longitude: number;
   date?: string;
-  image?: {
-    uri: string;
-    name: string;
-    type: string;
-  };
+  variety?: string;
 }
 
 // Helper function to generate filename for images
@@ -158,6 +154,12 @@ const CropsScreen = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [photo, setPhoto] = useState<PhotoState | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    commodity: string;
+    price: string;
+    quantity: string;
+  } | null>(null);
   const cameraRef = React.useRef<CameraView>(null);
 
   useEffect(() => {
@@ -276,48 +278,29 @@ const CropsScreen = () => {
       // Create the payload with the exact structure required by the API
       const payload: AddCropPayload = {
         commodity: form.name,
-        buyingprice: price,
-        quantitybought: quantity,
-        unit: "Kg", // As specified in the API documentation
+        quantity: quantity,
+        price: price,
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
-        // Add current date in the format expected by the API
-        date: new Date().toISOString(),
+        date: new Date().toISOString().split("T")[0], // Format: YYYY-MM-DD
       };
-
-      // Add image if available
-      if (photo) {
-        console.log("📸 Photo available, adding to payload:", {
-          uri: photo.uri,
-          name: photo.fileName,
-          type: photo.type,
-        });
-
-        payload.image = {
-          uri: photo.uri,
-          name: photo.fileName || generateImageFileName(form.name),
-          type: photo.type || "image/jpeg",
-        };
-      } else {
-        console.log("📸 No photo selected, submitting without image");
-      }
 
       const response = await addCrop(payload);
 
-      Alert.alert(
-        t.common.success,
-        `${t.crops.submissionSuccess.replace('{{id}}', response.id)}\n\nID: ${response.id}\nCommodity: ${response.commodity}\nPrice: ₹${response.buyingprice}/kg\nQuantity: ${response.quantitybought}kg`,
-        [
-          {
-            text: t.common.ok,
-            onPress: () => {
-              // Reset form after successful submission
-              setForm({ name: "", pricePerUnit: "", quantity: "" });
-              setPhoto(null);
-            },
-          },
-        ]
-      );
+      console.log("DEBUG FORM STATE:", form);
+
+      // Get the crop icon for the selected commodity
+      const selectedCrop = cropItems.find(item => item.value === form.name);
+
+      // Show beautified success modal
+      setSuccessData({
+        commodity: selectedCrop
+          ? `${selectedCrop.icon} ${t.crops[selectedCrop.labelKey as keyof typeof t.crops]}`
+          : response.commodity,
+        price: form.pricePerUnit,
+        quantity: form.quantity,
+      });
+      setShowSuccessModal(true);
     } catch (error: any) {
       console.error("Crop submission error:", error);
       Alert.alert(
@@ -328,7 +311,14 @@ const CropsScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [form, currentLocation, isLogged, setIsLoading, photo, t, navigation]);
+  }, [form, currentLocation, isLogged, setIsLoading, photo, t, navigation, cropItems]);
+
+  const handleSuccessModalClose = useCallback(() => {
+    setShowSuccessModal(false);
+    setSuccessData(null);
+    setForm({ name: "", pricePerUnit: "", quantity: "" });
+    setPhoto(null);
+  }, []);
 
   // --- Render Logic ---
 
@@ -529,8 +519,194 @@ const CropsScreen = () => {
           )}
         </ScrollView>
       </LinearGradient>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleSuccessModalClose}
+      >
+        <View style={successModalStyles.overlay}>
+          <View style={successModalStyles.modalContainer}>
+            <LinearGradient
+              colors={["#49A760", "#3d8b4f"]}
+              style={successModalStyles.header}
+            >
+              <View style={successModalStyles.iconCircle}>
+                <Ionicons name="checkmark" size={40} color="#49A760" />
+              </View>
+            </LinearGradient>
+
+            <View style={successModalStyles.content}>
+              <Text style={successModalStyles.title}>{t.common.success}!</Text>
+              <Text style={successModalStyles.subtitle}>
+                {t.crops.cropDataSubmitted || "Your crop data has been submitted successfully"}
+              </Text>
+
+              {successData && (
+                <View style={successModalStyles.detailsCard}>
+                  <View style={successModalStyles.detailRow}>
+                    <View style={successModalStyles.detailIcon}>
+                      <Ionicons name="leaf" size={20} color="#49A760" />
+                    </View>
+                    <View style={successModalStyles.detailContent}>
+                      <Text style={successModalStyles.detailLabel}>{t.crops.selectCropCommodity?.replace("*", "") || "Commodity"}</Text>
+                      <Text style={successModalStyles.detailValue}>{successData.commodity}</Text>
+                    </View>
+                  </View>
+
+                  <View style={successModalStyles.divider} />
+
+                  <View style={successModalStyles.detailRow}>
+                    <View style={successModalStyles.detailIcon}>
+                      <Ionicons name="pricetag" size={20} color="#49A760" />
+                    </View>
+                    <View style={successModalStyles.detailContent}>
+                      <Text style={successModalStyles.detailLabel}>{t.crops.pricePerKg?.replace("*", "") || "Price"}</Text>
+                      <Text style={successModalStyles.detailValue}>₹{successData.price}/kg</Text>
+                    </View>
+                  </View>
+
+                  <View style={successModalStyles.divider} />
+
+                  <View style={successModalStyles.detailRow}>
+                    <View style={successModalStyles.detailIcon}>
+                      <Ionicons name="cube" size={20} color="#49A760" />
+                    </View>
+                    <View style={successModalStyles.detailContent}>
+                      <Text style={successModalStyles.detailLabel}>{t.crops.quantityBought?.replace("*", "") || "Quantity"}</Text>
+                      <Text style={successModalStyles.detailValue}>{successData.quantity} kg</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={successModalStyles.button}
+                onPress={handleSuccessModalClose}
+              >
+                <LinearGradient
+                  colors={["#49A760", "#3d8b4f"]}
+                  style={successModalStyles.buttonGradient}
+                >
+                  <Text style={successModalStyles.buttonText}>{t.common.ok}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
+};
+
+// Success Modal Styles
+const successModalStyles = {
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    width: "100%" as const,
+    maxWidth: 340,
+    overflow: "hidden" as const,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  header: {
+    paddingVertical: 30,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  iconCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#fff",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  content: {
+    padding: 24,
+    alignItems: "center" as const,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold" as const,
+    color: "#333",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center" as const,
+    marginBottom: 20,
+  },
+  detailsCard: {
+    width: "100%" as const,
+    backgroundColor: "#f8fffe",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#e0f2e9",
+  },
+  detailRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingVertical: 8,
+  },
+  detailIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#e8f5e9",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    marginRight: 12,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: "#888",
+    marginBottom: 2,
+  },
+  detailValue: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#333",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#e0f2e9",
+    marginVertical: 4,
+  },
+  button: {
+    width: "100%" as const,
+    borderRadius: 12,
+    overflow: "hidden" as const,
+  },
+  buttonGradient: {
+    paddingVertical: 14,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold" as const,
+  },
 };
 
 export default CropsScreen;
