@@ -5,9 +5,10 @@ import { Image, ScrollView, Text, View, TouchableOpacity, Linking, Alert, Activi
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCallback, useEffect, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Constants from "expo-constants";
 
 // Local assets, styles, and context
-import logo from "@/assets/images/logo2.png";
+import logo from "@/assets/images/logo2-transparent.png";
 import { indexStyles as styles } from "@/components/IndexCss";
 import { useGlobal } from "@/context/global-provider";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -31,7 +32,7 @@ const SplashScreen = () => {
     >
       <StatusBar style="dark" />
       <View style={{ alignItems: "center" }}>
-        <Image source={logo} style={{ width: 120, height: 120, marginBottom: 20 }} resizeMode="contain" />
+        <Image source={logo} style={{ width: 180, height: 180, marginBottom: 20 }} resizeMode="contain" />
         <Text style={{ fontSize: 24, color: "#49A760", marginBottom: 8, fontWeight: "bold" }}>
           {t.branding.appName}
         </Text>
@@ -125,7 +126,7 @@ export default function Index() {
           {/* Header */}
           <View style={styles.header}>
             <Image source={logo} style={styles.logo} />
-            <Text style={styles.appName} key={`appName-${language}`}>{t.branding.appName}</Text>
+            {/* <Text style={styles.appName} key={`appName-${language}`}>{t.branding.appName}</Text> */}
             <Text style={styles.tagline} key={`tagline-${language}`}>{t.branding.tagline}</Text>
           </View>
 
@@ -173,6 +174,9 @@ export default function Index() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               {t.branding.copyright.replace('{{year}}', new Date().getFullYear().toString())}
+            </Text>
+            <Text style={[styles.footerText, { marginTop: 4, fontSize: 12 }]}>
+              v{Constants.expoConfig?.version || '1.0.0'}
             </Text>
           </View>
         </View>

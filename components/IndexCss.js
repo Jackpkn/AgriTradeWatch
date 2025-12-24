@@ -62,9 +62,8 @@ export const indexStyles = {
       marginTop: 20,
     },
     logo: {
-      width: 100,
-      height: 100,
-      marginBottom: 16,
+      width: 180,
+      height: 180,
     },
     appName: {
       fontSize: 28,

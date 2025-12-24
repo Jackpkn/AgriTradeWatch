@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import Constants from "expo-constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 
@@ -335,6 +336,7 @@ const Profile = () => {
       <LinearGradient colors={["#f8fffe", "#eafbe7"]} style={styles.gradientBackground}>
         <ScrollView
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#49A760']} />}
+          contentContainerStyle={{ paddingBottom: 100 }}
         >
           <ProfileHeader user={user} styles={styles} />
 
@@ -364,7 +366,7 @@ const Profile = () => {
           </View>
 
           <View style={styles.aboutSection}>
-            <Text style={styles.versionText}>{t.common.version} 1.0.0</Text>
+            <Text style={styles.versionText}>{t.common.version} {Constants.expoConfig?.version || '1.0.0'}</Text>
           </View>
         </ScrollView>
       </LinearGradient>
