@@ -143,7 +143,7 @@ const CropsScreen = () => {
     [isLandscape, width]
   );
 
-  const { currentLocation, setIsLoading, isLogged } = useGlobal();
+  const { currentLocation, setIsLoading, isLogged, userRole } = useGlobal();
   const cropItems = useMemo(() => getCropItems(t), [t]);
 
   const [form, setForm] = useState<CropFormState>({
@@ -242,6 +242,16 @@ const CropsScreen = () => {
       return;
     }
 
+    // Only allow farmer and consumer user types to add crops
+    if (userRole !== 'farmer' && userRole !== 'consumer') {
+      Alert.alert(
+        t.common.error || "Error",
+        t.crops.onlyFarmerConsumerCanAdd || "Only farmers and consumers can add crop data.",
+        [{ text: t.common.ok || "OK" }]
+      );
+      return;
+    }
+
     if (!form.name || !form.pricePerUnit || !form.quantity) {
       Alert.alert(t.auth.validationError, t.crops.fillAllFields);
       return;
@@ -311,7 +321,7 @@ const CropsScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [form, currentLocation, isLogged, setIsLoading, photo, t, navigation, cropItems]);
+  }, [form, currentLocation, isLogged, userRole, setIsLoading, photo, t, navigation, cropItems]);
 
   const handleSuccessModalClose = useCallback(() => {
     setShowSuccessModal(false);

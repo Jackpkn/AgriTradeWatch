@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   BackHandler,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native-paper";
@@ -27,7 +28,7 @@ import { DamageCropFormData } from "@/types/api";
 
 const DamageCrop: React.FC = () => {
   const navigation = useNavigation();
-  const { mainUser, setIsLoading } = useGlobal();
+  const { mainUser, setIsLoading, currentLocation, isLogged, userRole } = useGlobal();
   const { t } = useTranslation();
   const { isLandscape, width } = useOrientation() as any;
   const styles = useMemo(
@@ -183,6 +184,39 @@ const DamageCrop: React.FC = () => {
 
   // Submit damage report
   const handleSubmit = async () => {
+    // Check if user is logged in
+    if (!isLogged) {
+      Alert.alert(
+        t.auth.authRequired || "Authentication Required",
+        t.auth.authRequiredMessage || "Please login to submit a damage report.",
+        [
+          { text: t.auth.login || "Login", onPress: () => navigation.navigate("Login" as never) },
+          { text: t.common.cancel || "Cancel", style: "cancel" },
+        ]
+      );
+      return;
+    }
+
+    // Only allow farmer user type to report damage
+    if (userRole !== 'farmer') {
+      Alert.alert(
+        t.common.error || "Error",
+        t.damageCrop.onlyFarmerCanReport || "Only farmers can report crop damage.",
+        [{ text: t.common.ok || "OK" }]
+      );
+      return;
+    }
+
+    // Check if location is available
+    if (!currentLocation?.latitude || !currentLocation?.longitude) {
+      Alert.alert(
+        t.auth.locationRequired || "Location Required",
+        t.damageCrop.locationRequiredMessage || "Location is required to submit a damage report. Please enable location services.",
+        [{ text: t.common.ok || "OK" }]
+      );
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -196,6 +230,8 @@ const DamageCrop: React.FC = () => {
         damage_date: formData.damage_date,
         report_date: new Date().toISOString().split("T")[0], // Always use today's date
         remarks: formData.remarks,
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
         photo: photo
           ? {
             uri: photo.uri,

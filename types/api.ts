@@ -78,7 +78,9 @@ export interface DamageCropPayload {
   damage_date: string;
   report_date: string;
   remarks: string;
-  photo?: File | Blob;
+  latitude: number;
+  longitude: number;
+  photo?: File | Blob | { uri: string; name: string; type: string };
 }
 
 // Digital Thela (Produce) Types
