@@ -734,25 +734,34 @@ const AddProduce: React.FC = () => {
                         style={{ backgroundColor: "#fff" }}
                       />
                     ))}
+                    <Picker.Item
+                      key="other"
+                      label="Other"
+                      value="other"
+                      color="#000"
+                      style={{ backgroundColor: "#fff" }}
+                    />
                   </Picker>
                 </View>
               </View>
 
-              {/* New Commodity (Optional) */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  New Commodity (Optional)
-                </Text>
-                <TextInput
-                  style={styles.textInput}
-                  mode="outlined"
-                  value={formData.new_commodity}
-                  onChangeText={(value) => updateField("new_commodity", value)}
-                  placeholder="Enter new commodity if not in list"
-                  outlineColor="#E0E0E0"
-                  activeOutlineColor="#9C27B0"
-                />
-              </View>
+              {/* New Commodity (Optional) - Only shown when "Other" is selected */}
+              {formData.sale_commodity === "other" && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>
+                    New Commodity (Optional)
+                  </Text>
+                  <TextInput
+                    style={styles.textInput}
+                    mode="outlined"
+                    value={formData.new_commodity}
+                    onChangeText={(value) => updateField("new_commodity", value)}
+                    placeholder="Enter new commodity if not in list"
+                    outlineColor="#E0E0E0"
+                    activeOutlineColor="#9C27B0"
+                  />
+                </View>
+              )}
 
               {/* Variety Name */}
               <View style={styles.inputGroup}>
