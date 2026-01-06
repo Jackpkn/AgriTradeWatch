@@ -5,6 +5,7 @@ import React, {
     useState,
     useEffect,
     useCallback,
+    useRef,
     ReactNode,
 } from "react";
 import { Alert, AppState } from "react-native";
@@ -84,6 +85,9 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
     const [mainUser, setMainUser] = useState<User | null>(null);
     const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
 
+    // Ref to prevent duplicate location requests
+    const hasRequestedLocationRef = useRef<boolean>(false);
+
     // --- Effects ---
 
     // Effect 1: Initialize session and listen for all authentication changes.
@@ -147,11 +151,14 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
 
     // Effect 3: Request mandatory location permission once on app start.
     useEffect(() => {
-        let hasRequestedLocation = false;
-
         const requestLocation = async () => {
-            if (hasRequestedLocation) return; // Prevent multiple requests
-            hasRequestedLocation = true;
+            // Skip if location has already been requested
+            if (hasRequestedLocationRef.current) {
+                console.log('GlobalProvider: Location already requested, skipping');
+                return;
+            }
+
+            hasRequestedLocationRef.current = true;
 
             try {
                 // Assumes getMandatoryLocation is promise-based for cleaner async/await
@@ -174,7 +181,7 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
                 }
             } catch (error) {
                 console.warn("Location permission was denied or failed to retrieve.", error);
-                hasRequestedLocation = false; // Allow retry on error
+                hasRequestedLocationRef.current = false; // Allow retry on error
                 // You could show a custom alert here guiding the user to settings.
             }
         };

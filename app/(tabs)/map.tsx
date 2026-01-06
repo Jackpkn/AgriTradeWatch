@@ -570,7 +570,7 @@ const useMapState = () => {
     markerPosition: null,
     priceUnit: MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_KG,
     selectedDateRange: 'custom',
-    customStartDate: new Date(),
+    customStartDate: new Date(new Date().setMonth(new Date().getMonth() - 1)),
     customEndDate: new Date(),
     priceData: {
       custom: { min: 0, max: 0, modal: 0, average: 0, count: 0 }
