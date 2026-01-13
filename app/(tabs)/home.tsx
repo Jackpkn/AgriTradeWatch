@@ -34,6 +34,8 @@ interface Feature {
   bgColor: string;
   isEnabled: boolean;
   comingSoon?: boolean;
+  isLocked?: boolean;
+  lockedMessage?: string;
 }
 
 interface QuickAction {
@@ -110,7 +112,7 @@ const useNetworkStatus = (): boolean => {
 
 const Home: React.FC = React.memo(() => {
   // Context
-  const { mainUser } = useGlobal();
+  const { mainUser, userRole } = useGlobal();
   const { t } = useTranslation();
   const navigation = useNavigation();
 
@@ -128,8 +130,24 @@ const Home: React.FC = React.memo(() => {
     [isLandscape, width]
   );
 
-  // Get features with translations
-  const FEATURES = useMemo(() => getFeatures(t), [t]);
+  // Get features with translations (mark Digital Thela as locked for consumers)
+  const FEATURES = useMemo(() => {
+    const allFeatures = getFeatures(t);
+    if (userRole === 'consumer') {
+      // Mark Digital Thela as locked for consumers - it's only for farmers and retailers
+      return allFeatures.map(feature => {
+        if (feature.route === 'digital-thela') {
+          return {
+            ...feature,
+            isLocked: true,
+            lockedMessage: t.home.digitalThelaLocked || "Only for Farmers & Retailers",
+          };
+        }
+        return feature;
+      });
+    }
+    return allFeatures;
+  }, [t, userRole]);
 
   // Navigation handler
   const handleNavigation = useCallback(
@@ -167,6 +185,15 @@ const Home: React.FC = React.memo(() => {
         Alert.alert(
           t.common.comingSoon,
           `${feature.title} is currently under development. Stay tuned for updates!`,
+          [{ text: t.common.ok }]
+        );
+        return;
+      }
+
+      if (feature.isLocked) {
+        Alert.alert(
+          t.home.featureRestricted || "Feature Restricted",
+          feature.lockedMessage || "This feature is not available for your account type.",
           [{ text: t.common.ok }]
         );
         return;
@@ -210,31 +237,48 @@ const Home: React.FC = React.memo(() => {
         style={[
           styles.featureCard,
           !feature.isEnabled && styles.comingSoonCard,
+          feature.isLocked && { opacity: 0.7 },
         ]}
         onPress={() => handleFeaturePress(feature)}
         disabled={!feature.isEnabled}
         testID={`feature-card-${feature.id}`}
         accessibilityLabel={`${feature.title}: ${feature.description}`}
         accessibilityRole="button"
-        accessibilityState={{ disabled: !feature.isEnabled }}
+        accessibilityState={{ disabled: !feature.isEnabled || feature.isLocked }}
       >
+        {/* Lock overlay for restricted features */}
+        {feature.isLocked && (
+          <View style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            borderRadius: 12,
+            padding: 4,
+            zIndex: 10,
+          }}>
+            <Ionicons name="lock-closed" size={16} color="#fff" />
+          </View>
+        )}
+
         <View style={styles.featureContent}>
           <View
             style={[
               styles.featureIconContainer,
               { backgroundColor: feature.bgColor },
+              feature.isLocked && { opacity: 0.5 },
             ]}
           >
             <Ionicons
               name={feature.icon}
               size={32}
-              color={feature.isEnabled ? feature.gradient[0] : "#BDBDBD"}
+              color={feature.isEnabled && !feature.isLocked ? feature.gradient[0] : "#BDBDBD"}
             />
           </View>
           <Text
             style={[
               styles.featureTitle,
-              !feature.isEnabled && { color: "#BDBDBD" },
+              (!feature.isEnabled || feature.isLocked) && { color: "#BDBDBD" },
             ]}
           >
             {feature.title}
@@ -242,7 +286,7 @@ const Home: React.FC = React.memo(() => {
           <Text
             style={[
               styles.featureDescription,
-              !feature.isEnabled && { color: "#BDBDBD" },
+              (!feature.isEnabled || feature.isLocked) && { color: "#BDBDBD" },
             ]}
           >
             {feature.description}
@@ -252,6 +296,13 @@ const Home: React.FC = React.memo(() => {
         {feature.comingSoon ? (
           <View style={styles.comingSoonButton}>
             <Text style={styles.comingSoonText}>{t.common.comingSoon}</Text>
+          </View>
+        ) : feature.isLocked ? (
+          <View style={[styles.comingSoonButton, { backgroundColor: '#e0e0e0' }]}>
+            <Ionicons name="lock-closed" size={14} color="#666" style={{ marginRight: 4 }} />
+            <Text style={[styles.comingSoonText, { color: '#666' }]}>
+              {feature.lockedMessage || "Locked"}
+            </Text>
           </View>
         ) : (
           <TouchableOpacity

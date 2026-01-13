@@ -17,6 +17,7 @@ import { Picker } from "@react-native-picker/picker";
 
 import { produceService } from "@/services";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useGlobal } from "@/context/global-provider";
 import DigitalThelaMap from "@/components/map/DigitalThelaMap";
 
 // Types
@@ -198,6 +199,28 @@ const styles = StyleSheet.create({
 const DigitalThela: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { userRole } = useGlobal();
+
+  // Access guard - only farmers and retailers can access Digital Thela
+  const allowedRoles = ['farmer', 'retailer'];
+  if (userRole && !allowedRoles.includes(userRole)) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="lock-closed" size={64} color="#9C27B0" />
+          <Text style={styles.errorText}>
+            Digital Thela is only available for Farmers and Retailers.
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.retryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // State
   const [allEntries, setAllEntries] = useState<DTEntry[]>([]);
