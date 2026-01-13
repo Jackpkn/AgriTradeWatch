@@ -10,7 +10,6 @@ export interface DTEntry {
   latitude: number;
   longitude: number;
   created_at: string;
-  level_of_produce: string;
   quantity_for_sale: number;
   cost: number;
   unit: string;
@@ -233,10 +232,6 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
           <div class="popup-row">
             <span class="popup-label">Price:</span>
             <span class="popup-value">₹\${entry.cost}/\${entry.unit}</span>
-          </div>
-          <div class="popup-row">
-            <span class="popup-label">Production:</span>
-            <span class="popup-value">\${entry.level_of_produce.replace(/_/g, ' ')}</span>
           </div>
           <div class="popup-seller" onclick="handleUsernameClick('\${entry.username_id}', event)">
             Seller: <span class="username-link">\${entry.username_id}</span>

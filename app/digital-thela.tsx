@@ -29,7 +29,6 @@ interface DTEntry {
   latitude: number;
   longitude: number;
   created_at: string;
-  level_of_produce: string;
   quantity_for_sale: number;
   cost: number;
   unit: string;
@@ -399,7 +398,7 @@ const DigitalThela: React.FC = () => {
                 <View style={styles.detailItemLeft}>
                   <Text style={styles.detailSeller}>{entry.username_id}</Text>
                   <Text style={styles.detailVariety}>
-                    {entry.variety_name} • {entry.level_of_produce?.replace(/_/g, ' ') || 'N/A'}
+                    {entry.variety_name}
                   </Text>
                 </View>
                 <View style={styles.detailItemRight}>

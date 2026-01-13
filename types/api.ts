@@ -88,7 +88,6 @@ export interface ProduceFormData {
   sale_commodity: string;
   variety_name: string;
   method: 'organic' | 'inorganic';
-  level_of_produce: 'selling_surplus' | 'selling_surplus_with_value_addition';
   sowing_date: string;
   harvest_date: string;
   quantity_for_sale: string;
@@ -109,7 +108,6 @@ export interface ProducePayload {
   sale_commodity: string;
   variety_name: string;
   method: string;
-  level_of_produce: string;
   sowing_date: string;
   harvest_date: string;
   quantity_for_sale: number;

@@ -28,7 +28,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   COMMODITIES,
   CROP_UNITS,
-  PRODUCTION_LEVELS,
 } from "@/constants/appConstants";
 
 // Types
@@ -36,7 +35,6 @@ interface ProduceFormState {
   sale_commodity: string;
   new_commodity: string;
   variety_name: string;
-  level_of_produce: string;
   quantity_for_sale: string;
   cost: string;
   unit: string;
@@ -284,7 +282,6 @@ const AddProduce: React.FC = () => {
     sale_commodity: "",
     new_commodity: "",
     variety_name: "",
-    level_of_produce: "selling_surplus",
     quantity_for_sale: "",
     cost: "",
     unit: "",
@@ -592,7 +589,6 @@ const AddProduce: React.FC = () => {
         new_commodity: formData.new_commodity || "",
         variety_name: formData.variety_name || "",
         method: "organic", // Default
-        level_of_produce: formData.level_of_produce || "",
         sowing_date: new Date().toISOString().split("T")[0],
         harvest_date: new Date().toISOString().split("T")[0],
         quantity_for_sale: formData.quantity_for_sale ? parseFloat(formData.quantity_for_sale) : "",
@@ -777,33 +773,6 @@ const AddProduce: React.FC = () => {
                   outlineColor="#E0E0E0"
                   activeOutlineColor="#9C27B0"
                 />
-              </View>
-
-              {/* Production Level */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  {t.digitalThela.productionLevel || "Production Level"} *
-                </Text>
-                <View style={[styles.pickerContainer, { backgroundColor: "#fff" }]}>
-                  <Picker
-                    selectedValue={formData.level_of_produce}
-                    onValueChange={(value) =>
-                      updateField("level_of_produce", value)
-                    }
-                    style={[styles.picker, { backgroundColor: "#fff", color: "#000" }]}
-                    dropdownIconColor="#000"
-                  >
-                    {PRODUCTION_LEVELS.map((level) => (
-                      <Picker.Item
-                        key={level.id}
-                        label={level.label}
-                        value={level.id}
-                        color="#000"
-                        style={{ backgroundColor: "#fff" }}
-                      />
-                    ))}
-                  </Picker>
-                </View>
               </View>
 
               {/* Quantity for Sale */}
