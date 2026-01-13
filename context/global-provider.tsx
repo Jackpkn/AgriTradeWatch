@@ -202,8 +202,7 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
                 }
             } catch (error) {
                 console.warn("Location permission was denied or failed to retrieve.", error);
-                hasRequestedLocationRef.current = false; // Allow retry on error
-                // You could show a custom alert here guiding the user to settings.
+                // Don't reset hasRequestedLocationRef - persistence is handled in getLocation.tsx
             }
         };
 

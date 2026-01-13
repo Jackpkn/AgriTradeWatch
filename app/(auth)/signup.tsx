@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,7 +22,7 @@ import { signUpStyles as styles } from "@/components/auth/SignUpStyles";
 import { useGlobal } from "@/context/global-provider";
 import { useTranslation } from "@/hooks/useTranslation";
 import authService, { RegistrationData } from "@/services/auth-service";
-import { getMandatoryLocation } from "@/components/getLocation";
+import * as Location from "expo-location";
 import { APIError } from "@/services/api";
 import { FormInput, SelectionButton, SelectionModal } from "@/components/auth/FormComponents";
 import { USER_TYPES } from "@/constants/authConstants";
@@ -169,20 +170,50 @@ const SignUp = () => {
   const handleRetryLocation = useCallback(async () => {
     setIsRequestingLocation(true);
     try {
-      console.log('Signup: Manually requesting location...');
-      const location = await getMandatoryLocation();
+      console.log('Signup: Checking location permission status...');
+      const { status } = await Location.getForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        // Permission not granted - direct user to settings instead of requesting again
+        console.log('Signup: Permission not granted, directing to settings');
+        Alert.alert(
+          t.auth.locationRequired,
+          "Please enable location permission in your device settings.",
+          [
+            {
+              text: "Open Settings",
+              onPress: () => {
+                if (Platform.OS === "ios") {
+                  Linking.openURL("app-settings:");
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+            { text: t.common.cancel, style: "cancel" },
+          ]
+        );
+        setIsRequestingLocation(false);
+        return;
+      }
+
+      // Permission granted - fetch location
+      console.log('Signup: Permission granted, fetching location...');
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
       if (location) {
-        console.log('Signup: Manual location request successful:', location.coords);
-        // Location will be updated in global context automatically
+        console.log('Signup: Location fetched successfully:', location.coords);
+        // Note: This updates local state only. The global context should be updated
+        // via the GlobalProvider's location request on app start.
       }
     } catch (error) {
-      console.error('Signup: Manual location request failed:', error);
+      console.error('Signup: Location request failed:', error);
       Alert.alert(
         t.common.error,
-        "Unable to get your location. Please check your location settings and try again.",
-        [
-          { text: t.common.ok }
-        ]
+        "Unable to get your location. Please check your GPS settings and try again.",
+        [{ text: t.common.ok }]
       );
     } finally {
       setIsRequestingLocation(false);

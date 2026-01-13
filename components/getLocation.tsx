@@ -1,13 +1,18 @@
 import React from "react";
 import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Alert,
   BackHandler,
+  Linking,
   Platform,
   View,
   Text,
   ActivityIndicator,
 } from "react-native";
+
+// ---------- Constants ----------
+const LOCATION_PERMISSION_REQUESTED_KEY = "@location_permission_requested";
 
 // ---------- Types ----------
 interface LocationPermissionLoadingProps {
@@ -83,6 +88,43 @@ const exitApp = (): void => {
   }
 };
 
+// ---------- Permission persistence helpers ----------
+const markPermissionRequested = async (): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(LOCATION_PERMISSION_REQUESTED_KEY, "true");
+  } catch (error) {
+    console.warn("Failed to persist permission state:", error);
+  }
+};
+
+const hasAlreadyRequestedPermission = async (): Promise<boolean> => {
+  try {
+    const value = await AsyncStorage.getItem(LOCATION_PERMISSION_REQUESTED_KEY);
+    return value === "true";
+  } catch (error) {
+    console.warn("Failed to read permission state:", error);
+    return false;
+  }
+};
+
+// Clear the persisted state (useful for testing or reset scenarios)
+export const resetLocationPermissionState = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(LOCATION_PERMISSION_REQUESTED_KEY);
+  } catch (error) {
+    console.warn("Failed to reset permission state:", error);
+  }
+};
+
+// ---------- Open device settings ----------
+const openLocationSettings = (): void => {
+  if (Platform.OS === "ios") {
+    Linking.openURL("app-settings:");
+  } else {
+    Linking.openSettings();
+  }
+};
+
 // ---------- Mandatory location permission ----------
 export const getMandatoryLocation = async (
   onSuccess?: LocationSuccessCallback,
@@ -93,30 +135,36 @@ export const getMandatoryLocation = async (
     // First check if we already have permission
     let { status } = await Location.getForegroundPermissionsAsync();
 
-    // Only request if we don't have permission
+    // Only request if we don't have permission AND we haven't requested before
     if (status !== "granted") {
-      const result = await Location.requestForegroundPermissionsAsync();
-      status = result.status;
+      const alreadyRequested = await hasAlreadyRequestedPermission();
+
+      if (!alreadyRequested) {
+        // First time requesting - show the system dialog
+        console.log("First time requesting location permission...");
+        await markPermissionRequested();
+        const result = await Location.requestForegroundPermissionsAsync();
+        status = result.status;
+      } else {
+        console.log("Permission was already requested before, skipping system dialog");
+      }
     }
 
     if (status !== "granted") {
+      // Permission denied - show alert to open settings (no recursive call)
       Alert.alert(
         "Location Permission Required",
-        "MandiGo requires location access to show crop prices near you and help you track market trends. Please enable location permissions to continue using the app.",
+        "MandiGo requires location access to show crop prices near you and help you track market trends. Please enable location in your device settings.",
         [
           {
-            text: "Enable Location",
-            onPress: () => {
-              getMandatoryLocation(onSuccess, onError, setCurrentLocation);
-            },
+            text: "Open Settings",
+            onPress: openLocationSettings,
             style: "default",
           },
           {
             text: "Exit App",
             onPress: () => {
-              console.log(
-                "User chose to exit app due to denied location permission"
-              );
+              console.log("User chose to exit app due to denied location permission");
               exitApp();
             },
             style: "destructive",
@@ -125,15 +173,13 @@ export const getMandatoryLocation = async (
         { cancelable: false }
       );
 
-      if (onError) onError("Permission denied - app will exit");
+      if (onError) onError("Permission denied");
       return null;
     }
 
     console.log("Location permission granted, fetching current position...");
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.High,
-
-      // timeout: 15000,
     });
 
     console.log("Location obtained successfully:", location.coords);
@@ -154,6 +200,11 @@ export const getMandatoryLocation = async (
         "Location access is required for MandiGo to function properly. Please enable location permissions in your device settings.",
         [
           {
+            text: "Open Settings",
+            onPress: openLocationSettings,
+            style: "default",
+          },
+          {
             text: "Exit App",
             onPress: () => exitApp(),
             style: "destructive",
@@ -162,23 +213,22 @@ export const getMandatoryLocation = async (
         { cancelable: false }
       );
     } else {
+      // GPS/network error - offer to open settings (no recursive retry)
       Alert.alert(
         "Location Error",
         "Unable to get your current location. Please check your GPS settings and try again.",
         [
           {
-            text: "Try Again",
-            onPress: () => {
-              getMandatoryLocation(onSuccess, onError, setCurrentLocation);
-            },
+            text: "Open Settings",
+            onPress: openLocationSettings,
+            style: "default",
           },
           {
-            text: "Exit App",
-            onPress: () => exitApp(),
-            style: "destructive",
+            text: "Cancel",
+            style: "cancel",
           },
         ],
-        { cancelable: false }
+        { cancelable: true }
       );
     }
 
