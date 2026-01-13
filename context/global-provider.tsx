@@ -46,6 +46,7 @@ interface GlobalContextType {
     // Actions / Methods
     logout: () => Promise<void>;
     requireAuthentication: <T>(callback: () => T) => T | null;
+    updateUserProfile: (user: User) => void;
 
     // Exposed Setters (use with caution)
     setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -119,7 +120,27 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
         return () => unsubscribe();
     }, []);
 
-    // Effect 2: Monitor network status.
+    // Effect 2: Fetch fresh profile data when user is logged in
+    useEffect(() => {
+        const fetchFreshProfile = async () => {
+            if (isLogged && mainUser) {
+                try {
+                    console.log('🔄 Fetching fresh profile data on login...');
+                    const { default: profileService } = await import('@/services/profile-service');
+                    const freshProfile = await profileService.getProfile();
+                    console.log('✅ Fresh profile fetched:', freshProfile);
+                    setMainUser(freshProfile);
+                } catch (error) {
+                    console.error('⚠️ Failed to fetch fresh profile:', error);
+                    // Keep using the cached user data if profile fetch fails
+                }
+            }
+        };
+
+        fetchFreshProfile();
+    }, [isLogged, mainUser?.id]);
+
+    // Effect 3: Monitor network status.
     useEffect(() => {
         const setInitialStatus = async () => {
             const status = await networkManager.getNetworkStatus();
@@ -149,7 +170,7 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
         };
     }, []);
 
-    // Effect 3: Request mandatory location permission once on app start.
+    // Effect 4: Request mandatory location permission once on app start.
     useEffect(() => {
         const requestLocation = async () => {
             // Skip if location has already been requested
@@ -209,6 +230,11 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
         return callback();
     }, [isLogged]);
 
+    const updateUserProfile = useCallback((user: User) => {
+        console.log('🔄 Updating user profile in global context:', user);
+        setMainUser(user);
+    }, []);
+
     // Derived state for user role. It's null if no user is logged in.
     const userRole = mainUser ? mainUser.job : null;
 
@@ -223,6 +249,7 @@ export const GlobalProvider = ({ children }: GlobalProviderProps): JSX.Element =
         userRole,
         logout,
         requireAuthentication,
+        updateUserProfile,
         setIsLoading,
     };
 

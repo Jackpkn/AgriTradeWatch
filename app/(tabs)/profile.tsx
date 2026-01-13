@@ -56,17 +56,20 @@ type LocationPreference = 'Auto-detect Current' | 'Enter Manually';
 // ========================================================================
 
 const useUserData = () => {
+  const { updateUserProfile } = useGlobal();
   const [user, setUser] = useState<ProfileData | null>(null);
 
   const fetchUserData = useCallback(async () => {
     try {
       const profileData = await profileService.getProfile();
       setUser(profileData);
+      // Update the global context with fresh profile data
+      updateUserProfile(profileData);
     } catch (err: any) {
       console.error('Error fetching profile:', err);
       Alert.alert('Error', 'Failed to load profile data. Please try again.');
     }
-  }, []);
+  }, [updateUserProfile]);
 
   useEffect(() => {
     fetchUserData();

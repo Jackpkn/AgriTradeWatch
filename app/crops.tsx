@@ -97,6 +97,7 @@ interface AddCropPayload {
   longitude: number;
   date?: string;
   variety?: string;
+  userRole: "farmer" | "consumer";
 }
 
 // Helper function to generate filename for images
@@ -145,6 +146,11 @@ const CropsScreen = () => {
 
   const { currentLocation, setIsLoading, isLogged, userRole } = useGlobal();
   const cropItems = useMemo(() => getCropItems(t), [t]);
+
+  // Debug: Log the userRole to check its value
+  useEffect(() => {
+    console.log("Current userRole:", userRole, "Type:", typeof userRole);
+  }, [userRole]);
 
   const [form, setForm] = useState<CropFormState>({
     name: "",
@@ -293,6 +299,7 @@ const CropsScreen = () => {
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
         date: new Date().toISOString().split("T")[0], // Format: YYYY-MM-DD
+        userRole: userRole as "farmer" | "consumer",
       };
 
       const response = await addCrop(payload);
@@ -415,7 +422,11 @@ const CropsScreen = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t.crops.pricePerKg}</Text>
+                  <Text style={styles.inputLabel}>
+                    {String(userRole).toLowerCase() === 'farmer'
+                      ? (t.crops.sellingPricePerKg || 'Selling Price Per Kg *')
+                      : (t.crops.buyingPricePerKg || 'Buying Price Per Kg *')}
+                  </Text>
                   <TextInput
                     style={styles.textInput}
                     mode="outlined"
@@ -424,14 +435,26 @@ const CropsScreen = () => {
                       setForm((f) => ({ ...f, pricePerUnit: text }))
                     }
                     keyboardType="numeric"
-                    placeholder={t.crops.enterPricePerKg}
+                    placeholder={
+                      String(userRole).toLowerCase() === 'farmer'
+                        ? (t.crops.enterSellingPrice || 'Enter selling price')
+                        : (t.crops.enterBuyingPrice || 'Enter buying price')
+                    }
                     accessible={true}
-                    accessibilityLabel="Price per kilogram"
+                    accessibilityLabel={
+                      String(userRole).toLowerCase() === 'farmer'
+                        ? 'Selling price per kilogram'
+                        : 'Buying price per kilogram'
+                    }
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t.crops.quantityBought}</Text>
+                  <Text style={styles.inputLabel}>
+                    {String(userRole).toLowerCase() === 'farmer'
+                      ? (t.crops.quantitySold || 'Quantity Sold (Kg) *')
+                      : (t.crops.quantityBought || 'Quantity Bought (Kg) *')}
+                  </Text>
                   <TextInput
                     style={styles.textInput}
                     mode="outlined"
@@ -440,9 +463,17 @@ const CropsScreen = () => {
                       setForm((f) => ({ ...f, quantity: text }))
                     }
                     keyboardType="numeric"
-                    placeholder={t.crops.enterQuantity}
+                    placeholder={
+                      String(userRole).toLowerCase() === 'farmer'
+                        ? (t.crops.enterQuantitySold || 'Enter quantity sold')
+                        : (t.crops.enterQuantityBought || 'Enter quantity bought')
+                    }
                     accessible={true}
-                    accessibilityLabel="Quantity bought in kilograms"
+                    accessibilityLabel={
+                      String(userRole).toLowerCase() === 'farmer'
+                        ? 'Quantity sold in kilograms'
+                        : 'Quantity bought in kilograms'
+                    }
                   />
                 </View>
 
@@ -573,7 +604,11 @@ const CropsScreen = () => {
                       <Ionicons name="pricetag" size={20} color="#49A760" />
                     </View>
                     <View style={successModalStyles.detailContent}>
-                      <Text style={successModalStyles.detailLabel}>{t.crops.pricePerKg?.replace("*", "") || "Price"}</Text>
+                      <Text style={successModalStyles.detailLabel}>
+                        {String(userRole).toLowerCase() === 'farmer'
+                          ? (t.crops.sellingPricePerKg?.replace("*", "") || "Selling Price")
+                          : (t.crops.buyingPricePerKg?.replace("*", "") || "Buying Price")}
+                      </Text>
                       <Text style={successModalStyles.detailValue}>₹{successData.price}/kg</Text>
                     </View>
                   </View>
@@ -585,7 +620,11 @@ const CropsScreen = () => {
                       <Ionicons name="cube" size={20} color="#49A760" />
                     </View>
                     <View style={successModalStyles.detailContent}>
-                      <Text style={successModalStyles.detailLabel}>{t.crops.quantityBought?.replace("*", "") || "Quantity"}</Text>
+                      <Text style={successModalStyles.detailLabel}>
+                        {String(userRole).toLowerCase() === 'farmer'
+                          ? (t.crops.quantitySold?.replace("*", "") || "Quantity Sold")
+                          : (t.crops.quantityBought?.replace("*", "") || "Quantity Bought")}
+                      </Text>
                       <Text style={successModalStyles.detailValue}>{successData.quantity} kg</Text>
                     </View>
                   </View>

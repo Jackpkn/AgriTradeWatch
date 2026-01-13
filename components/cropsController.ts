@@ -10,6 +10,7 @@ interface AddCropPayload {
   longitude: number;
   date?: string;
   variety?: string;
+  userRole: "farmer" | "consumer";
 }
 
 interface CropApiResponse {
@@ -36,14 +37,21 @@ export const addCrop = async (
     const token = await getStoredToken();
     if (!token) throw new Error("Authentication token not found.");
 
-    // --- Create JSON payload ---
+    // --- Create JSON payload with role-specific field names ---
     const payload: Record<string, any> = {
       commodity: cropData.commodity,
-      quantity: cropData.quantity,
-      price: cropData.price,
       latitude: cropData.latitude,
       longitude: cropData.longitude,
     };
+
+    // Map field names based on user role
+    if (cropData.userRole === "farmer") {
+      payload.sellingprice = cropData.price;
+      payload.quantitysold = cropData.quantity;
+    } else if (cropData.userRole === "consumer") {
+      payload.buyingprice = cropData.price;
+      payload.quantitybought = cropData.quantity;
+    }
 
     if (cropData.date) {
       payload.date = cropData.date;
