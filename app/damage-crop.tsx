@@ -179,6 +179,11 @@ const DamageCrop: React.FC = () => {
       return false;
     }
 
+    if (!photo) {
+      Alert.alert(t.common.error, t.damageCrop.photoRequired || "Please add a photo of the damage");
+      return false;
+    }
+
     return true;
   };
 

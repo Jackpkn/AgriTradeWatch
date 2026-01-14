@@ -547,7 +547,7 @@ export const createCropsStyles = createOrientationStyles(
       overflow: "hidden",
     },
     picker: {
-      height: 50,
+      height: 56,
       backgroundColor: "#fff",
       color: "#000",
     },
@@ -854,7 +854,7 @@ export const createStatsStyles = createOrientationStyles(
       flex: 1,
     },
     picker: {
-      height: 50,
+      height: 56,
       backgroundColor: "#fff",
       color: "#000",
     },

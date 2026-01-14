@@ -11,9 +11,8 @@ export const useMapData = () => {
   const [error, setError] = useState(null);
   const [authError, setAuthError] = useState(false);
 
-  // Fetch all crops data
-  useEffect(() => {
-    const fetchAllCrops = async () => {
+  // Fetch all crops data function
+  const fetchAllCrops = useCallback(async () => {
       try {
         console.log("useMapData: Starting to fetch crops data...");
         setLoading(true);
@@ -85,10 +84,12 @@ export const useMapData = () => {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchAllCrops();
   }, []);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchAllCrops();
+  }, [fetchAllCrops]);
 
   // Combine all crops for backward compatibility
   const allCrops = useMemo(() => {
@@ -109,5 +110,6 @@ export const useMapData = () => {
     loading,
     error,
     authError,
+    refetch: fetchAllCrops,
   };
 };

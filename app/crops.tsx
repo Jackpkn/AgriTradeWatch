@@ -178,6 +178,14 @@ const CropsScreen = () => {
     })();
   }, []);
 
+  // Refresh screen state when coming into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Crops screen focused - ready for submission");
+      // Screen is now in focus and ready for input
+    }, [])
+  );
+
   const handleTakePicture = useCallback(async () => {
     if (cameraRef.current) {
       const takenPhoto = await cameraRef.current.takePictureAsync({

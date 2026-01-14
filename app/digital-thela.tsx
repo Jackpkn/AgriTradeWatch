@@ -228,14 +228,14 @@ const DigitalThela: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [commodities, setCommodities] = useState<string[]>([]);
 
-  // Fetch all DT entries on mount
-  useEffect(() => {
-    fetchAllEntries();
-  }, []);
-
-  // Handle Android hardware back button
+  // Auto-reload data and handle Android hardware back button when screen is focused
   useFocusEffect(
     useCallback(() => {
+      // Refresh data when screen comes into focus
+      console.log("Digital Thela screen focused - refreshing data");
+      fetchAllEntries();
+
+      // Handle back button
       const onBackPress = () => {
         navigation.goBack();
         return true; // Prevent default behavior

@@ -1,6 +1,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, Modal, Alert, StyleSheet } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -696,7 +697,16 @@ const MapScreen = () => {
     allCrops,
     loading: dataLoading,
     error: dataError,
+    refetch,
   } = useMapData();
+
+  // Auto-reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Map screen focused - refreshing data");
+      refetch();
+    }, [refetch])
+  );
 
   const { filterCropsInRadius } = useGeolocation();
   const { calculatePriceData } = usePriceCalculations(allCrops, state.selectedCrop);
