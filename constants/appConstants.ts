@@ -3,8 +3,6 @@
 // Crop Units
 export const CROP_UNITS = [
   { id: "Kg", label: "Kg", name: "Kilogram" },
-  { id: "quintal", label: "Quintal", name: "Quintal" },
-  { id: "Ton", label: "Ton", name: "Metric Ton" },
   { id: "250 gm", label: "250 gm", name: "250 Grams" },
   { id: "bundle", label: "Bundle", name: "Bundle" },
   { id: "piece", label: "Piece", name: "Piece" },

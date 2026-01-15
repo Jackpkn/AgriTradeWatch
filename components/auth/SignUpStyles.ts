@@ -15,7 +15,7 @@ export const signUpStyles = StyleSheet.create({
     lineHeight: 20
   },
   inputContainer: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ddd", borderRadius: 8, backgroundColor: '#f9f9f9', marginBottom: 15 },
-  input: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, fontSize: 16 },
+  input: { flex: 1, paddingVertical: 12, paddingHorizontal: 10, fontSize: 16, color: "#333" },
   inputIcon: { marginHorizontal: 10 },
   eyeIcon: { padding: 10 },
   submitButton: { backgroundColor: "#2E7D32", paddingVertical: 15, borderRadius: 8, alignItems: "center", marginTop: 10 },

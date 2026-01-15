@@ -57,7 +57,7 @@ const SignUp = () => {
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<ModalType>(null);
-  const [selectedUserType, setSelectedUserType] = useState<'Farmer' | 'Consumer'>('Farmer');
+  const [selectedUserType, setSelectedUserType] = useState<'Farmer' | 'Consumer' | 'Retailer'>('Farmer');
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const [isRequestingLocation, setIsRequestingLocation] = useState<boolean>(true); // Start as true to show waiting state
 
@@ -123,7 +123,7 @@ const SignUp = () => {
       return;
     }
 
-    const job = selectedUserType.toLowerCase() as 'farmer' | 'consumer';
+    const job = selectedUserType.toLowerCase() as 'farmer' | 'consumer' | 'retailer';
 
     setIsRegistering(true);
     setIsLoading(true);
@@ -369,7 +369,7 @@ const SignUp = () => {
         title="Select Your Role"
         options={USER_TYPES}
         selectedValue={selectedUserType}
-        onSelect={(value: string) => setSelectedUserType(value as 'Farmer' | 'Consumer')}
+        onSelect={(value: string) => setSelectedUserType(value as 'Farmer' | 'Consumer' | 'Retailer')}
       />
 
       <GlobalLoader
