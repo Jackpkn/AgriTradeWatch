@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-gifted-charts';
+import Svg, { Circle, Line, Text as SvgText, G } from 'react-native-svg';
 import { Picker } from '@react-native-picker/picker';
 import { fetchCropPrices } from '@/components/crud';
 import { useGlobal } from '@/context/global-provider';
@@ -41,6 +42,7 @@ interface ChartDataPoint {
   value: number;
   timestamp: number;
   dataPointText: string;
+  allPrices?: number[]; // All prices for this date (for vertical stacking)
 }
 
 interface CropOption {
@@ -353,60 +355,59 @@ const Stats: React.FC = () => {
       // Sort by timestamp
       filteredCrops.sort((a, b) => getCropTimestamp(a) - getCropTimestamp(b));
 
-      // Process data points - handle multiple prices on same date
-      const rawData = filteredCrops
-        .map(crop => {
-          const timestamp = getCropTimestamp(crop);
-          const price = getCropPrice(crop);
+      // Group prices by date - to show multiple prices at same x-position
+      const dateGroups: { [key: string]: { prices: number[], timestamp: number } } = {};
 
-          if (price > 0) {
-            return {
-              label: formatDate(timestamp),
-              value: price,
-              timestamp,
-              dataPointText: `₹${price}`,
-            };
+      filteredCrops.forEach(crop => {
+        const timestamp = getCropTimestamp(crop);
+        const price = getCropPrice(crop);
+        const dateLabel = formatDate(timestamp);
+
+        if (price > 0) {
+          if (!dateGroups[dateLabel]) {
+            dateGroups[dateLabel] = { prices: [], timestamp };
           }
-          return null;
-        })
-        .filter((item): item is ChartDataPoint => item !== null)
-        .sort((a, b) => a.timestamp - b.timestamp);
-
-      // Group by date and spread out multiple prices on the same date
-      const dateGroups: { [key: string]: ChartDataPoint[] } = {};
-      rawData.forEach(item => {
-        const dateKey = item.label;
-        if (!dateGroups[dateKey]) {
-          dateGroups[dateKey] = [];
+          dateGroups[dateLabel].prices.push(price);
         }
-        dateGroups[dateKey].push(item);
       });
 
-      // Create final data array with spread-out points for same-date entries
-      const data: ChartDataPoint[] = [];
-      Object.keys(dateGroups).sort((a, b) => {
-        const dateA = dateGroups[a]?.[0]?.timestamp || 0;
-        const dateB = dateGroups[b]?.[0]?.timestamp || 0;
-        return dateA - dateB;
-      }).forEach(dateKey => {
-        const group = dateGroups[dateKey] || [];
-        if (group.length === 1) {
-          // Single price for this date - add as is
-          data.push(group[0]!);
-        } else {
-          // Multiple prices for same date - spread them out
-          // Sort by price to make the line progression smoother
-          group.sort((a, b) => a.value - b.value);
-          group.forEach((item, index) => {
-            data.push({
-              ...item,
-              // Show label only for first item, empty for others to avoid clutter
-              label: index === 0 ? item.label : '',
-              // Add small timestamp offset to create visual spacing
-              timestamp: item.timestamp + index,
-            });
-          });
-        }
+      // Sort dates chronologically
+      const sortedDates = Object.keys(dateGroups).sort((a, b) => {
+        return dateGroups[a]!.timestamp - dateGroups[b]!.timestamp;
+      });
+
+      // Create primary data series (first price of each date)
+      const data: ChartDataPoint[] = sortedDates.map(dateLabel => ({
+        label: dateLabel,
+        value: dateGroups[dateLabel]!.prices[0] || 0,
+        timestamp: dateGroups[dateLabel]!.timestamp,
+        dataPointText: `₹${dateGroups[dateLabel]!.prices[0]}`,
+      }));
+
+      // Create secondary data series (second price of each date, if exists)
+      const data2: ChartDataPoint[] = sortedDates.map(dateLabel => ({
+        label: dateLabel,
+        value: dateGroups[dateLabel]!.prices[1] || 0, // 0 if no second price
+        timestamp: dateGroups[dateLabel]!.timestamp,
+        dataPointText: dateGroups[dateLabel]!.prices[1] ? `₹${dateGroups[dateLabel]!.prices[1]}` : '',
+      }));
+
+      // Create third data series (third price of each date, if exists)
+      const data3: ChartDataPoint[] = sortedDates.map(dateLabel => ({
+        label: dateLabel,
+        value: dateGroups[dateLabel]!.prices[2] || 0,
+        timestamp: dateGroups[dateLabel]!.timestamp,
+        dataPointText: dateGroups[dateLabel]!.prices[2] ? `₹${dateGroups[dateLabel]!.prices[2]}` : '',
+      }));
+
+      // Check if we have secondary/tertiary prices
+      const hasSecondPrices = data2.some(d => d.value > 0);
+      const hasThirdPrices = data3.some(d => d.value > 0);
+
+      console.log(`📊 [${type}] Data series:`, {
+        primary: data.map(d => ({ label: d.label, value: d.value })),
+        secondary: hasSecondPrices ? data2.filter(d => d.value > 0).map(d => ({ label: d.label, value: d.value })) : 'none',
+        tertiary: hasThirdPrices ? data3.filter(d => d.value > 0).map(d => ({ label: d.label, value: d.value })) : 'none',
       });
 
       if (data.length === 0) {
@@ -419,10 +420,15 @@ const Stats: React.FC = () => {
         );
       }
 
-      // Calculate statistics
-      const values = data.map(d => d.value);
-      const maxValue = Math.max(...values);
-      const minValue = Math.min(...values);
+      // Calculate statistics from all prices (all series)
+      const allValues = [
+        ...data.map(d => d.value),
+        ...data2.filter(d => d.value > 0).map(d => d.value),
+        ...data3.filter(d => d.value > 0).map(d => d.value),
+      ];
+      const values = data.map(d => d.value); // For compatibility
+      const maxValue = Math.max(...allValues);
+      const minValue = Math.min(...allValues.filter(v => v > 0));
       const medianValue = calculateMedian(values);
       const averageValue = values.reduce((sum, val) => sum + val, 0) / values.length;
       const priceRange = maxValue - minValue;
@@ -438,47 +444,140 @@ const Stats: React.FC = () => {
       );
 
       const gradientColors = GRADIENT_COLORS[type];
+      const chartHeight = 280;
+      const chartMaxValue = maxValue + (maxValue - minValue) * 0.1;
+
+      // SVG Scatter Chart dimensions
+      const padding = { top: 40, right: 20, bottom: 50, left: 50 };
+      const plotWidth = chartWidth - padding.left - padding.right;
+      const plotHeight = chartHeight - padding.top - padding.bottom;
+
+      // Scale functions
+      const xScale = (index: number) => padding.left + (index / (sortedDates.length - 1 || 1)) * plotWidth;
+      const yScale = (value: number) => padding.top + plotHeight - ((value - minValue) / (chartMaxValue - minValue)) * plotHeight;
+
+      // Y-axis labels
+      const yAxisLabels = [];
+      const numYLabels = 5;
+      for (let i = 0; i <= numYLabels; i++) {
+        const value = minValue + (chartMaxValue - minValue) * (i / numYLabels);
+        yAxisLabels.push({ value: Math.round(value), y: yScale(value) });
+      }
 
       return (
-        <View style={styles.chartWrapper}>
-
+        <View style={[styles.chartWrapper, { overflow: 'visible' }]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chartScrollContainer}
+            contentContainerStyle={[styles.chartScrollContainer, { overflow: 'visible' }]}
+            style={{ overflow: 'visible' }}
           >
-            <View style={styles.chartContainer}>
-              <LineChart
-                data={data}
-                width={chartWidth}
-                height={280}
-                yAxisTextStyle={styles.yAxisLabel}
-                xAxisLabelTextStyle={styles.xAxisLabel}
-                showVerticalLines
-                verticalLinesColor="rgba(0,0,0,0.1)"
-                textColor1={gradientColors[0]}
-                color={gradientColors[0]}
-                thickness={3}
-                areaChart
-                startFillColor={gradientColors[0]}
-                endFillColor={gradientColors[1]}
-                startOpacity={0.3}
-                endOpacity={0.05}
-                maxValue={maxValue + (maxValue - minValue) * 0.1}
-                noOfSections={5}
-                spacing={data.length > 10 ? 60 : 80}
-                initialSpacing={20}
-                endSpacing={20}
-                rulesColor="rgba(0,0,0,0.1)"
-                rulesType="solid"
-                xAxisColor="#ddd"
-                yAxisColor="#ddd"
-                dataPointsColor={gradientColors[0]}
-                dataPointsRadius={5}
-                curved
-                isAnimated
-                animationDuration={1000}
-              />
+            <View style={[styles.chartContainer, { overflow: 'visible' }]}>
+              <Svg width={chartWidth} height={chartHeight}>
+                {/* Y-axis */}
+                <Line
+                  x1={padding.left}
+                  y1={padding.top}
+                  x2={padding.left}
+                  y2={padding.top + plotHeight}
+                  stroke="#ddd"
+                  strokeWidth={1}
+                />
+
+                {/* X-axis */}
+                <Line
+                  x1={padding.left}
+                  y1={padding.top + plotHeight}
+                  x2={padding.left + plotWidth}
+                  y2={padding.top + plotHeight}
+                  stroke="#ddd"
+                  strokeWidth={1}
+                />
+
+                {/* Horizontal grid lines and Y-axis labels */}
+                {yAxisLabels.map((label, i) => (
+                  <G key={`y-${i}`}>
+                    <Line
+                      x1={padding.left}
+                      y1={label.y}
+                      x2={padding.left + plotWidth}
+                      y2={label.y}
+                      stroke="rgba(0,0,0,0.1)"
+                      strokeWidth={1}
+                    />
+                    <SvgText
+                      x={padding.left - 8}
+                      y={label.y + 4}
+                      fontSize={10}
+                      fill="#666"
+                      textAnchor="end"
+                    >
+                      {label.value}
+                    </SvgText>
+                  </G>
+                ))}
+
+                {/* X-axis labels */}
+                {sortedDates.map((dateLabel, index) => (
+                  <SvgText
+                    key={`x-${index}`}
+                    x={xScale(index)}
+                    y={padding.top + plotHeight + 20}
+                    fontSize={9}
+                    fill="#666"
+                    textAnchor="middle"
+                  >
+                    {dateLabel}
+                  </SvgText>
+                ))}
+
+                {/* Vertical grid lines */}
+                {sortedDates.map((_, index) => (
+                  <Line
+                    key={`vline-${index}`}
+                    x1={xScale(index)}
+                    y1={padding.top}
+                    x2={xScale(index)}
+                    y2={padding.top + plotHeight}
+                    stroke="rgba(0,0,0,0.05)"
+                    strokeWidth={1}
+                  />
+                ))}
+
+                {/* Data points - all prices for each date */}
+                {sortedDates.map((dateLabel, dateIndex) => {
+                  const prices = dateGroups[dateLabel]?.prices || [];
+                  const x = xScale(dateIndex);
+
+                  return prices.map((price, priceIndex) => {
+                    const y = yScale(price);
+                    return (
+                      <G key={`point-${dateIndex}-${priceIndex}`}>
+                        {/* Price label */}
+                        <SvgText
+                          x={x}
+                          y={y - 12}
+                          fontSize={9}
+                          fill={gradientColors[0]}
+                          fontWeight="600"
+                          textAnchor="middle"
+                        >
+                          Rs {price}
+                        </SvgText>
+                        {/* Dot */}
+                        <Circle
+                          cx={x}
+                          cy={y}
+                          r={6}
+                          fill={gradientColors[0]}
+                          stroke="#fff"
+                          strokeWidth={2}
+                        />
+                      </G>
+                    );
+                  });
+                })}
+              </Svg>
             </View>
           </ScrollView>
         </View>
