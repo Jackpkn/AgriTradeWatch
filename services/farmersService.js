@@ -6,6 +6,19 @@
 
 import { apiWithRetry, APIError, HTTP_STATUS } from './api';
 
+// Helper to get today's date in YYYY-MM-DD format
+const getTodayDate = () => new Date().toISOString().split('T')[0];
+
+// Transform price API response to match existing component structure
+const transformPriceData = (data, commodity) => data.map(item => ({
+  name: commodity,
+  commodity: commodity,
+  pricePerUnit: item.price,
+  sellingPrice: item.price,
+  createdAt: { seconds: Math.floor(new Date(item.date).getTime() / 1000) },
+  location: { timestamp: new Date(item.date).getTime() }
+}));
+
 // Farmer data transformation utilities
 const transformFarmerData = (apiFarmer) => ({
   id: apiFarmer.id,
@@ -143,6 +156,65 @@ class FarmersService {
       
       throw new APIError(
         'Failed to fetch farmers data',
+        error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        error.data
+      );
+    }
+  }
+
+  /**
+   * Get farmer prices for a specific commodity
+   * @param {string} commodity - Commodity name (e.g., 'garlic', 'onion')
+   * @returns {Promise<Array>} Array of price data objects
+   */
+  async getFarmerPrices(commodity) {
+    try {
+      if (!commodity) {
+        throw new APIError('Commodity is required', HTTP_STATUS.BAD_REQUEST);
+      }
+
+      const cacheKey = `farmer_prices_${commodity.toLowerCase()}`;
+      const cachedData = farmersCache.get(cacheKey);
+
+      if (cachedData) {
+        if (__DEV__) {
+          console.log('📦 Using cached farmer prices for', commodity);
+        }
+        return cachedData;
+      }
+
+      const startDate = '2000-01-01';
+      const endDate = getTodayDate();
+      const url = `/farmers_prices/${encodeURIComponent(commodity)}/?start_date=${startDate}&end_date=${endDate}`;
+
+      if (__DEV__) {
+        console.log('🚜 Fetching farmer prices:', url);
+      }
+
+      const response = await apiWithRetry.get(url);
+      const prices = Array.isArray(response.data) ? transformPriceData(response.data, commodity) : [];
+
+      // Cache the results
+      farmersCache.set(cacheKey, prices);
+
+      if (__DEV__) {
+        console.log('🚜 Retrieved farmer prices:', prices.length, 'entries for', commodity);
+      }
+
+      return prices;
+    } catch (error) {
+      console.error('Error fetching farmer prices:', error);
+
+      // Return cached data if available, even if expired
+      const cacheKey = `farmer_prices_${commodity.toLowerCase()}`;
+      const cachedData = farmersCache.get(cacheKey);
+      if (cachedData) {
+        console.log('⚠️ Using expired cached farmer prices due to network error');
+        return cachedData;
+      }
+
+      throw new APIError(
+        'Failed to fetch farmer prices',
         error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
         error.data
       );

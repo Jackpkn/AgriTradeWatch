@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-gifted-charts';
 import { Picker } from '@react-native-picker/picker';
-import { fetchCrops } from '@/components/crud';
+import { fetchCropPrices } from '@/components/crud';
 import { useGlobal } from '@/context/global-provider';
 import { useOrientation } from '@/utils/orientationUtils';
 import { createStatsStyles } from '@/utils/responsiveStyles';
@@ -61,6 +61,7 @@ interface CropChartProps {
   };
   isLandscape: boolean;
   t: any;
+  loading?: boolean;
 }
 
 interface CropSelectorProps {
@@ -78,6 +79,8 @@ interface MarketAnalyticsState {
   refreshing: boolean;
   showConsumerAnalytics: boolean;
   showFarmerAnalytics: boolean;
+  consumerLoading: boolean;
+  farmerLoading: boolean;
 }
 
 // Predefined crop list for stats dropdown
@@ -192,6 +195,8 @@ const Stats: React.FC = () => {
     refreshing: false,
     showConsumerAnalytics: true,
     showFarmerAnalytics: true,
+    consumerLoading: false,
+    farmerLoading: false,
   });
 
   // Orientation and styling
@@ -280,8 +285,19 @@ const Stats: React.FC = () => {
     screenData,
     isLandscape,
     t,
+    loading = false,
   }) => {
     try {
+      // Show loading state
+      if (loading) {
+        return (
+          <View style={styles.noDataContainer}>
+            <Ionicons name="refresh-outline" size={48} color="#ccc" />
+            <Text style={styles.noDataText}>{t.stats.loadingCropData}</Text>
+          </View>
+        );
+      }
+
       // Validation checks
       if (!cropsArray || !Array.isArray(cropsArray)) {
         return (
@@ -337,8 +353,8 @@ const Stats: React.FC = () => {
       // Sort by timestamp
       filteredCrops.sort((a, b) => getCropTimestamp(a) - getCropTimestamp(b));
 
-      // Process data points
-      const data: ChartDataPoint[] = filteredCrops
+      // Process data points - handle multiple prices on same date
+      const rawData = filteredCrops
         .map(crop => {
           const timestamp = getCropTimestamp(crop);
           const price = getCropPrice(crop);
@@ -355,6 +371,43 @@ const Stats: React.FC = () => {
         })
         .filter((item): item is ChartDataPoint => item !== null)
         .sort((a, b) => a.timestamp - b.timestamp);
+
+      // Group by date and spread out multiple prices on the same date
+      const dateGroups: { [key: string]: ChartDataPoint[] } = {};
+      rawData.forEach(item => {
+        const dateKey = item.label;
+        if (!dateGroups[dateKey]) {
+          dateGroups[dateKey] = [];
+        }
+        dateGroups[dateKey].push(item);
+      });
+
+      // Create final data array with spread-out points for same-date entries
+      const data: ChartDataPoint[] = [];
+      Object.keys(dateGroups).sort((a, b) => {
+        const dateA = dateGroups[a]?.[0]?.timestamp || 0;
+        const dateB = dateGroups[b]?.[0]?.timestamp || 0;
+        return dateA - dateB;
+      }).forEach(dateKey => {
+        const group = dateGroups[dateKey] || [];
+        if (group.length === 1) {
+          // Single price for this date - add as is
+          data.push(group[0]!);
+        } else {
+          // Multiple prices for same date - spread them out
+          // Sort by price to make the line progression smoother
+          group.sort((a, b) => a.value - b.value);
+          group.forEach((item, index) => {
+            data.push({
+              ...item,
+              // Show label only for first item, empty for others to avoid clutter
+              label: index === 0 ? item.label : '',
+              // Add small timestamp offset to create visual spacing
+              timestamp: item.timestamp + index,
+            });
+          });
+        }
+      });
 
       if (data.length === 0) {
         return (
@@ -521,99 +574,88 @@ const Stats: React.FC = () => {
     }
   };
 
-  // Data fetching function
-  const fetchAllCrops = useCallback(async (): Promise<void> => {
+  // Fetch consumer prices for selected commodity
+  const fetchConsumerPrices = useCallback(async (commodity: string): Promise<void> => {
+    if (!commodity) return;
+
     try {
-      setIsLoading(true);
+      setState(prev => ({ ...prev, consumerLoading: true }));
 
-      const [consumerData, farmerData] = await Promise.all([
-        fetchCrops('consumers'),
-        fetchCrops('farmers'),
-      ]);
-
+      console.log('📊 Fetching consumer prices for:', commodity);
+      const consumerData = await fetchCropPrices('consumers', commodity);
       const consumerCrops = Array.isArray(consumerData) ? consumerData : [];
-      const farmerCrops = Array.isArray(farmerData) ? farmerData : [];
 
-      // Debug logging
-      console.log('📊 Data fetching results:', {
-        consumerCount: consumerCrops.length,
-        farmerCount: farmerCrops.length,
-        consumerSample: consumerCrops.slice(0, 3).map(c => ({
-          name: c?.name,
-          commodity: c?.commodity,
-          price: c?.pricePerUnit || c?.buyingPrice
-        })),
-        farmerSample: farmerCrops.slice(0, 3).map(c => ({
-          name: c?.name,
-          commodity: c?.commodity,
-          price: c?.pricePerUnit || c?.buyingPrice
-        }))
-      });
+      console.log('📊 Consumer prices received:', consumerCrops.length, 'entries');
 
       setState(prev => ({
         ...prev,
         consumerCrops,
-        farmerCrops,
-        refreshing: false,
+        consumerLoading: false,
       }));
 
-      const totalData = consumerCrops.length + farmerCrops.length;
-      if (totalData > 0) {
-        console.log(`✅ Successfully loaded ${totalData} market data points`);
-      } else {
-        console.log('ℹ️ No market data available yet');
-      }
-
     } catch (error) {
-      console.error('Error fetching crops:', error);
-      Alert.alert(t.common.error, t.stats.failedToFetchCropData);
-
+      console.error('Error fetching consumer prices:', error);
       setState(prev => ({
         ...prev,
         consumerCrops: [],
-        farmerCrops: [],
-        refreshing: false,
+        consumerLoading: false,
       }));
-    } finally {
-      setIsLoading(false);
     }
-  }, [setIsLoading]);
+  }, []);
+
+  // Fetch farmer prices for selected commodity
+  const fetchFarmerPrices = useCallback(async (commodity: string): Promise<void> => {
+    if (!commodity) return;
+
+    try {
+      setState(prev => ({ ...prev, farmerLoading: true }));
+
+      console.log('📊 Fetching farmer prices for:', commodity);
+      const farmerData = await fetchCropPrices('farmers', commodity);
+      const farmerCrops = Array.isArray(farmerData) ? farmerData : [];
+
+      console.log('📊 Farmer prices received:', farmerCrops.length, 'entries');
+
+      setState(prev => ({
+        ...prev,
+        farmerCrops,
+        farmerLoading: false,
+      }));
+
+    } catch (error) {
+      console.error('Error fetching farmer prices:', error);
+      setState(prev => ({
+        ...prev,
+        farmerCrops: [],
+        farmerLoading: false,
+      }));
+    }
+  }, []);
 
   // Refresh handler
   const onRefresh = useCallback(() => {
     setState(prev => ({ ...prev, refreshing: true }));
-    fetchAllCrops();
-  }, [fetchAllCrops]);
+    Promise.all([
+      fetchConsumerPrices(state.consumerCropName),
+      fetchFarmerPrices(state.farmerCropName),
+    ]).finally(() => {
+      setState(prev => ({ ...prev, refreshing: false }));
+    });
+  }, [fetchConsumerPrices, fetchFarmerPrices, state.consumerCropName, state.farmerCropName]);
 
-  // Effect hooks
+  // Fetch consumer prices when consumer crop name changes
   useEffect(() => {
-    fetchAllCrops();
-  }, [fetchAllCrops]);
-
-  // FIXED: Set default crop names separately for consumer and farmer
-  useEffect(() => {
-    if (consumerCropOptions.length > 0 && !state.consumerCropName) {
-      const firstConsumerCrop = consumerCropOptions[0]?.value;
-      if (firstConsumerCrop) {
-        setState(prev => ({
-          ...prev,
-          consumerCropName: firstConsumerCrop,
-        }));
-      }
+    if (state.consumerCropName) {
+      fetchConsumerPrices(state.consumerCropName);
     }
-  }, [consumerCropOptions, state.consumerCropName]);
+  }, [state.consumerCropName, fetchConsumerPrices]);
 
+  // Fetch farmer prices when farmer crop name changes
   useEffect(() => {
-    if (farmerCropOptions.length > 0 && !state.farmerCropName) {
-      const firstFarmerCrop = farmerCropOptions[0]?.value;
-      if (firstFarmerCrop) {
-        setState(prev => ({
-          ...prev,
-          farmerCropName: firstFarmerCrop,
-        }));
-      }
+    if (state.farmerCropName) {
+      fetchFarmerPrices(state.farmerCropName);
     }
-  }, [farmerCropOptions, state.farmerCropName]);
+  }, [state.farmerCropName, fetchFarmerPrices]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -693,6 +735,7 @@ const Stats: React.FC = () => {
               screenData={screenData}
               isLandscape={isLandscape}
               t={t}
+              loading={state.consumerLoading}
             />
           </View>
 
@@ -728,6 +771,7 @@ const Stats: React.FC = () => {
               screenData={screenData}
               isLandscape={isLandscape}
               t={t}
+              loading={state.farmerLoading}
             />
           </View>
         </ScrollView>

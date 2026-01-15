@@ -6,6 +6,19 @@
 
 import { apiWithRetry, APIError, HTTP_STATUS } from './api';
 
+// Helper to get today's date in YYYY-MM-DD format
+const getTodayDate = () => new Date().toISOString().split('T')[0];
+
+// Transform price API response to match existing component structure
+const transformPriceData = (data, commodity) => data.map(item => ({
+  name: commodity,
+  commodity: commodity,
+  pricePerUnit: item.price,
+  buyingPrice: item.price,
+  createdAt: { seconds: Math.floor(new Date(item.date).getTime() / 1000) },
+  location: { timestamp: new Date(item.date).getTime() }
+}));
+
 // Consumer data transformation utilities
 const transformConsumerData = (apiConsumer) => ({
   id: apiConsumer.id,
@@ -185,6 +198,67 @@ class ConsumersService {
       
       throw new APIError(
         'Failed to fetch consumers data',
+        error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        error.data
+      );
+    }
+  }
+
+  /**
+   * Get consumer prices for a specific commodity
+   * @param {string} commodity - Commodity name (e.g., 'Garlic', 'Onion')
+   * @returns {Promise<Array>} Array of price data objects
+   */
+  async getConsumerPrices(commodity) {
+    try {
+      if (!commodity) {
+        throw new APIError('Commodity is required', HTTP_STATUS.BAD_REQUEST);
+      }
+
+      const cacheKey = `consumer_prices_${commodity.toLowerCase()}`;
+      const cachedData = consumersCache.get(cacheKey);
+
+      if (cachedData) {
+        if (__DEV__) {
+          console.log('📦 Using cached consumer prices for', commodity);
+        }
+        return cachedData;
+      }
+
+      const startDate = '2000-01-01';
+      const endDate = getTodayDate();
+      // Note: consumers1_prices endpoint uses title case for commodity
+      const formattedCommodity = commodity.charAt(0).toUpperCase() + commodity.slice(1).toLowerCase();
+      const url = `/consumers1_prices/${encodeURIComponent(formattedCommodity)}/?start_date=${startDate}&end_date=${endDate}`;
+
+      if (__DEV__) {
+        console.log('🛒 Fetching consumer prices:', url);
+      }
+
+      const response = await apiWithRetry.get(url);
+      const prices = Array.isArray(response.data) ? transformPriceData(response.data, commodity) : [];
+
+      // Cache the results
+      consumersCache.set(cacheKey, prices);
+
+      if (__DEV__) {
+        console.log('🛒 Retrieved consumer prices:', prices.length, 'entries for', commodity);
+      }
+
+      return prices;
+    } catch (error) {
+      console.error('Error fetching consumer prices:', error);
+
+      // Return cached data if available, even if expired
+      const cacheKey = `consumer_prices_${commodity.toLowerCase()}`;
+      const cachedData = consumersCache.get(cacheKey);
+      if (cachedData) {
+        console.log('⚠️ Using expired cached consumer prices due to network error');
+        return cachedData;
+      }
+
+      throw new APIError(
+        'Failed to fetch consumer prices',
         error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR,
         error.data
       );

@@ -1,6 +1,43 @@
 // API IMPORTS
 import { authService, userService, cropsService, farmersService, consumersService } from '@/services';
 
+// Function to fetch crop prices for a specific commodity
+export const fetchCropPrices = async (path, commodity) => {
+    console.log('Fetching crop prices for:', commodity, 'from collection:', path);
+    try {
+        let prices = [];
+
+        if (path === 'consumers') {
+            console.log('CRUD: Calling consumersService.getConsumerPrices()');
+            prices = await consumersService.getConsumerPrices(commodity);
+            console.log('CRUD: consumersService.getConsumerPrices returned:', prices?.length || 0, 'items');
+        } else if (path === 'farmers') {
+            console.log('CRUD: Calling farmersService.getFarmerPrices()');
+            prices = await farmersService.getFarmerPrices(commodity);
+            console.log('CRUD: farmersService.getFarmerPrices returned:', prices?.length || 0, 'items');
+        }
+
+        console.log(`Received ${prices.length} price entries for ${commodity} from ${path}`);
+        return prices;
+    } catch (error) {
+        console.error('CRUD: Error fetching crop prices from', path, ':', error);
+        console.error('CRUD: Error details:', {
+            message: error.message,
+            status: error.status,
+            data: error.data
+        });
+
+        // Handle offline/network errors gracefully
+        if (error.status === 0 || error.message?.includes('Network')) {
+            console.log('CRUD: App is offline, returning empty array for graceful degradation');
+            return [];
+        }
+
+        // For other errors, return empty array to allow UI to continue
+        return [];
+    }
+};
+
 
 // Function to fetch all crops
 export const fetchCrops = async (path) => {
