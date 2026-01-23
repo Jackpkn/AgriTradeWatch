@@ -6,7 +6,7 @@ export const MAP_CONFIG = {
   MIN_ZOOM: ENV_CONFIG.MAP.MIN_ZOOM,
   MAX_ZOOM: ENV_CONFIG.MAP.MAX_ZOOM,
   RADIUS: {
-    MIN: 0, // 0km
+    MIN: 0.5, // 0.5km
     MAX: 500, // 500km
     DEFAULT: 10, // 10km default
     DEBOUNCE_MS: ENV_CONFIG.MAP.DEBOUNCE_MS,

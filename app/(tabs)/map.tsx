@@ -1132,11 +1132,11 @@ const MapScreen = () => {
                 </Text>
                 <Slider
                   style={{ width: '100%', height: 40 }}
-                  minimumValue={0}
+                  minimumValue={0.5}
                   maximumValue={500}
-                  step={5}
+                  step={0.5}
                   value={state.radius}
-                  onValueChange={setRadius}
+                  onValueChange={debouncedSetRadius}
                   onSlidingComplete={setRadius}
                   minimumTrackTintColor="#49A760"
                   maximumTrackTintColor="#e0e0e0"
@@ -1148,7 +1148,7 @@ const MapScreen = () => {
                   style={mapStyles.sliderStepsScroll}
                 >
                   <View style={mapStyles.sliderSteps}>
-                    {[0, 10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500].map((step) => (
+                    {[0.5, 1, 5, 10, 25, 50, 100, 150, 200, 300, 400, 500].map((step) => (
                       <TouchableOpacity
                         key={step}
                         style={[

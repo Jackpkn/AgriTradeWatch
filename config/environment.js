@@ -31,8 +31,8 @@ const ENV_CONFIGS = {
     enableVirtualization: true,
     virtualizationThreshold: 500,
     MAP: {
-      DEFAULT_ZOOM: 13,
-      MIN_ZOOM: 8,
+      DEFAULT_ZOOM: 10,
+      MIN_ZOOM: 5,
       MAX_ZOOM: 20,
       DEBOUNCE_MS: 150,
       MAX_MARKERS: 1000,
@@ -48,8 +48,8 @@ const ENV_CONFIGS = {
     enableVirtualization: true,
     virtualizationThreshold: 1000,
     MAP: {
-      DEFAULT_ZOOM: 13,
-      MIN_ZOOM: 8,
+      DEFAULT_ZOOM: 10,
+      MIN_ZOOM: 5,
       MAX_ZOOM: 19,
       DEBOUNCE_MS: 300,
       MAX_MARKERS: 2000,
@@ -65,8 +65,8 @@ const ENV_CONFIGS = {
     enableVirtualization: false,
     virtualizationThreshold: 50,
     MAP: {
-      DEFAULT_ZOOM: 13,
-      MIN_ZOOM: 8,
+      DEFAULT_ZOOM: 10,
+      MIN_ZOOM: 5,
       MAX_ZOOM: 18,
       DEBOUNCE_MS: 100,
       MAX_MARKERS: 100,

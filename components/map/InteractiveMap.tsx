@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useCallback, ForwardedRef } from "react";
+import React, { useMemo, useRef, useCallback, useEffect, ForwardedRef } from "react";
 import { View, Text } from "react-native";
 import WebView from "react-native-webview";
 import { MAP_CONFIG } from "@/constants/mapConfig";
@@ -55,6 +55,55 @@ const InteractiveMap = React.forwardRef((
   // Use forwarded ref or create local ref
   const localWebViewRef = useRef<WebView>(null);
   const webViewRef = ref || localWebViewRef;
+
+  // Calculate zoom level based on radius (max 500km)
+  const getZoomForRadius = useCallback((radiusKm: number): number => {
+    if (radiusKm <= 1) return 14;
+    if (radiusKm <= 5) return 12;
+    if (radiusKm <= 10) return 11;
+    if (radiusKm <= 25) return 10;
+    if (radiusKm <= 50) return 9;
+    if (radiusKm <= 100) return 8;
+    if (radiusKm <= 200) return 7;
+    if (radiusKm <= 300) return 6;
+    if (radiusKm <= 400) return 5;
+    return 5; // For 500km
+  }, []);
+
+  // Update radius dynamically without re-rendering the whole map
+  useEffect(() => {
+    if (webViewRef && typeof webViewRef === 'object' && 'current' in webViewRef && webViewRef.current) {
+      const radiusMeters = radius * 1000;
+      const radiusLabel = `${radius}km`;
+
+      const jsCode = `
+        (function() {
+          if (window.radiusCircle && window.map) {
+            window.radiusCircle.setRadius(${radiusMeters});
+
+            // Update radius label
+            if (window.radiusLabel) {
+              window.map.removeLayer(window.radiusLabel);
+              window.radiusLabel = L.marker(window.radiusCircle.getLatLng(), {
+                icon: L.divIcon({
+                  className: 'radius-label',
+                  html: '<div style="background: rgba(73, 167, 96, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${radiusLabel} radius</div>',
+                  iconSize: [0, 0],
+                  iconAnchor: [0, -20]
+                })
+              }).addTo(window.map);
+            }
+
+            // Fit map to show entire circle
+            window.map.fitBounds(window.radiusCircle.getBounds(), { padding: [20, 20], maxZoom: ${getZoomForRadius(radius)} });
+          }
+        })();
+        true;
+      `;
+
+      webViewRef.current.injectJavaScript(jsCode);
+    }
+  }, [radius, webViewRef, getZoomForRadius]);
 
   // Generate proper Leaflet map HTML
   const mapHtml = useMemo(() => {
@@ -207,11 +256,16 @@ const InteractiveMap = React.forwardRef((
               dashArray: '5, 5'
             }).addTo(map);
 
+            // Auto-fit map to show the entire radius circle with appropriate zoom
+            if (${radius} > 0) {
+              map.fitBounds(window.radiusCircle.getBounds(), { padding: [20, 20], maxZoom: ${getZoomForRadius(radius)} });
+            }
+
             // Add radius label (store reference for drag updates)
             window.radiusLabel = L.marker([${latitude}, ${longitude}], {
               icon: L.divIcon({
                 className: 'radius-label',
-                html: '<div style="background: rgba(73, 167, 96, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${radius <= 0.5 ? Math.round(radius * 1000) + 'm' : radius + 'km'} radius</div>',
+                html: '<div style="background: rgba(73, 167, 96, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${radius}km radius</div>',
                 iconSize: [0, 0],
                 iconAnchor: [0, -20]
               })
@@ -225,7 +279,8 @@ const InteractiveMap = React.forwardRef((
         </body>
       </html>
     `;
-  }, [markerPosition, allCrops, selectedCrop, radius, selectedMapType]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- radius changes handled by useEffect injection
+  }, [markerPosition, allCrops, selectedCrop, selectedMapType, getZoomForRadius]);
 
   // Handle messages from WebView
   const handleWebViewMessage = useCallback(
@@ -247,10 +302,10 @@ const InteractiveMap = React.forwardRef((
     [onMarkerMove]
   );
 
-  // Key for WebView re-rendering
+  // Key for WebView re-rendering - radius removed to prevent full re-renders
   const webViewKey = useMemo(
-    () => `map-${markerPosition?.latitude}-${markerPosition?.longitude}-${selectedCrop}-${radius}-${selectedMapType}-${allCrops.length}`,
-    [markerPosition, selectedCrop, radius, selectedMapType, allCrops.length]
+    () => `map-${markerPosition?.latitude}-${markerPosition?.longitude}-${selectedCrop}-${selectedMapType}-${allCrops.length}`,
+    [markerPosition, selectedCrop, selectedMapType, allCrops.length]
   );
 
   // Debug logging
