@@ -52,20 +52,22 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
         }
       });
 
-      // Convert to chart format
+      // Convert to chart format - return all individual prices per date for scatter plot
       const chartData = Object.entries(pricesByDate)
         .filter(([_, data]) => data.prices.length > 0)
         .map(([date, data]) => {
+          // Calculate stats for the header display
           const avgPrice =
             data.prices.reduce((sum, price) => sum + price, 0) /
             data.prices.length;
-          const roundedPrice = Math.round(avgPrice);
+          const roundedAvg = Math.round(avgPrice);
           return {
             label: date,
-            value: roundedPrice,
-            dataPointText: `₹${roundedPrice}`,
+            value: roundedAvg, // Keep average for stats display
+            dataPointText: `₹${roundedAvg}`,
             timestamp: data.timestamp,
             count: data.prices.length,
+            allPrices: data.prices, // All individual prices for scatter plot
           };
         })
         .sort((a, b) => a.timestamp - b.timestamp);

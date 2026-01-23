@@ -1,12 +1,12 @@
 import React from "react";
 import { View, Text, ScrollView, Dimensions } from "react-native";
-import { LineChart } from "react-native-gifted-charts";
+import Svg, { Circle, Line, Text as SvgText, G } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface PriceChartProps {
-  chartData: { value: number; label: string; count: number }[];
+  chartData: { value: number; label: string; count: number; allPrices?: number[] }[];
   selectedCrop: string;
   priceUnit: string;
   title: string;
@@ -39,12 +39,16 @@ const PriceChart = ({
       )
       .map((item) => {
         const roundedValue = Math.round(item.value);
-        console.log(`PriceChart: Processing ${selectedCrop} - Original: ${item.value}, Rounded: ${roundedValue}`);
+        // Ensure allPrices exists and contains valid values
+        const allPrices = (item.allPrices || [item.value])
+          .map((p: number) => Math.round(p))
+          .filter((p: number) => p > 0 && !isNaN(p));
         return {
           ...item,
           value: roundedValue,
           dataPointText: `₹${roundedValue}`,
           count: item.count || 1,
+          allPrices: allPrices.length > 0 ? allPrices : [roundedValue],
         };
       });
   }, [chartData, selectedCrop]);
@@ -52,44 +56,40 @@ const PriceChart = ({
   if (!validChartData.length) return null;
 
   const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
-  const chartWidth = Math.max(width - 40, validChartData.length * 120);
 
-  const maxValue = Math.max(...validChartData.map((d) => Math.round(d.value)));
-  const minValue = Math.min(...validChartData.map((d) => Math.round(d.value)));
-  const priceRange = maxValue - minValue || 1;
+  // Collect ALL prices across all dates for min/max calculation
+  const allPricesFlat = validChartData.flatMap((d) => d.allPrices || [d.value]);
+  const maxValue = Math.max(...allPricesFlat);
+  const minValue = Math.min(...allPricesFlat.filter((v) => v > 0));
 
-  // Create consistent linear Y-axis intervals
-  const getLinearYAxisConfig = () => {
-    // Always start from 0 for consistency
-    const yMin = 0;
+  // Chart dimensions
+  const chartHeight = 280;
+  const padding = { top: 40, right: 20, bottom: 50, left: 50 };
+  const chartWidth = Math.max(width - 40, validChartData.length * 100);
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const plotHeight = chartHeight - padding.top - padding.bottom;
 
-    // Calculate a nice round interval (5, 10, 20, 25, 50, 100, etc.)
-    let interval = 5;
-    if (maxValue > 100) interval = 25;
-    else if (maxValue > 50) interval = 10;
-    else if (maxValue > 25) interval = 5;
-    else interval = 2; // For very small values
+  // Calculate Y-axis range with padding
+  const yPadding = (maxValue - minValue) * 0.1 || 10;
+  const yMin = Math.max(0, minValue - yPadding);
+  const yMax = maxValue + yPadding;
 
-    // Round max up to next interval
-    const yMax = Math.ceil(maxValue / interval) * interval;
-
-    // Generate Y-axis labels
-    const yAxisLabels = [];
-    for (let i = yMin; i <= yMax; i += interval) {
-      yAxisLabels.push(i.toString());
-    }
-
-    return {
-      min: yMin,
-      max: yMax,
-      interval: interval,
-      labels: yAxisLabels,
-      stepValue: interval,
-      stepHeight: 320 / ((yMax - yMin) / interval)
-    };
+  // Scale functions
+  const xScale = (index: number) => {
+    if (validChartData.length === 1) return padding.left + plotWidth / 2;
+    return padding.left + (index / (validChartData.length - 1)) * plotWidth;
+  };
+  const yScale = (value: number) => {
+    return padding.top + plotHeight - ((value - yMin) / (yMax - yMin)) * plotHeight;
   };
 
-  const yAxisConfig = getLinearYAxisConfig();
+  // Y-axis labels
+  const numYLabels = 5;
+  const yAxisLabels = [];
+  for (let i = 0; i <= numYLabels; i++) {
+    const value = yMin + (yMax - yMin) * (i / numYLabels);
+    yAxisLabels.push({ value: Math.round(value), y: yScale(value) });
+  }
 
 
 
@@ -172,81 +172,108 @@ const PriceChart = ({
           contentContainerStyle={modernStyles.chartScrollContent}
         >
           <View style={modernStyles.chartWrapper}>
-            <LineChart
-              key={`${selectedCrop}-${priceUnit}-${validChartData.length}`}
-              data={validChartData}
-              width={chartWidth}
-              height={320}
-              yAxisLabelPrefix={"₹"}
-              xAxisLabelTextStyle={modernStyles.xAxisLabel}
-              showVerticalLines
-              verticalLinesColor={"rgba(79, 205, 196, 0.1)"}
-              textColor={"#2C3E50"}
-              color={getGradientColors()[0] || "#4ECDC4"}
-              thickness={3}
-              areaChart
-              startFillColor={getGradientColors()[0] || "#4ECDC4"}
-              endFillColor={getGradientColors()[2] || "#26D0CE"}
-              startOpacity={0.3}
-              endOpacity={0.05}
-              maxValue={yAxisConfig.max}
-              stepValue={yAxisConfig.stepValue}
-              noOfSections={yAxisConfig.labels.length - 1}
-              textShiftY={-30}
-              textShiftX={0}
-              curved
-              dataPointsColor={getGradientColors()[0] || "#4ECDC4"}
-              dataPointsRadius={6}
-              spacing={validChartData.length > 10 ? 60 : 90}
-              initialSpacing={40}
-              endSpacing={40}
-              rulesColor={"rgba(44, 62, 80, 0.1)"}
-              rulesType="solid"
-              xAxisColor={"#BDC3C7"}
-              yAxisColor={"#BDC3C7"}
-              hideRules={false}
-              hideDataPoints={false}
-              focusEnabled
-              showValuesAsDataPointsText={false}
-              animateOnDataChange
-              animationDuration={1200}
-              pointerConfig={{
-                pointerStripHeight: 250,
-                pointerStripColor: "rgba(44, 62, 80, 0.15)",
-                pointerStripWidth: 2,
-                pointerColor: getGradientColors()[0] || "#4ECDC4",
-                radius: 8,
-                activatePointersOnLongPress: true,
-                pointerLabelComponent: (item: any[]) => {
+            <Svg width={chartWidth} height={chartHeight}>
+              {/* Y-axis */}
+              <Line
+                x1={padding.left}
+                y1={padding.top}
+                x2={padding.left}
+                y2={padding.top + plotHeight}
+                stroke="#ddd"
+                strokeWidth={1}
+              />
+
+              {/* X-axis */}
+              <Line
+                x1={padding.left}
+                y1={padding.top + plotHeight}
+                x2={padding.left + plotWidth}
+                y2={padding.top + plotHeight}
+                stroke="#ddd"
+                strokeWidth={1}
+              />
+
+              {/* Horizontal grid lines and Y-axis labels */}
+              {yAxisLabels.map((label, i) => (
+                <G key={`y-${i}`}>
+                  <Line
+                    x1={padding.left}
+                    y1={label.y}
+                    x2={padding.left + plotWidth}
+                    y2={label.y}
+                    stroke="rgba(0,0,0,0.1)"
+                    strokeWidth={1}
+                  />
+                  <SvgText
+                    x={padding.left - 8}
+                    y={label.y + 4}
+                    fontSize={10}
+                    fill="#666"
+                    textAnchor="end"
+                  >
+                    {label.value}
+                  </SvgText>
+                </G>
+              ))}
+
+              {/* Vertical grid lines and X-axis labels */}
+              {validChartData.map((item, index) => (
+                <G key={`x-${index}`}>
+                  <Line
+                    x1={xScale(index)}
+                    y1={padding.top}
+                    x2={xScale(index)}
+                    y2={padding.top + plotHeight}
+                    stroke="rgba(0,0,0,0.05)"
+                    strokeWidth={1}
+                  />
+                  <SvgText
+                    x={xScale(index)}
+                    y={padding.top + plotHeight + 20}
+                    fontSize={9}
+                    fill="#666"
+                    textAnchor="middle"
+                  >
+                    {item.label}
+                  </SvgText>
+                </G>
+              ))}
+
+              {/* Data points - ALL prices for each date (scatter plot) */}
+              {validChartData.map((item, dateIndex) => {
+                const prices = item.allPrices || [item.value];
+                const x = xScale(dateIndex);
+                const gradientColor = getGradientColors()[0];
+
+                return prices.map((price, priceIndex) => {
+                  const y = yScale(price);
                   return (
-                    <View style={modernStyles.tooltip}>
-                      <LinearGradient
-                        colors={["#FFFFFF", "#F8F9FA"]}
-                        style={modernStyles.tooltipGradient}
+                    <G key={`point-${dateIndex}-${priceIndex}`}>
+                      {/* Price label */}
+                      <SvgText
+                        x={x}
+                        y={y - 12}
+                        fontSize={9}
+                        fill={gradientColor}
+                        fontWeight="600"
+                        textAnchor="middle"
                       >
-                        <Text style={modernStyles.tooltipPrice}>
-                          ₹{Math.round(item[0]?.value)}
-                        </Text>
-                        <Text style={modernStyles.tooltipDate}>
-                          {item[0]?.label}
-                        </Text>
-                        <View style={modernStyles.tooltipReports}>
-                          <View
-                            style={[
-                              modernStyles.reportsDot,
-                              { backgroundColor: getGradientColors()[0] },
-                            ]}
-                          />
-                          <Text style={modernStyles.reportsText}>
-                            {item[0]?.count} {t.map.reports}
-                          </Text>
-                        </View>
-                      </LinearGradient>
-                    </View>
+                        {price}
+                      </SvgText>
+                      {/* Dot */}
+                      <Circle
+                        cx={x}
+                        cy={y}
+                        r={6}
+                        fill={gradientColor}
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    </G>
                   );
-                },
-              }}
-            />
+                });
+              })}
+            </Svg>
           </View>
         </ScrollView>
       </View>
