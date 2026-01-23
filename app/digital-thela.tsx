@@ -200,26 +200,8 @@ const DigitalThela: React.FC = () => {
   const { t } = useTranslation();
   const { userRole } = useGlobal();
 
-  // Access guard - only farmers and retailers can access Digital Thela
-  const allowedRoles = ['farmer', 'retailer'];
-  if (userRole && !allowedRoles.includes(userRole)) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Ionicons name="lock-closed" size={64} color="#9C27B0" />
-          <Text style={styles.errorText}>
-            Digital Thela is only available for Farmers and Retailers.
-          </Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.retryButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // Check if user can add produce (only farmers and retailers)
+  const canAddProduce = userRole === 'farmer' || userRole === 'retailer';
 
   // State
   const [allEntries, setAllEntries] = useState<DTEntry[]>([]);
@@ -435,22 +417,24 @@ const DigitalThela: React.FC = () => {
         </View>
       )}
 
-      {/* Floating Add Button */}
-      <View style={styles.fabContainer} collapsable={false}>
-        <TouchableOpacity
-          onPress={handleAddProduce}
-          activeOpacity={0.7}
-          delayPressIn={0}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <LinearGradient
-            colors={["#9C27B0", "#7B1FA2"]}
-            style={styles.fabButton}
+      {/* Floating Add Button - only for farmers and retailers */}
+      {canAddProduce && (
+        <View style={styles.fabContainer} collapsable={false}>
+          <TouchableOpacity
+            onPress={handleAddProduce}
+            activeOpacity={0.7}
+            delayPressIn={0}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="add" size={32} color="#fff" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+            <LinearGradient
+              colors={["#9C27B0", "#7B1FA2"]}
+              style={styles.fabButton}
+            >
+              <Ionicons name="add" size={32} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

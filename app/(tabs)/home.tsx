@@ -130,24 +130,8 @@ const Home: React.FC = React.memo(() => {
     [isLandscape, width]
   );
 
-  // Get features with translations (mark Digital Thela as locked for consumers)
-  const FEATURES = useMemo(() => {
-    const allFeatures = getFeatures(t);
-    if (userRole === 'consumer') {
-      // Mark Digital Thela as locked for consumers - it's only for farmers and retailers
-      return allFeatures.map(feature => {
-        if (feature.route === 'digital-thela') {
-          return {
-            ...feature,
-            isLocked: true,
-            lockedMessage: t.home.digitalThelaLocked || "Only for Farmers & Retailers",
-          };
-        }
-        return feature;
-      });
-    }
-    return allFeatures;
-  }, [t, userRole]);
+  // Get features with translations
+  const FEATURES = useMemo(() => getFeatures(t), [t]);
 
   // Navigation handler
   const handleNavigation = useCallback(
