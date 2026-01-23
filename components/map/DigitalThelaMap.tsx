@@ -16,15 +16,190 @@ export interface DTEntry {
   photo_or_video: string;
 }
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
 interface DigitalThelaMapProps {
   entries: DTEntry[];
   selectedCommodity: string | null;
   onEntrySelect?: (entry: DTEntry | null) => void;
   onUsernamePress?: (username: string) => void;
+  userLocation?: UserLocation | null;
 }
 
+// Comprehensive commodity-to-emoji mapping for fruits, vegetables, grains, and more
+const COMMODITY_EMOJIS: Record<string, string> = {
+  // Vegetables
+  potato: "🥔",
+  potatoes: "🥔",
+  onion: "🧅",
+  onions: "🧅",
+  garlic: "🧄",
+  carrot: "🥕",
+  carrots: "🥕",
+  tomato: "🍅",
+  tomatoes: "🍅",
+  eggplant: "🍆",
+  brinjal: "🍆",
+  baingan: "🍆",
+  cucumber: "🥒",
+  cucumbers: "🥒",
+  lettuce: "🥬",
+  cabbage: "🥬",
+  broccoli: "🥦",
+  corn: "🌽",
+  maize: "🌽",
+  makka: "🌽",
+  pepper: "🌶️",
+  chilli: "🌶️",
+  chili: "🌶️",
+  mirchi: "🌶️",
+  bellpepper: "🫑",
+  capsicum: "🫑",
+  shimla: "🫑",
+  mushroom: "🍄",
+  mushrooms: "🍄",
+  peas: "🫛",
+  matar: "🫛",
+  beans: "🫘",
+  leafygreens: "🥬",
+  spinach: "🥬",
+  palak: "🥬",
+  methi: "🥬",
+  beetroot: "🫒",
+  radish: "🫒",
+  mooli: "🫒",
+  ginger: "🫚",
+  adrak: "🫚",
+
+  // Fruits
+  apple: "🍎",
+  apples: "🍎",
+  seb: "🍎",
+  greenapple: "🍏",
+  banana: "🍌",
+  bananas: "🍌",
+  kela: "🍌",
+  orange: "🍊",
+  oranges: "🍊",
+  santra: "🍊",
+  lemon: "🍋",
+  lemons: "🍋",
+  nimbu: "🍋",
+  lime: "🍋",
+  watermelon: "🍉",
+  tarbooz: "🍉",
+  grapes: "🍇",
+  angoor: "🍇",
+  strawberry: "🍓",
+  strawberries: "🍓",
+  blueberry: "🫐",
+  blueberries: "🫐",
+  peach: "🍑",
+  peaches: "🍑",
+  aadu: "🍑",
+  mango: "🥭",
+  mangoes: "🥭",
+  aam: "🥭",
+  pineapple: "🍍",
+  ananas: "🍍",
+  coconut: "🥥",
+  nariyal: "🥥",
+  kiwi: "🥝",
+  cherry: "🍒",
+  cherries: "🍒",
+  pear: "🍐",
+  pears: "🍐",
+  nashpati: "🍐",
+  melon: "🍈",
+  kharbooja: "🍈",
+  papaya: "🥭",
+  pomegranate: "🫐",
+  anaar: "🫐",
+  guava: "🍐",
+  amrood: "🍐",
+  fig: "🫐",
+  anjeer: "🫐",
+  plum: "🫐",
+  aloo_bukhara: "🫐",
+  custardapple: "🍏",
+  sitafal: "🍏",
+  jackfruit: "🍈",
+  kathal: "🍈",
+  litchi: "🍒",
+  lychee: "🍒",
+
+  // Grains & Cereals
+  wheat: "🌾",
+  gehun: "🌾",
+  rice: "🍚",
+  chawal: "🍚",
+  paddy: "🌾",
+  dhan: "🌾",
+  bajra: "🌾",
+  jowar: "🌾",
+  ragi: "🌾",
+  barley: "🌾",
+  jau: "🌾",
+  oats: "🌾",
+  millet: "🌾",
+
+  // Pulses & Legumes
+  dal: "🫘",
+  lentils: "🫘",
+  masoor: "🫘",
+  moong: "🫘",
+  chana: "🫘",
+  chickpeas: "🫘",
+  rajma: "🫘",
+  kidneybean: "🫘",
+  soybean: "🫘",
+  groundnut: "🥜",
+  peanut: "🥜",
+  peanuts: "🥜",
+  moongfali: "🥜",
+
+  // Cash Crops
+  sugarcane: "🎋",
+  ganna: "🎋",
+  cotton: "🧶",
+  kapas: "🧶",
+  jute: "🧶",
+  tobacco: "🍂",
+  tea: "🍵",
+  chai: "🍵",
+  coffee: "☕",
+
+  // Spices
+  turmeric: "🟡",
+  haldi: "🟡",
+  cumin: "🟤",
+  jeera: "🟤",
+  coriander: "🌿",
+  dhaniya: "🌿",
+  mustard: "🟡",
+  sarson: "🟡",
+
+  // Others
+  milk: "🥛",
+  doodh: "🥛",
+  egg: "🥚",
+  eggs: "🥚",
+  anda: "🥚",
+  honey: "🍯",
+  shahad: "🍯",
+};
+
+// Get emoji for a commodity, with fallback
+const getCommodityEmoji = (commodity: string): string => {
+  const normalized = commodity.toLowerCase().replace(/\s+/g, '');
+  return COMMODITY_EMOJIS[normalized] || "🛒";
+};
+
 const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
-  ({ entries, selectedCommodity, onEntrySelect, onUsernamePress }, ref) => {
+  ({ entries, selectedCommodity, onEntrySelect, onUsernamePress, userLocation }, ref) => {
     const webViewRef = useRef<WebView>(null);
     const [mapReady, setMapReady] = useState(false);
 
@@ -108,6 +283,34 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
     .custom-marker {
       background: none;
       border: none;
+    }
+    .emoji-marker {
+      font-size: 32px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
+    }
+    .current-location-marker {
+      width: 16px;
+      height: 16px;
+      background: #4285F4;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .current-location-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(66, 133, 244, 0.2);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
     }
     .marker-pin {
       width: 30px;
@@ -194,7 +397,7 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
     map = L.map('map', {
       zoomControl: true,
       attributionControl: false,
-    }).setView([${mapCenter.lat}, ${mapCenter.lng}], 10);
+    }).setView([${mapCenter.lat}, ${mapCenter.lng}], 5);
 
     // Satellite imagery layer
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -208,8 +411,29 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
       attribution: 'Esri'
     }).addTo(map);
 
-    // Custom marker icon
-    const customIcon = L.divIcon({
+    // Commodity emoji mapping
+    const COMMODITY_EMOJIS = ${JSON.stringify(COMMODITY_EMOJIS)};
+
+    // Get emoji for commodity with fallback
+    function getCommodityEmoji(commodity) {
+      const normalized = commodity.toLowerCase().replace(/\\s+/g, '');
+      return COMMODITY_EMOJIS[normalized] || '🛒';
+    }
+
+    // Create emoji icon for a commodity
+    function createEmojiIcon(commodity) {
+      const emoji = getCommodityEmoji(commodity);
+      return L.divIcon({
+        className: 'custom-marker',
+        html: '<div class="emoji-marker">' + emoji + '</div>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36]
+      });
+    }
+
+    // Fallback marker icon (purple pin)
+    const fallbackIcon = L.divIcon({
       className: 'custom-marker',
       html: '<div class="marker-pin"></div>',
       iconSize: [30, 42],
@@ -251,8 +475,9 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
 
       // Add new markers
       entries.forEach(entry => {
+        const icon = createEmojiIcon(entry.sale_commodity);
         const marker = L.marker([entry.latitude, entry.longitude], {
-          icon: customIcon
+          icon: icon
         }).addTo(map);
 
         marker.bindPopup(createPopupContent(entry), {
@@ -273,7 +498,7 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
       // Fit bounds to show all markers
       if (entries.length > 0) {
         const bounds = L.latLngBounds(entries.map(e => [e.latitude, e.longitude]));
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
       }
     }
 
@@ -296,7 +521,7 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
       if (data.type === 'updateEntries') {
         updateMarkers(data.entries);
         if (data.center) {
-          map.setView([data.center.lat, data.center.lng], 10);
+          map.setView([data.center.lat, data.center.lng], 5);
         }
       }
     });
@@ -307,10 +532,31 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
       if (data.type === 'updateEntries') {
         updateMarkers(data.entries);
         if (data.center) {
-          map.setView([data.center.lat, data.center.lng], 10);
+          map.setView([data.center.lat, data.center.lng], 5);
         }
       }
     });
+
+    // Current location marker
+    const userLocationData = ${userLocation ? JSON.stringify(userLocation) : 'null'};
+
+    // Create blue dot icon for current location
+    const currentLocationIcon = L.divIcon({
+      className: 'custom-marker',
+      html: '<div class="current-location-pulse"></div><div class="current-location-marker"></div>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
+    });
+
+    // Show current location if available
+    if (userLocationData) {
+      const currentLocationMarker = L.marker([userLocationData.latitude, userLocationData.longitude], {
+        icon: currentLocationIcon,
+        zIndexOffset: 1000
+      }).addTo(map);
+
+      currentLocationMarker.bindPopup('<div style="text-align:center;font-weight:600;color:#4285F4;">Your Location</div>');
+    }
 
     // Notify React Native that map is ready
     setTimeout(() => {
@@ -330,6 +576,7 @@ const DigitalThelaMap = forwardRef<WebView, DigitalThelaMapProps>(
           style={styles.webview}
           javaScriptEnabled={true}
           domStorageEnabled={true}
+          geolocationEnabled={true}
           onMessage={handleMessage}
           scrollEnabled={false}
           bounces={false}

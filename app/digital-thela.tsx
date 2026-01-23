@@ -35,6 +35,11 @@ interface DTEntry {
   photo_or_video?: string;
 }
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
 // Styles
 const styles = StyleSheet.create({
   container: {
@@ -198,10 +203,15 @@ const styles = StyleSheet.create({
 const DigitalThela: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { userRole } = useGlobal();
+  const { userRole, currentLocation } = useGlobal();
 
   // Check if user can add produce (only farmers and retailers)
   const canAddProduce = userRole === 'farmer' || userRole === 'retailer';
+
+  // Get user location from global context
+  const userLocation: UserLocation | null = currentLocation
+    ? { latitude: currentLocation.latitude, longitude: currentLocation.longitude }
+    : null;
 
   // State
   const [allEntries, setAllEntries] = useState<DTEntry[]>([]);
@@ -413,6 +423,7 @@ const DigitalThela: React.FC = () => {
             entries={filteredEntries}
             selectedCommodity={selectedCommodity}
             onUsernamePress={handleUsernamePress}
+            userLocation={userLocation}
           />
         </View>
       )}
