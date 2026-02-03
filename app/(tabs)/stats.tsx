@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ScrollView,
   Text,
@@ -445,7 +446,12 @@ const Stats: React.FC = () => {
 
       const gradientColors = GRADIENT_COLORS[type];
       const chartHeight = 280;
-      const chartMaxValue = maxValue + (maxValue - minValue) * 0.1;
+
+      // Handle single data point: add padding around the value for Y-axis range
+      const adjustedMinValue = priceRange === 0 ? Math.max(0, minValue - minValue * 0.2) : minValue;
+      const chartMaxValue = priceRange === 0
+        ? maxValue + maxValue * 0.2  // Add 20% padding when single point
+        : maxValue + priceRange * 0.1;
 
       // SVG Scatter Chart dimensions
       const padding = { top: 40, right: 20, bottom: 50, left: 50 };
@@ -453,14 +459,27 @@ const Stats: React.FC = () => {
       const plotHeight = chartHeight - padding.top - padding.bottom;
 
       // Scale functions
-      const xScale = (index: number) => padding.left + (index / (sortedDates.length - 1 || 1)) * plotWidth;
-      const yScale = (value: number) => padding.top + plotHeight - ((value - minValue) / (chartMaxValue - minValue)) * plotHeight;
+      // Handle single data point: center it horizontally
+      const xScale = (index: number) => {
+        if (sortedDates.length === 1) {
+          return padding.left + plotWidth / 2; // Center single point
+        }
+        return padding.left + (index / (sortedDates.length - 1)) * plotWidth;
+      };
+      // Use adjusted min for proper Y-axis scaling (handles single data point)
+      const yScale = (value: number) => {
+        const range = chartMaxValue - adjustedMinValue;
+        if (range === 0) {
+          return padding.top + plotHeight / 2; // Fallback: center vertically
+        }
+        return padding.top + plotHeight - ((value - adjustedMinValue) / range) * plotHeight;
+      };
 
       // Y-axis labels
       const yAxisLabels = [];
       const numYLabels = 5;
       for (let i = 0; i <= numYLabels; i++) {
-        const value = minValue + (chartMaxValue - minValue) * (i / numYLabels);
+        const value = adjustedMinValue + (chartMaxValue - adjustedMinValue) * (i / numYLabels);
         yAxisLabels.push({ value: Math.round(value), y: yScale(value) });
       }
 
@@ -545,7 +564,7 @@ const Stats: React.FC = () => {
                 ))}
 
                 {/* Data points - all prices for each date */}
-                {sortedDates.map((dateLabel, dateIndex) => {
+                {sortedDates.flatMap((dateLabel, dateIndex) => {
                   const prices = dateGroups[dateLabel]?.prices || [];
                   const x = xScale(dateIndex);
 
@@ -755,6 +774,19 @@ const Stats: React.FC = () => {
       fetchFarmerPrices(state.farmerCropName);
     }
   }, [state.farmerCropName, fetchFarmerPrices]);
+
+  // Auto-reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Stats screen focused - refreshing data");
+      if (state.consumerCropName) {
+        fetchConsumerPrices(state.consumerCropName);
+      }
+      if (state.farmerCropName) {
+        fetchFarmerPrices(state.farmerCropName);
+      }
+    }, [fetchConsumerPrices, fetchFarmerPrices, state.consumerCropName, state.farmerCropName])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
