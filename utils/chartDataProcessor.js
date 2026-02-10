@@ -6,7 +6,15 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
     "processChartData",
     crops.length,
     () => {
-      if (!crops.length) return [];
+      console.log('  📈 [processChartData] Starting with:', {
+        inputCrops: crops.length,
+        selectedCrop: selectedCrop
+      });
+
+      if (!crops.length) {
+        console.log('  📈 [processChartData] ❌ No crops provided, returning empty');
+        return [];
+      }
 
       const cropData = crops.filter(
         (crop) => {
@@ -16,7 +24,21 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
         }
       );
 
-      if (!cropData.length) return [];
+      console.log('  📈 [processChartData] After name filter:', {
+        beforeFilter: crops.length,
+        afterFilter: cropData.length,
+        selectedCrop: selectedCrop
+      });
+
+      if (cropData.length === 0 && crops.length > 0) {
+        console.log('  📈 [processChartData] ⚠️ All crops filtered out by name!');
+        console.log('  📈 Sample crop names in input:', crops.slice(0, 3).map(c => c.name || c.commodity));
+      }
+
+      if (!cropData.length) {
+        console.log('  📈 [processChartData] ❌ No matching crops after name filter');
+        return [];
+      }
 
       // Group by date
       const pricesByDate = {};
@@ -73,10 +95,18 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
         .sort((a, b) => a.timestamp - b.timestamp);
 
       // Ensure we always return valid data or empty array
-      return chartData.filter(
+      const finalData = chartData.filter(
         (item) =>
           item.value > 0 && !isNaN(item.value) && typeof item.label === "string"
       );
+
+      console.log('  📈 [processChartData] Final output:', {
+        dateGroupsCount: Object.keys(pricesByDate).length,
+        chartDataBeforeFilter: chartData.length,
+        finalDataCount: finalData.length
+      });
+
+      return finalData;
     }
   );
 };

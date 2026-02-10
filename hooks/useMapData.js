@@ -54,9 +54,31 @@ export const useMapData = () => {
         const consumerCrops = await fetchCrops("consumers");
         console.log("useMapData: Consumer crops received:", consumerCrops?.length || 0);
 
+        // Log sample consumer data structure
+        if (consumerCrops && consumerCrops.length > 0) {
+          console.log("useMapData: Sample CONSUMER crop structure:", {
+            sample: consumerCrops[0],
+            name: consumerCrops[0]?.name || consumerCrops[0]?.commodity,
+            pricePerUnit: consumerCrops[0]?.pricePerUnit,
+            location: consumerCrops[0]?.location,
+            createdAt: consumerCrops[0]?.createdAt
+          });
+        }
+
         console.log("useMapData: Fetching farmer crops...");
         const farmerCrops = await fetchCrops("farmers");
         console.log("useMapData: Farmer crops received:", farmerCrops?.length || 0);
+
+        // Log sample farmer data structure
+        if (farmerCrops && farmerCrops.length > 0) {
+          console.log("useMapData: Sample FARMER crop structure:", {
+            sample: farmerCrops[0],
+            name: farmerCrops[0]?.name || farmerCrops[0]?.commodity,
+            pricePerUnit: farmerCrops[0]?.pricePerUnit,
+            location: farmerCrops[0]?.location,
+            createdAt: farmerCrops[0]?.createdAt
+          });
+        }
 
         setAllConsumerCrops(consumerCrops || []);
         setAllFarmerCrops(farmerCrops || []);

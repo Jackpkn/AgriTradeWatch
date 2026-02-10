@@ -567,34 +567,40 @@ const Stats: React.FC = () => {
                 {sortedDates.flatMap((dateLabel, dateIndex) => {
                   const prices = dateGroups[dateLabel]?.prices || [];
                   const x = xScale(dateIndex);
+                  const count = prices.length;
 
-                  return prices.map((price, priceIndex) => {
-                    const y = yScale(price);
-                    return (
-                      <G key={`point-${dateIndex}-${priceIndex}`}>
-                        {/* Price label */}
+                  return (
+                    <G key={`date-group-${dateIndex}`}>
+                      {/* Count label - shown once per x-axis position */}
+                      {count > 0 && (
                         <SvgText
                           x={x}
-                          y={y - 12}
-                          fontSize={9}
+                          y={padding.top - 10}
+                          fontSize={10}
                           fill={gradientColors[0]}
                           fontWeight="600"
                           textAnchor="middle"
                         >
-                          Rs {price}
+                          n={count}
                         </SvgText>
-                        {/* Dot */}
-                        <Circle
-                          cx={x}
-                          cy={y}
-                          r={6}
-                          fill={gradientColors[0]}
-                          stroke="#fff"
-                          strokeWidth={2}
-                        />
-                      </G>
-                    );
-                  });
+                      )}
+                      {/* Dots for each price */}
+                      {prices.map((price, priceIndex) => {
+                        const y = yScale(price);
+                        return (
+                          <Circle
+                            key={`point-${dateIndex}-${priceIndex}`}
+                            cx={x}
+                            cy={y}
+                            r={6}
+                            fill={gradientColors[0]}
+                            stroke="#fff"
+                            strokeWidth={2}
+                          />
+                        );
+                      })}
+                    </G>
+                  );
                 })}
               </Svg>
             </View>

@@ -244,34 +244,40 @@ const PriceChart = ({
                 const prices = item.allPrices || [item.value];
                 const x = xScale(dateIndex);
                 const gradientColor = getGradientColors()[0];
+                const count = prices.length;
 
-                return prices.map((price, priceIndex) => {
-                  const y = yScale(price);
-                  return (
-                    <G key={`point-${dateIndex}-${priceIndex}`}>
-                      {/* Price label */}
+                return (
+                  <G key={`date-group-${dateIndex}`}>
+                    {/* Count label - shown once per x-axis position */}
+                    {count > 0 && (
                       <SvgText
                         x={x}
-                        y={y - 12}
-                        fontSize={9}
+                        y={padding.top - 10}
+                        fontSize={10}
                         fill={gradientColor}
                         fontWeight="600"
                         textAnchor="middle"
                       >
-                        {price}
+                        n={count}
                       </SvgText>
-                      {/* Dot */}
-                      <Circle
-                        cx={x}
-                        cy={y}
-                        r={6}
-                        fill={gradientColor}
-                        stroke="#fff"
-                        strokeWidth={2}
-                      />
-                    </G>
-                  );
-                });
+                    )}
+                    {/* Dots for each price */}
+                    {prices.map((price, priceIndex) => {
+                      const y = yScale(price);
+                      return (
+                        <Circle
+                          key={`point-${dateIndex}-${priceIndex}`}
+                          cx={x}
+                          cy={y}
+                          r={6}
+                          fill={gradientColor}
+                          stroke="#fff"
+                          strokeWidth={2}
+                        />
+                      );
+                    })}
+                  </G>
+                );
               })}
             </Svg>
           </View>

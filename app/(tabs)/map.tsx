@@ -17,7 +17,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 // Components
 import MapHeader from "@/components/map/MapHeader";
 import InteractiveMap from "@/components/map/InteractiveMap";
-import PriceUnitToggle from "@/components/map/PriceUnitToggle";
 import MapLegend from "@/components/map/MapLegend";
 import PriceChart from "@/components/map/PriceChart";
 import CropSelectionModal from "@/components/map/CropSelectionModal";
@@ -709,7 +708,6 @@ const MapScreen = () => {
   );
 
   const { filterCropsInRadius } = useGeolocation();
-  const { calculatePriceData } = usePriceCalculations(allCrops, state.selectedCrop);
 
   const radiusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const webViewRef = useRef<any>(null);
@@ -783,8 +781,350 @@ const MapScreen = () => {
     }
   }, [currentLocation?.latitude, currentLocation?.longitude, state.markerPosition, updateState]);
 
+  // IMPORTANT: All useMemo declarations must come BEFORE useEffects that depend on them
+  const filteredCrops = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🗺️ [STEP 1] FILTERING ALL CROPS BY RADIUS');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Input:', {
+      totalCrops: allCrops.length,
+      markerPosition: state.markerPosition,
+      radius: state.radius,
+      selectedCrop: state.selectedCrop
+    });
+
+    const startTime = performance.now();
+    const result = filterCropsInRadius(
+      allCrops,
+      state.markerPosition,
+      state.radius,
+      state.selectedCrop
+    );
+
+    console.log('Output: filteredCrops =', result.length, 'items');
+    if (result.length > 0) {
+      console.log('Sample filtered crop:', result[0]);
+    }
+
+    performanceMonitor.recordOperation(
+      "filterCrops",
+      performance.now() - startTime
+    );
+    return result;
+  }, [allCrops, state.markerPosition, state.radius, state.selectedCrop, filterCropsInRadius]);
+
+  // Use filteredCrops (radius-filtered) for price calculations
+  const { calculatePriceData } = usePriceCalculations(filteredCrops, state.selectedCrop);
+
+  const consumersInRadius = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔵 [STEP 2a] FILTERING CONSUMERS BY RADIUS');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Input:', {
+      totalConsumerCrops: allConsumerCrops.length,
+      radius: state.radius,
+      selectedCrop: state.selectedCrop
+    });
+
+    const result = filterCropsInRadius(
+      allConsumerCrops,
+      state.markerPosition,
+      state.radius,
+      state.selectedCrop
+    );
+
+    console.log('Output: consumersInRadius =', result.length, 'items');
+    if (result.length > 0) {
+      console.log('Sample consumer in radius:', {
+        name: result[0]?.name || result[0]?.commodity,
+        pricePerUnit: result[0]?.pricePerUnit,
+        location: result[0]?.location,
+        createdAt: result[0]?.createdAt
+      });
+    } else {
+      console.log('⚠️ NO CONSUMERS FOUND IN RADIUS!');
+      // Log a sample from all consumers to see why
+      if (allConsumerCrops.length > 0) {
+        console.log('Sample from allConsumerCrops:', {
+          name: allConsumerCrops[0]?.name || allConsumerCrops[0]?.commodity,
+          location: allConsumerCrops[0]?.location
+        });
+      }
+    }
+
+    return result;
+  }, [allConsumerCrops, state.markerPosition, state.radius, state.selectedCrop, filterCropsInRadius]);
+
+  const farmersInRadius = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🟢 [STEP 2b] FILTERING FARMERS BY RADIUS');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Input:', {
+      totalFarmerCrops: allFarmerCrops.length,
+      radius: state.radius,
+      selectedCrop: state.selectedCrop
+    });
+
+    const result = filterCropsInRadius(
+      allFarmerCrops,
+      state.markerPosition,
+      state.radius,
+      state.selectedCrop
+    );
+
+    console.log('Output: farmersInRadius =', result.length, 'items');
+    if (result.length > 0) {
+      console.log('Sample farmer in radius:', {
+        name: result[0]?.name || result[0]?.commodity,
+        pricePerUnit: result[0]?.pricePerUnit,
+        location: result[0]?.location,
+        createdAt: result[0]?.createdAt
+      });
+    } else {
+      console.log('⚠️ NO FARMERS FOUND IN RADIUS!');
+      // Log a sample from all farmers to see why
+      if (allFarmerCrops.length > 0) {
+        console.log('Sample from allFarmerCrops:', {
+          name: allFarmerCrops[0]?.name || allFarmerCrops[0]?.commodity,
+          location: allFarmerCrops[0]?.location
+        });
+      }
+    }
+
+    return result;
+  }, [allFarmerCrops, state.markerPosition, state.radius, state.selectedCrop, filterCropsInRadius]);
+
+  // Filter by date range helper function
+  const filterByDateRange = useCallback((crops: any[], startDate: Date, endDate: Date, label: string = '') => {
+    const startOfDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const endOfDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59);
+
+    console.log(`📅 [DATE FILTER] ${label}`);
+    console.log('Date range:', {
+      startDate: startOfDay.toISOString(),
+      endDate: endOfDay.toISOString(),
+      inputCount: crops.length
+    });
+
+    // Debug: Log first crop to see structure
+    if (crops.length > 0) {
+      const sampleCrop = crops[0];
+      const sampleTimestamp = sampleCrop.location?.timestamp ||
+        (sampleCrop.createdAt?.seconds ? sampleCrop.createdAt.seconds * 1000 : null) ||
+        (sampleCrop.createdAt?._seconds ? sampleCrop.createdAt._seconds * 1000 : null);
+
+      console.log('Sample crop timestamp info:', {
+        hasLocationTimestamp: !!sampleCrop?.location?.timestamp,
+        locationTimestamp: sampleCrop?.location?.timestamp,
+        hasCreatedAtSeconds: !!sampleCrop?.createdAt?.seconds,
+        createdAtSeconds: sampleCrop?.createdAt?.seconds,
+        hasCreatedAt_Seconds: !!sampleCrop?.createdAt?._seconds,
+        createdAt_Seconds: sampleCrop?.createdAt?._seconds,
+        resolvedTimestamp: sampleTimestamp,
+        resolvedDate: sampleTimestamp ? new Date(sampleTimestamp).toISOString() : 'N/A'
+      });
+    }
+
+    let includedCount = 0;
+    let excludedCount = 0;
+    let noTimestampCount = 0;
+
+    const result = crops.filter(crop => {
+      // Try multiple timestamp sources
+      let cropTimestamp = null;
+
+      if (crop.location?.timestamp) {
+        cropTimestamp = crop.location.timestamp;
+      } else if (crop.createdAt?.seconds) {
+        cropTimestamp = crop.createdAt.seconds * 1000;
+      } else if (crop.createdAt?._seconds) {
+        cropTimestamp = crop.createdAt._seconds * 1000;
+      } else if (crop.timestamp) {
+        cropTimestamp = crop.timestamp;
+      } else if (crop.date) {
+        cropTimestamp = new Date(crop.date).getTime();
+      }
+
+      if (!cropTimestamp) {
+        noTimestampCount++;
+        return true; // Include crops without timestamp
+      }
+
+      const cropDate = new Date(cropTimestamp);
+      const inRange = cropDate >= startOfDay && cropDate <= endOfDay;
+
+      if (inRange) {
+        includedCount++;
+      } else {
+        excludedCount++;
+      }
+
+      return inRange;
+    });
+
+    console.log(`📅 [DATE FILTER RESULT] ${label}:`, {
+      included: includedCount,
+      excluded: excludedCount,
+      noTimestamp: noTimestampCount,
+      totalOutput: result.length
+    });
+
+    return result;
+  }, []);
+
+  // Consumers filtered by radius AND date
+  const consumersInRadiusAndDate = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔵 [STEP 3a] FILTERING CONSUMERS BY DATE');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    return filterByDateRange(consumersInRadius, state.customStartDate, state.customEndDate, 'CONSUMERS');
+  }, [consumersInRadius, state.customStartDate, state.customEndDate, filterByDateRange]);
+
+  // Farmers filtered by radius AND date
+  const farmersInRadiusAndDate = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🟢 [STEP 3b] FILTERING FARMERS BY DATE');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    return filterByDateRange(farmersInRadius, state.customStartDate, state.customEndDate, 'FARMERS');
+  }, [farmersInRadius, state.customStartDate, state.customEndDate, filterByDateRange]);
+
+  const consumerStats = useMemo(() => {
+    try {
+      return calculateConsumerStats(consumersInRadiusAndDate, state.priceUnit, state.selectedCrop);
+    } catch (error) {
+      console.error('Error calculating consumer stats:', error);
+      return { averagePrice: 0, totalConsumers: 0, priceRange: { min: 0, max: 0 } };
+    }
+  }, [consumersInRadiusAndDate, state.priceUnit, state.selectedCrop]);
+
+  // Count only items with valid prices (> 0) for display
+  const itemsWithValidPrices = useMemo(() => {
+    const validItems = filteredCrops.filter(crop => {
+      const price = Number(crop.pricePerUnit) || 0;
+      return price > 0;
+    });
+    console.log('📊 Items with valid prices:', {
+      totalInRadius: filteredCrops.length,
+      withValidPrice: validItems.length
+    });
+    return validItems.length;
+  }, [filteredCrops]);
+
+  // NOTE: Charts now use radius-only filtered data (no date filter)
+  // This shows ALL data within the radius on the charts
+  const consumerChartData = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔵 [STEP 4a] PROCESSING CONSUMER CHART DATA');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    const startTime = performance.now();
+    try {
+      // Use radius-only filtered data (NOT date filtered) for charts
+      console.log('Input to processChartData:', {
+        dataCount: consumersInRadius.length,
+        selectedCrop: state.selectedCrop,
+        priceUnit: state.priceUnit
+      });
+
+      if (consumersInRadius.length > 0) {
+        console.log('Sample data being sent to chart:', consumersInRadius.slice(0, 2).map(c => ({
+          name: c.name || c.commodity,
+          pricePerUnit: c.pricePerUnit,
+          timestamp: c.location?.timestamp || c.createdAt?.seconds
+        })));
+      }
+
+      const result = processChartData(consumersInRadius, state.selectedCrop, state.priceUnit);
+
+      console.log('🔵 CONSUMER CHART RESULT:', {
+        inputCount: consumersInRadius.length,
+        outputPoints: result.length,
+        chartData: result.slice(0, 3) // Show first 3 points
+      });
+
+      if (result.length === 0 && consumersInRadius.length > 0) {
+        console.log('⚠️ WARNING: processChartData returned empty despite having input data!');
+      }
+
+      performanceMonitor.recordOperation("processConsumerChart", performance.now() - startTime);
+      return result;
+    } catch (error) {
+      console.error('Error processing consumer chart data:', error);
+      return [];
+    }
+  }, [consumersInRadius, state.selectedCrop, state.priceUnit]);
+
+  const farmerChartData = useMemo(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🟢 [STEP 4b] PROCESSING FARMER CHART DATA');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    const startTime = performance.now();
+    try {
+      // Use radius-only filtered data (NOT date filtered) for charts
+      console.log('Input to processChartData:', {
+        dataCount: farmersInRadius.length,
+        selectedCrop: state.selectedCrop,
+        priceUnit: state.priceUnit
+      });
+
+      if (farmersInRadius.length > 0) {
+        console.log('Sample data being sent to chart:', farmersInRadius.slice(0, 2).map(c => ({
+          name: c.name || c.commodity,
+          pricePerUnit: c.pricePerUnit,
+          timestamp: c.location?.timestamp || c.createdAt?.seconds
+        })));
+      }
+
+      const result = processChartData(farmersInRadius, state.selectedCrop, state.priceUnit);
+
+      console.log('🟢 FARMER CHART RESULT:', {
+        inputCount: farmersInRadius.length,
+        outputPoints: result.length,
+        chartData: result.slice(0, 3) // Show first 3 points
+      });
+
+      if (result.length === 0 && farmersInRadius.length > 0) {
+        console.log('⚠️ WARNING: processChartData returned empty despite having input data!');
+      }
+
+      performanceMonitor.recordOperation("processFarmerChart", performance.now() - startTime);
+      return result;
+    } catch (error) {
+      console.error('Error processing farmer chart data:', error);
+      return [];
+    }
+  }, [farmersInRadius, state.selectedCrop, state.priceUnit]);
+
+  // Debug: Log when chart data or filters change
   useEffect(() => {
-    if (state.selectedCrop && allCrops.length > 0 && !dataLoading) {
+    console.log('');
+    console.log('╔══════════════════════════════════════════════════════════════╗');
+    console.log('║                    📊 FINAL SUMMARY                          ║');
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+    console.log('║ FILTERS APPLIED:                                             ║');
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+    console.log(`  Crop: ${state.selectedCrop}`);
+    console.log(`  Radius: ${state.radius} km`);
+    console.log(`  Date Range: ${state.customStartDate.toLocaleDateString()} - ${state.customEndDate.toLocaleDateString()}`);
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+    console.log('║ DATA PIPELINE:                                               ║');
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+    console.log(`  [SOURCE]     allCrops: ${allCrops.length} (consumers: ${allConsumerCrops.length}, farmers: ${allFarmerCrops.length})`);
+    console.log(`  [RADIUS]     filteredCrops: ${filteredCrops.length} (with valid price: ${itemsWithValidPrices})`);
+    console.log(`  [RADIUS]     consumersInRadius: ${consumersInRadius.length}, farmersInRadius: ${farmersInRadius.length}`);
+    console.log(`  [DATE]       consumersInRadiusAndDate: ${consumersInRadiusAndDate.length}, farmersInRadiusAndDate: ${farmersInRadiusAndDate.length}`);
+    console.log(`  [CHART]      consumerChartData: ${consumerChartData.length} points, farmerChartData: ${farmerChartData.length} points`);
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+    console.log('║ CHART DISPLAY STATUS:                                        ║');
+    console.log('╠══════════════════════════════════════════════════════════════╣');
+    console.log(`  Consumer Chart: ${consumerChartData.length > 0 ? '✅ WILL SHOW' : '❌ NO DATA - Will show "No data available"'}`);
+    console.log(`  Farmer Chart: ${farmerChartData.length > 0 ? '✅ WILL SHOW' : '❌ NO DATA - Will show "No data available"'}`);
+    console.log('╚══════════════════════════════════════════════════════════════╝');
+    console.log('');
+  }, [allCrops, allConsumerCrops, allFarmerCrops, filteredCrops, itemsWithValidPrices, consumersInRadius, farmersInRadius, consumersInRadiusAndDate, farmersInRadiusAndDate, consumerChartData, farmerChartData, state.radius, state.customStartDate, state.customEndDate, state.selectedCrop]);
+
+  // Price data calculation effect - MUST be after useMemo declarations
+  useEffect(() => {
+    if (state.selectedCrop && filteredCrops.length >= 0 && !dataLoading) {
       updateState({ priceLoading: true });
       try {
         const newPriceData = {
@@ -799,68 +1139,7 @@ const MapScreen = () => {
         updateState({ priceLoading: false });
       }
     }
-  }, [state.customStartDate, state.customEndDate, state.selectedCrop, allCrops, dataLoading, calculatePriceData, updateState]);
-
-  // The rest of your component logic follows, and should now work without TypeScript errors.
-  // ... (The entire Map component's return JSX remains the same as in your original post) ...
-  // Full component JSX is included below for completeness.
-  const filteredCrops = useMemo(() => {
-    const startTime = performance.now();
-    const result = filterCropsInRadius(
-      allCrops,
-      state.markerPosition,
-      state.radius,
-      state.selectedCrop
-    );
-    performanceMonitor.recordOperation(
-      "filterCrops",
-      performance.now() - startTime
-    );
-    return result;
-  }, [allCrops, state.markerPosition, state.radius, state.selectedCrop, filterCropsInRadius]);
-
-  const consumersInRadius = useMemo(
-    () => filterCropsInRadius(
-      allConsumerCrops,
-      state.markerPosition,
-      state.radius,
-      state.selectedCrop
-    ),
-    [allConsumerCrops, state.markerPosition, state.radius, state.selectedCrop, filterCropsInRadius]
-  );
-
-  const consumerStats = useMemo(() => {
-    try {
-      return calculateConsumerStats(consumersInRadius, state.priceUnit, state.selectedCrop);
-    } catch (error) {
-      console.error('Error calculating consumer stats:', error);
-      return { averagePrice: 0, totalConsumers: 0, priceRange: { min: 0, max: 0 } };
-    }
-  }, [consumersInRadius, state.priceUnit, state.selectedCrop]);
-
-  const consumerChartData = useMemo(() => {
-    const startTime = performance.now();
-    try {
-      const result = processChartData(allConsumerCrops, state.selectedCrop, state.priceUnit);
-      performanceMonitor.recordOperation("processConsumerChart", performance.now() - startTime);
-      return result;
-    } catch (error) {
-      console.error('Error processing consumer chart data:', error);
-      return [];
-    }
-  }, [allConsumerCrops, state.selectedCrop, state.priceUnit]);
-
-  const farmerChartData = useMemo(() => {
-    const startTime = performance.now();
-    try {
-      const result = processChartData(allFarmerCrops, state.selectedCrop, state.priceUnit);
-      performanceMonitor.recordOperation("processFarmerChart", performance.now() - startTime);
-      return result;
-    } catch (error) {
-      console.error('Error processing farmer chart data:', error);
-      return [];
-    }
-  }, [allFarmerCrops, state.selectedCrop, state.priceUnit]);
+  }, [state.customStartDate, state.customEndDate, state.selectedCrop, state.radius, state.markerPosition, filteredCrops, dataLoading, calculatePriceData, updateState]);
 
   const handleMarkerMove = useCallback((newPosition: MarkerPosition) => {
     if (newPosition.latitude && newPosition.longitude &&
@@ -875,10 +1154,6 @@ const MapScreen = () => {
 
   const handleMapTypeChange = useCallback((mapType: string) => {
     updateState({ selectedMapType: mapType });
-  }, [updateState]);
-
-  const handlePriceUnitChange = useCallback((unit: string) => {
-    updateState({ priceUnit: unit });
   }, [updateState]);
 
   const handleSaveFavoriteLocation = useCallback(() => {
@@ -1123,7 +1398,7 @@ const MapScreen = () => {
                   {state.radius}km
                 </Text>
                 <Text style={mapStyles.radiusDataCount}>
-                  {filteredCrops.length} {t.map.itemsInRange}
+                  {itemsWithValidPrices} {t.map.itemsInRange}
                 </Text>
               </View>
               <View style={mapStyles.sliderContainer}>
@@ -1133,7 +1408,7 @@ const MapScreen = () => {
                 <Slider
                   style={{ width: '100%', height: 40 }}
                   minimumValue={0.5}
-                  maximumValue={500}
+                  maximumValue={2000}
                   step={0.5}
                   value={state.radius}
                   onValueChange={debouncedSetRadius}
@@ -1148,7 +1423,7 @@ const MapScreen = () => {
                   style={mapStyles.sliderStepsScroll}
                 >
                   <View style={mapStyles.sliderSteps}>
-                    {[0.5, 1, 5, 10, 25, 50, 100, 150, 200, 300, 400, 500].map((step) => (
+                    {[0.5, 1, 5, 10, 25, 50, 100, 200, 500, 1000, 1500, 2000].map((step) => (
                       <TouchableOpacity
                         key={step}
                         style={[
@@ -1168,14 +1443,10 @@ const MapScreen = () => {
               </View>
             </View>
           </View>
-          
-          <PriceUnitToggle
-            priceUnit={state.priceUnit}
-            onPriceUnitChange={handlePriceUnitChange}
-          />
 
           {consumerChartData.length > 0 ? (
             <PriceChart
+              key={`consumer-${state.radius}-${state.customStartDate.getTime()}-${state.customEndDate.getTime()}`}
               chartData={consumerChartData}
               selectedCrop={state.selectedCrop}
               priceUnit={state.priceUnit}
@@ -1192,6 +1463,7 @@ const MapScreen = () => {
           )}
           {farmerChartData.length > 0 ? (
             <PriceChart
+              key={`farmer-${state.radius}-${state.customStartDate.getTime()}-${state.customEndDate.getTime()}`}
               chartData={farmerChartData}
               selectedCrop={state.selectedCrop}
               priceUnit={state.priceUnit}
