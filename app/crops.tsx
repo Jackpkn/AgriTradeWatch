@@ -25,53 +25,11 @@ import { addCrop } from "@/components/cropsController";
 import { useOrientation } from "@/utils/orientationUtils";
 import { createCropsStyles } from "@/utils/responsiveStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useCommodities } from "@/hooks/useCommodities";
 
 const ADD_CROP_ENABLED = true;
 // Set to `true` to show the camera/gallery UI.
 const ADD_IMAGE_ENABLED = true;
-
-// Crop items will be generated dynamically using translations
-const getCropItems = (t: any) => [
-  // Vegetables
-  { labelKey: "cropAmbatChukka", value: "ambat chukka", icon: "🥬" },
-  { labelKey: "cropGinger", value: "ginger", icon: "🫚" },
-  { labelKey: "cropOnion", value: "onion", icon: "🧅" },
-  { labelKey: "cropCucumber", value: "cucumber", icon: "🥒" },
-  { labelKey: "cropBitterGourd", value: "bitter gourd", icon: "🥒" },
-  { labelKey: "cropCorianderLeaves", value: "coriander leaves", icon: "🌿" },
-  { labelKey: "cropCabbage", value: "cabbage", icon: "🥬" },
-  { labelKey: "cropClusterBeans", value: "cluster beans", icon: "🫘" },
-  { labelKey: "cropCarrot", value: "carrot", icon: "🥕" },
-  { labelKey: "cropCowpea", value: "cowpea", icon: "🫘" },
-  { labelKey: "cropTomato", value: "tomato", icon: "🍅" },
-  { labelKey: "cropCapsicum", value: "capsicum", icon: "🫑" },
-  { labelKey: "cropBottleGourd", value: "bottle gourd", icon: "🥒" },
-  { labelKey: "cropRidgeGourd", value: "ridge gourd", icon: "🥒" },
-  { labelKey: "cropSpinach", value: "spinach", icon: "🥬" },
-  { labelKey: "cropCauliflower", value: "cauliflower", icon: "🥦" },
-  { labelKey: "cropPotato", value: "potato", icon: "🥔" },
-  { labelKey: "cropBeetroot", value: "beetroot", icon: "🥕" },
-  { labelKey: "cropLadiesFinger", value: "ladies finger", icon: "🌱" },
-  { labelKey: "cropPumpkin", value: "pumpkin", icon: "🎃" },
-  { labelKey: "cropRadish", value: "radish", icon: "🥕" },
-  { labelKey: "cropFenugreekLeaves", value: "fenugreek leaves", icon: "🌿" },
-  { labelKey: "cropGarlic", value: "garlic", icon: "🧄" },
-  { labelKey: "cropLemon", value: "lemon", icon: "🍋" },
-  { labelKey: "cropBrinjal", value: "brinjal", icon: "🍆" },
-  { labelKey: "cropDrumstick", value: "drumstick", icon: "🥬" },
-  { labelKey: "cropGreenChilli", value: "green chilli", icon: "🌶️" },
-
-  // Fruits
-  { labelKey: "cropPomegranate", value: "pomegranate", icon: "🍎" },
-  { labelKey: "cropCustardApple", value: "custard apple", icon: "🍏" },
-  { labelKey: "cropDragonFruit", value: "dragon fruit", icon: "🐉" },
-  { labelKey: "cropGrapes", value: "grapes", icon: "🍇" },
-  { labelKey: "cropGuava", value: "guava", icon: "🍐" },
-  { labelKey: "cropOrange", value: "orange", icon: "🍊" },
-  { labelKey: "cropPapaya", value: "papaya", icon: "🥭" },
-  { labelKey: "cropSapota", value: "sapota", icon: "🥔" },
-  { labelKey: "cropBanana", value: "banana", icon: "🍌" },
-];
 
 // Represents the state of the form in the UI
 interface CropFormState {
@@ -145,7 +103,7 @@ const CropsScreen = () => {
   );
 
   const { currentLocation, setIsLoading, isLogged, userRole } = useGlobal();
-  const cropItems = useMemo(() => getCropItems(t), [t]);
+  const { commodities: cropItems, loading: commoditiesLoading } = useCommodities();
 
   // Debug: Log the userRole to check its value
   useEffect(() => {
@@ -320,7 +278,7 @@ const CropsScreen = () => {
       // Show beautified success modal
       setSuccessData({
         commodity: selectedCrop
-          ? `${selectedCrop.icon} ${t.crops[selectedCrop.labelKey as keyof typeof t.crops]}`
+          ? `${selectedCrop.icon} ${selectedCrop.labelKey && t.crops[selectedCrop.labelKey as keyof typeof t.crops] ? t.crops[selectedCrop.labelKey as keyof typeof t.crops] : selectedCrop.label}`
           : response.commodity,
         price: form.pricePerUnit,
         quantity: form.quantity,
@@ -419,7 +377,7 @@ const CropsScreen = () => {
                       {cropItems.map((item) => (
                         <Picker.Item
                           key={item.value}
-                          label={`${item.icon} ${t.crops[item.labelKey as keyof typeof t.crops]}`}
+                          label={`${item.icon} ${item.labelKey && t.crops[item.labelKey as keyof typeof t.crops] ? t.crops[item.labelKey as keyof typeof t.crops] : item.label}`}
                           value={item.value}
                           color="#000"
                           style={{ backgroundColor: "#fff" }}

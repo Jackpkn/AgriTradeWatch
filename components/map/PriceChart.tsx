@@ -2,8 +2,9 @@ import React from "react";
 import { View, Text, ScrollView, Dimensions } from "react-native";
 import Svg, { Circle, Line, Text as SvgText, G } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
-import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
+import { MAP_CONFIG } from "@/constants/mapConfig";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useCommodities } from "@/hooks/useCommodities";
 
 interface PriceChartProps {
   chartData: { value: number; label: string; count: number; allPrices?: number[] }[];
@@ -23,6 +24,7 @@ const PriceChart = ({
   isConsumerChart = false,
 }: PriceChartProps) => {
   const { t } = useTranslation();
+  const { commodities } = useCommodities();
 
   // Validate and sanitize chart data
   const validChartData = React.useMemo(() => {
@@ -55,7 +57,7 @@ const PriceChart = ({
 
   if (!validChartData.length) return null;
 
-  const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
+  const selectedCropData = commodities.find((c) => c.value === selectedCrop);
 
   // Collect ALL prices across all dates for min/max calculation
   const allPricesFlat = validChartData.flatMap((d) => d.allPrices || [d.value]);

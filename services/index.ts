@@ -10,3 +10,4 @@ export { default as produceService, ProduceService } from './produce-service';
 export { default as farmersService } from './farmersService.js';
 export { default as consumersService } from './consumersService.js';
 export { default as userService } from './userService.js';
+export { fetchCommodities, clearCommoditiesCache } from './commoditiesService.js';

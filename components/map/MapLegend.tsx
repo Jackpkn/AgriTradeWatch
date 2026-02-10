@@ -1,7 +1,8 @@
 import { View, Text } from "react-native";
-import { CROP_OPTIONS, MAP_CONFIG } from "@/constants/mapConfig";
+import { MAP_CONFIG } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useCommodities } from "@/hooks/useCommodities";
 
 interface MapLegendProps {
   selectedCrop: string;
@@ -10,7 +11,8 @@ interface MapLegendProps {
 
 const MapLegend = ({ selectedCrop, radius }: MapLegendProps) => {
   const { t } = useTranslation();
-  const selectedCropData = CROP_OPTIONS.find((c) => c.value === selectedCrop);
+  const { commodities } = useCommodities();
+  const selectedCropData = commodities.find((c) => c.value === selectedCrop);
 
   const legendItems = [
     {

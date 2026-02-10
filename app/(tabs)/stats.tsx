@@ -19,6 +19,7 @@ import { useGlobal } from '@/context/global-provider';
 import { useOrientation } from '@/utils/orientationUtils';
 import { createStatsStyles } from '@/utils/responsiveStyles';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useCommodities } from '@/hooks/useCommodities';
 
 // Type definitions
 interface CropLocation {
@@ -86,98 +87,6 @@ interface MarketAnalyticsState {
   farmerLoading: boolean;
 }
 
-// Predefined crop list for stats dropdown
-const AVAILABLE_CROPS: CropOption[] = [
-  // Vegetables
-  { label: 'Ambat Chukka', value: 'ambat chukka', icon: '🥬' },
-  { label: 'Ginger', value: 'ginger', icon: '🫚' },
-  { label: 'Onion', value: 'onion', icon: '🧅' },
-  { label: 'Cucumber', value: 'cucumber', icon: '🥒' },
-  { label: 'Bitter Gourd', value: 'bitter gourd', icon: '🥒' },
-  { label: 'Coriander Leaves', value: 'coriander leaves', icon: '🌿' },
-  { label: 'Cabbage', value: 'cabbage', icon: '🥬' },
-  { label: 'Cluster Beans', value: 'cluster beans', icon: '🫘' },
-  { label: 'Carrot', value: 'carrot', icon: '🥕' },
-  { label: 'Cowpea', value: 'cowpea', icon: '🫘' },
-  { label: 'Tomato', value: 'tomato', icon: '🍅' },
-  { label: 'Capsicum', value: 'capsicum', icon: '🫑' },
-  { label: 'Bottle Gourd', value: 'bottle gourd', icon: '🥒' },
-  { label: 'Ridge Gourd', value: 'ridge gourd', icon: '🥒' },
-  { label: 'Spinach', value: 'spinach', icon: '🥬' },
-  { label: 'Cauliflower', value: 'cauliflower', icon: '🥦' },
-  { label: 'Potato', value: 'potato', icon: '🥔' },
-  { label: 'Beetroot', value: 'beetroot', icon: '🥕' },
-  { label: 'Ladies Finger', value: 'ladies finger', icon: '🌱' },
-  { label: 'Pumpkin', value: 'pumpkin', icon: '🎃' },
-  { label: 'Radish', value: 'radish', icon: '🥕' },
-  { label: 'Fenugreek Leaves', value: 'fenugreek leaves', icon: '🌿' },
-  { label: 'Garlic', value: 'garlic', icon: '🧄' },
-  { label: 'Lemon', value: 'lemon', icon: '🍋' },
-  { label: 'Brinjal', value: 'brinjal', icon: '🍆' },
-  { label: 'Drumstick', value: 'drumstick', icon: '🥬' },
-  { label: 'Green Chilli', value: 'green chilli', icon: '🌶️' },
-
-  // Fruits
-  { label: 'Pomegranate', value: 'pomegranate', icon: '🍎' },
-  { label: 'Custard Apple', value: 'custard apple', icon: '🍏' },
-  { label: 'Dragon Fruit', value: 'dragon fruit', icon: '🐉' },
-  { label: 'Grapes', value: 'grapes', icon: '🍇' },
-  { label: 'Guava', value: 'guava', icon: '🍐' },
-  { label: 'Orange', value: 'orange', icon: '🍊' },
-  { label: 'Papaya', value: 'papaya', icon: '🥭' },
-  { label: 'Sapota', value: 'sapota', icon: '🥔' },
-  { label: 'Banana', value: 'banana', icon: '🍌' },
-];
-
-// Crop icons mapping
-const CROP_ICONS: Record<string, string> = {
-  // Vegetables
-  'ambat chukka': '🥬',
-  ginger: '🫚',
-  onion: '🧅',
-  cucumber: '🥒',
-  'bitter gourd': '🥒',
-  'coriander leaves': '🌿',
-  coriander: '🌿',
-  cabbage: '🥬',
-  'cluster beans': '🫘',
-  carrot: '🥕',
-  cowpea: '🫘',
-  tomato: '🍅',
-  capsicum: '🫑',
-  'bottle gourd': '🥒',
-  'ridge gourd': '🥒',
-  spinach: '🥬',
-  cauliflower: '🥦',
-  potato: '🥔',
-  beetroot: '🥕',
-  'ladies finger': '🌱',
-  pumpkin: '🎃',
-  radish: '🥕',
-  'fenugreek leaves': '🌿',
-  garlic: '🧄',
-  lemon: '🍋',
-  brinjal: '🍆',
-  drumstick: '🥬',
-  'green chilli': '🌶️',
-
-  // Fruits
-  pomegranate: '🍎',
-  'custard apple': '🍏',
-  'dragon fruit': '🐉',
-  grapes: '🍇',
-  grape: '🍇',
-  guava: '🍐',
-  orange: '🍊',
-  papaya: '🥭',
-  sapota: '🥔',
-  banana: '🍌',
-
-  // Other
-  wheat: '🌾',
-  default: '🌾',
-} as const;
-
 // Gradient colors
 const GRADIENT_COLORS = {
   consumer: ['#49A760', '#3d8b4f'] as const,
@@ -188,6 +97,7 @@ const Stats: React.FC = () => {
   // Global context
   const { setIsLoading } = useGlobal();
   const { t } = useTranslation();
+  const { commodities: cropOptions, loading: commoditiesLoading } = useCommodities();
 
   // State management
   const [state, setState] = useState<MarketAnalyticsState>({
@@ -212,14 +122,14 @@ const Stats: React.FC = () => {
   };
   const styles = useMemo(() => createStatsStyles(isLandscape, width), [isLandscape, width]);
 
-  // Use predefined crop list for both consumer and farmer (shows all crops)
+  // Use API-fetched crop list for both consumer and farmer (shows all crops)
   const consumerCropOptions = useMemo((): CropOption[] => {
-    return AVAILABLE_CROPS;
-  }, []);
+    return cropOptions;
+  }, [cropOptions]);
 
   const farmerCropOptions = useMemo((): CropOption[] => {
-    return AVAILABLE_CROPS;
-  }, []);
+    return cropOptions;
+  }, [cropOptions]);
 
   // Utility functions
   const isValidCrop = (crop: any): crop is CropData => {

@@ -1,7 +1,7 @@
 
-import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { CROP_OPTIONS } from "@/constants/mapConfig";
+import { useCommodities } from "@/hooks/useCommodities";
 
 interface CropSelectionModalProps {
   visible: boolean;
@@ -11,6 +11,8 @@ interface CropSelectionModalProps {
 }
 
 const CropSelectionModal = ({ visible, selectedCrop, onSelect, onClose }: CropSelectionModalProps) => {
+  const { commodities, loading } = useCommodities();
+
   return (
     <Modal
       visible={visible}
@@ -27,35 +29,42 @@ const CropSelectionModal = ({ visible, selectedCrop, onSelect, onClose }: CropSe
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={modalStyles.content}>
-            {CROP_OPTIONS.map((crop) => (
-              <TouchableOpacity
-                key={crop.value}
-                style={[
-                  modalStyles.cropOption,
-                  selectedCrop === crop.value && modalStyles.selectedCropOption,
-                ]}
-                onPress={() => {
-                  onSelect(crop.value);
-                  onClose();
-                }}
-              >
-                <Text style={modalStyles.cropIcon}>{crop.icon}</Text>
-                <Text
+          {loading ? (
+            <View style={modalStyles.loadingContainer}>
+              <ActivityIndicator size="large" color="#49A760" />
+              <Text style={modalStyles.loadingText}>Loading crops...</Text>
+            </View>
+          ) : (
+            <ScrollView style={modalStyles.content}>
+              {commodities.map((crop) => (
+                <TouchableOpacity
+                  key={crop.value}
                   style={[
-                    modalStyles.cropLabel,
-                    selectedCrop === crop.value &&
-                    modalStyles.selectedCropLabel,
+                    modalStyles.cropOption,
+                    selectedCrop === crop.value && modalStyles.selectedCropOption,
                   ]}
+                  onPress={() => {
+                    onSelect(crop.value);
+                    onClose();
+                  }}
                 >
-                  {crop.label}
-                </Text>
-                {selectedCrop === crop.value && (
-                  <Ionicons name="checkmark" size={20} color="#fff" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  <Text style={modalStyles.cropIcon}>{crop.icon}</Text>
+                  <Text
+                    style={[
+                      modalStyles.cropLabel,
+                      selectedCrop === crop.value &&
+                      modalStyles.selectedCropLabel,
+                    ]}
+                  >
+                    {crop.label}
+                  </Text>
+                  {selectedCrop === crop.value && (
+                    <Ionicons name="checkmark" size={20} color="#fff" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </View>
     </Modal>
@@ -92,6 +101,16 @@ const modalStyles = {
   },
   content: {
     padding: 20,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#666",
   },
   cropOption: {
     flexDirection: "row" as const,

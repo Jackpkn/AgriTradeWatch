@@ -1,9 +1,10 @@
 
 import { View, Text, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { CROP_OPTIONS, MAP_TYPES } from "@/constants/mapConfig";
+import { MAP_TYPES } from "@/constants/mapConfig";
 import { mapStyles } from "./mapStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useCommodities } from "@/hooks/useCommodities";
 
 interface MapHeaderProps {
   selectedCrop: string;
@@ -19,6 +20,7 @@ const MapHeader = ({
   onMapTypeChange,
 }: MapHeaderProps) => {
   const { t } = useTranslation();
+  const { commodities } = useCommodities();
 
   const getMapTypeLabel = (value: string) => {
     if (value === "default") return t.map.satelliteMap;
@@ -38,9 +40,9 @@ const MapHeader = ({
               onPress={onCropPress}
             >
               <Text style={mapStyles.cropSelectorButtonText}>
-                {CROP_OPTIONS.find((c) => c.value === selectedCrop)?.icon ||
+                {commodities.find((c) => c.value === selectedCrop)?.icon ||
                   "🌾"}{" "}
-                {CROP_OPTIONS.find((c) => c.value === selectedCrop)?.label ||
+                {commodities.find((c) => c.value === selectedCrop)?.label ||
                   selectedCrop}
               </Text>
               <Ionicons name="chevron-down" size={16} color="#fff" />
