@@ -46,11 +46,12 @@ export interface DTEntry {
     latitude: number;
     longitude: number;
     created_at: string;
-    level_of_produce: string;
     quantity_for_sale: number;
     cost: number;
     unit: string;
     photo_or_video?: string;
+    description?: string;
+    description_voice?: string;
 }
 
 export interface EnhancedProfileData extends Omit<ProfileData, 'password'> {

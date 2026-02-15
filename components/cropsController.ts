@@ -84,6 +84,7 @@ export const addCrop = async (
     const response = await axios.post(API_URL, payload, config);
 
     console.log("Crop added successfully. Response:", JSON.stringify(response.data, null, 2));
+
     return response.data as CropApiResponse;
   } catch (error: any) {
     console.error("Crop submission error:", error);

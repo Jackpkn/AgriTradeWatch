@@ -701,7 +701,6 @@ const Stats: React.FC = () => {
   // Auto-reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log("Stats screen focused - refreshing data");
       if (state.consumerCropName) {
         fetchConsumerPrices(state.consumerCropName);
       }

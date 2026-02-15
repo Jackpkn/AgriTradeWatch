@@ -9,11 +9,13 @@ import {
   Linking,
   StyleSheet,
   BackHandler,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
+import { Audio } from "expo-av";
 import { TextInput } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,6 +43,7 @@ interface ProduceFormState {
   state: string;
   district: string;
   tehsil: string;
+  description: string;
 }
 
 interface PhotoState {
@@ -48,6 +51,13 @@ interface PhotoState {
   base64?: string;
   fileName?: string;
   type?: string;
+}
+
+interface VoiceState {
+  uri: string;
+  fileName?: string;
+  type?: string;
+  duration?: number;
 }
 
 
@@ -179,6 +189,81 @@ const styles = StyleSheet.create({
       fontSize: 12,
       color: "#666",
     },
+    voiceSection: {
+      marginTop: 16,
+    },
+    voiceButtons: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 8,
+    },
+    voiceButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#9C27B0",
+      backgroundColor: "#fff",
+      gap: 8,
+    },
+    voiceButtonRecording: {
+      backgroundColor: "#ffebee",
+      borderColor: "#f44336",
+    },
+    voiceButtonText: {
+      color: "#9C27B0",
+      fontWeight: "600",
+      fontSize: 14,
+    },
+    voiceButtonTextRecording: {
+      color: "#f44336",
+    },
+    voicePreview: {
+      marginTop: 12,
+      padding: 12,
+      backgroundColor: "#f3e5f5",
+      borderRadius: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    voicePreviewInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    voicePreviewText: {
+      fontSize: 14,
+      color: "#7B1FA2",
+      fontWeight: "500",
+    },
+    voiceDuration: {
+      fontSize: 12,
+      color: "#9C27B0",
+    },
+    recordingIndicator: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 8,
+      padding: 8,
+      backgroundColor: "#ffebee",
+      borderRadius: 8,
+    },
+    recordingDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: "#f44336",
+    },
+    recordingText: {
+      color: "#f44336",
+      fontSize: 14,
+      fontWeight: "500",
+    },
     submitButton: {
       marginTop: 24,
       borderRadius: 8,
@@ -288,6 +373,7 @@ const AddProduce: React.FC = () => {
     state: "",
     district: "",
     tehsil: "",
+    description: "",
   });
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -296,6 +382,12 @@ const AddProduce: React.FC = () => {
   const [locationConfirmed, setLocationConfirmed] = useState(false);
   const [markerPosition, setMarkerPosition] = useState<{latitude: number; longitude: number} | null>(null);
   const cameraRef = useRef<CameraView>(null);
+
+  // Voice recording states
+  const [voiceRecording, setVoiceRecording] = useState<Audio.Recording | null>(null);
+  const [voiceFile, setVoiceFile] = useState<VoiceState | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
 
   // Computed values for location dropdowns
   const availableStates = useMemo(() => Object.keys(LOCATION_DATA), []);
@@ -539,6 +631,126 @@ const AddProduce: React.FC = () => {
     return true;
   }, [formData, t]);
 
+  // Voice recording functions
+  const startRecording = useCallback(async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          t.common.error || "Error",
+          t.digitalThela.microphonePermissionRequired || "Microphone permission is required to record voice"
+        );
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      // Use recording options that output a format the backend accepts
+      const recordingOptions = {
+        android: {
+          extension: '.mp3',
+          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+          audioEncoder: Audio.AndroidAudioEncoder.AAC,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+        },
+        ios: {
+          extension: '.wav',
+          outputFormat: Audio.IOSOutputFormat.LINEARPCM,
+          audioQuality: Audio.IOSAudioQuality.HIGH,
+          sampleRate: 44100,
+          numberOfChannels: 2,
+          bitRate: 128000,
+          linearPCMBitDepth: 16,
+          linearPCMIsBigEndian: false,
+          linearPCMIsFloat: false,
+        },
+        web: {
+          mimeType: 'audio/webm',
+          bitsPerSecond: 128000,
+        },
+      };
+
+      const { recording } = await Audio.Recording.createAsync(recordingOptions);
+
+      // Use expo-av's built-in status update for accurate duration
+      recording.setOnRecordingStatusUpdate((status) => {
+        if (status.isRecording && status.durationMillis) {
+          setRecordingDuration(Math.floor(status.durationMillis / 1000));
+        }
+      });
+
+      setVoiceRecording(recording);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      console.log("🎙️ Recording started");
+    } catch (err) {
+      console.error("Failed to start recording:", err);
+      Alert.alert(t.common.error || "Error", "Failed to start recording");
+    }
+  }, [t]);
+
+  const stopRecording = useCallback(async () => {
+    if (!voiceRecording) return;
+
+    try {
+      setIsRecording(false);
+
+      const status = await voiceRecording.getStatusAsync();
+      const finalDuration = status.durationMillis ? Math.floor(status.durationMillis / 1000) : recordingDuration;
+
+      await voiceRecording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
+
+      const uri = voiceRecording.getURI();
+      if (uri) {
+        // Determine file extension and MIME type based on platform
+        const isIOS = Platform.OS === 'ios';
+        const extension = isIOS ? '.wav' : '.mp3';
+        const mimeType = isIOS ? 'audio/wav' : 'audio/mpeg';
+
+        setVoiceFile({
+          uri,
+          fileName: `voice_${Date.now()}${extension}`,
+          type: mimeType,
+          duration: finalDuration,
+        });
+        console.log("🎙️ Recording saved:", uri, "Duration:", finalDuration, "Type:", mimeType);
+      }
+
+      setVoiceRecording(null);
+    } catch (err) {
+      console.error("Failed to stop recording:", err);
+    }
+  }, [voiceRecording, recordingDuration]);
+
+  const removeVoiceRecording = useCallback(() => {
+    setVoiceFile(null);
+    setRecordingDuration(0);
+  }, []);
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Cleanup recording on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceRecording) {
+        voiceRecording.stopAndUnloadAsync();
+      }
+    };
+  }, [voiceRecording]);
+
   const handleSubmit = useCallback(async () => {
     if (!isLogged) {
       Alert.alert(
@@ -602,6 +814,7 @@ const AddProduce: React.FC = () => {
         state: formData.state || "",
         district: formData.district || "",
         tehsil: formData.tehsil || "",
+        description: formData.description || "",
       };
 
       if (photo) {
@@ -618,6 +831,21 @@ const AddProduce: React.FC = () => {
         };
       } else {
         console.log("📸 No photo selected, submitting without image");
+      }
+
+      // Add voice description if recorded
+      if (voiceFile) {
+        console.log("🎙️ Voice description available, adding to payload:", {
+          uri: voiceFile.uri,
+          name: voiceFile.fileName,
+          type: voiceFile.type,
+        });
+
+        payload.description_voice = {
+          uri: voiceFile.uri,
+          name: voiceFile.fileName || `voice_${Date.now()}.m4a`,
+          type: voiceFile.type || "audio/m4a",
+        };
       }
 
       const response = await produceService.submitProduce(payload);
@@ -650,7 +878,7 @@ const AddProduce: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, currentLocation, isLogged, setIsLoading, photo, t, navigation, markerPosition, locationConfirmed, validateForm]);
+  }, [formData, currentLocation, isLogged, setIsLoading, photo, voiceFile, t, navigation, markerPosition, locationConfirmed, validateForm]);
 
   if (isCameraOpen) {
     return (
@@ -937,6 +1165,87 @@ const AddProduce: React.FC = () => {
                       </Text>
                     )}
                   </>
+                )}
+              </View>
+
+              {/* Description */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>
+                  {t.digitalThela.description || "Description (Optional)"}
+                </Text>
+                <TextInput
+                  style={[styles.textInput, { minHeight: 80 }]}
+                  mode="outlined"
+                  value={formData.description}
+                  onChangeText={(value) => updateField("description", value)}
+                  placeholder={t.digitalThela.enterDescription || "Describe your produce (quality, freshness, etc.)"}
+                  outlineColor="#E0E0E0"
+                  activeOutlineColor="#9C27B0"
+                  multiline={true}
+                  numberOfLines={3}
+                />
+              </View>
+
+              {/* Voice Description Section */}
+              <View style={styles.voiceSection}>
+                <Text style={styles.inputLabel}>
+                  {t.digitalThela.voiceDescription || "Voice Description (Optional)"}
+                </Text>
+                <Text style={styles.imageHelpText}>
+                  {t.digitalThela.voiceDescriptionHelp || "Record a voice message describing your produce"}
+                </Text>
+
+                <View style={styles.voiceButtons}>
+                  {!isRecording ? (
+                    <TouchableOpacity
+                      style={styles.voiceButton}
+                      onPress={startRecording}
+                      disabled={!!voiceFile}
+                    >
+                      <Ionicons name="mic" size={24} color={voiceFile ? "#ccc" : "#9C27B0"} />
+                      <Text style={[styles.voiceButtonText, voiceFile && { color: "#ccc" }]}>
+                        {t.digitalThela.startRecording || "Start Recording"}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.voiceButton, styles.voiceButtonRecording]}
+                      onPress={stopRecording}
+                    >
+                      <Ionicons name="stop" size={24} color="#f44336" />
+                      <Text style={[styles.voiceButtonText, styles.voiceButtonTextRecording]}>
+                        {t.digitalThela.stopRecording || "Stop Recording"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {isRecording && (
+                  <View style={styles.recordingIndicator}>
+                    <View style={styles.recordingDot} />
+                    <Text style={styles.recordingText}>
+                      {t.digitalThela.recording || "Recording..."} {formatDuration(recordingDuration)}
+                    </Text>
+                  </View>
+                )}
+
+                {voiceFile && !isRecording && (
+                  <View style={styles.voicePreview}>
+                    <View style={styles.voicePreviewInfo}>
+                      <Ionicons name="musical-notes" size={24} color="#7B1FA2" />
+                      <View>
+                        <Text style={styles.voicePreviewText}>
+                          {t.digitalThela.voiceRecorded || "Voice recorded"}
+                        </Text>
+                        <Text style={styles.voiceDuration}>
+                          {t.digitalThela.duration || "Duration"}: {formatDuration(voiceFile.duration || 0)}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity onPress={removeVoiceRecording}>
+                      <Ionicons name="close-circle" size={24} color="#ff6b6b" />
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
 

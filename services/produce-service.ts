@@ -127,6 +127,11 @@ export class ProduceService {
       formData.append('longitude', produceData.longitude?.toString() || '');
       formData.append('location_confirmed', (produceData as any).location_confirmed ? 'true' : 'false');
 
+      // Add optional description field
+      if ((produceData as any).description) {
+        formData.append('description', (produceData as any).description);
+      }
+
       // Add photo/video if provided
       if (produceData.photo_or_video) {
         console.log('📸 Adding photo/video to produce listing');
@@ -134,6 +139,17 @@ export class ProduceService {
           uri: produceData.photo_or_video.uri,
           type: 'image/jpeg',
           name: 'produce_photo.jpg',
+        } as any);
+      }
+
+      // Add voice description if provided
+      if ((produceData as any).description_voice) {
+        const voice = (produceData as any).description_voice;
+        console.log('🎙️ Adding voice description to produce listing:', voice.type);
+        formData.append('description_voice', {
+          uri: voice.uri,
+          type: voice.type || 'audio/wav',
+          name: voice.name || 'description_voice.wav',
         } as any);
       }
 

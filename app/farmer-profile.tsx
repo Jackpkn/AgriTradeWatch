@@ -238,6 +238,23 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: "center",
   },
+  descriptionContainer: {
+    backgroundColor: "#f8f9fa",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  descriptionLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: "#333",
+    lineHeight: 20,
+  },
 });
 
 const FarmerProfile: React.FC = () => {
@@ -435,19 +452,23 @@ const FarmerProfile: React.FC = () => {
                     </Text>
                   </View>
                   <View style={styles.entryDetailRow}>
-                    <Text style={styles.entryDetailLabel}>
-                      {t.farmerProfile.levelOfProduce}
-                    </Text>
-                    <Text style={styles.entryDetailValue}>
-                      {entry.level_of_produce?.replace(/_/g, " ") || "N/A"}
-                    </Text>
-                  </View>
-                  <View style={styles.entryDetailRow}>
                     <Text style={styles.entryDetailLabel}>{t.farmerProfile.listed}</Text>
                     <Text style={styles.entryDetailValue}>
                       {formatDate(entry.created_at)}
                     </Text>
                   </View>
+
+                  {/* Description */}
+                  {entry.description && (
+                    <View style={styles.descriptionContainer}>
+                      <Text style={styles.descriptionLabel}>
+                        {t.farmerProfile.description || "Description"}
+                      </Text>
+                      <Text style={styles.descriptionText}>
+                        {entry.description}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
             ))

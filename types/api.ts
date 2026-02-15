@@ -95,7 +95,13 @@ export interface ProduceFormData {
   unit: string;
   produce_expense: string;
   profit_expectation: string;
+  description?: string;
   photo_or_video?: {
+    uri: string;
+    name: string;
+    type: string;
+  };
+  description_voice?: {
     uri: string;
     name: string;
     type: string;
@@ -115,7 +121,9 @@ export interface ProducePayload {
   unit: string;
   produce_expense: number;
   profit_expectation: number;
+  description?: string;
   photo_or_video?: File | Blob;
+  description_voice?: File | Blob;
   latitude?: number;
   longitude?: number;
   username?: string;

@@ -33,6 +33,8 @@ interface DTEntry {
   cost: number;
   unit: string;
   photo_or_video?: string;
+  description?: string;
+  description_voice?: string;
 }
 
 interface UserLocation {
