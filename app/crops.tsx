@@ -36,7 +36,18 @@ interface CropFormState {
   name: string;
   pricePerUnit: string;
   quantity: string;
+  unit: string;
 }
+
+// Unit options for the dropdown
+const UNIT_OPTIONS = [
+  { value: "Kg", label: "Kg", labelKey: "unitKg" },
+  { value: "Quintal", label: "Quintal", labelKey: "unitQuintal" },
+  { value: "Ton", label: "Ton", labelKey: "unitTon" },
+  { value: "piece", label: "Piece", labelKey: "unitPiece" },
+  { value: "dozen", label: "Dozen", labelKey: "unitDozen" },
+  { value: "bundle", label: "Bundle", labelKey: "unitBundle" },
+];
 
 // Represents the shape of a selected photo
 interface PhotoState {
@@ -55,6 +66,7 @@ interface AddCropPayload {
   longitude: number;
   date?: string;
   variety?: string;
+  unit?: string;
   userRole: "farmer" | "consumer";
 }
 
@@ -114,6 +126,7 @@ const CropsScreen = () => {
     name: "",
     pricePerUnit: "",
     quantity: "",
+    unit: "Kg",
   });
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [photo, setPhoto] = useState<PhotoState | null>(null);
@@ -123,6 +136,7 @@ const CropsScreen = () => {
     commodity: string;
     price: string;
     quantity: string;
+    unit: string;
   } | null>(null);
   const cameraRef = React.useRef<CameraView>(null);
 
@@ -265,6 +279,7 @@ const CropsScreen = () => {
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude,
         date: new Date().toISOString().split("T")[0], // Format: YYYY-MM-DD
+        unit: form.unit,
         userRole: userRole as "farmer" | "consumer",
       };
 
@@ -282,6 +297,7 @@ const CropsScreen = () => {
           : response.commodity,
         price: form.pricePerUnit,
         quantity: form.quantity,
+        unit: form.unit,
       });
       setShowSuccessModal(true);
     } catch (error: any) {
@@ -299,7 +315,7 @@ const CropsScreen = () => {
   const handleSuccessModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setSuccessData(null);
-    setForm({ name: "", pricePerUnit: "", quantity: "" });
+    setForm({ name: "", pricePerUnit: "", quantity: "", unit: "Kg" });
     setPhoto(null);
   }, []);
 
@@ -418,8 +434,8 @@ const CropsScreen = () => {
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>
                     {String(userRole).toLowerCase() === 'farmer'
-                      ? (t.crops.quantitySold || 'Quantity Sold (Kg) *')
-                      : (t.crops.quantityBought || 'Quantity Bought (Kg) *')}
+                      ? (t.crops.quantitySold || 'Quantity Sold *')
+                      : (t.crops.quantityBought || 'Quantity Bought *')}
                   </Text>
                   <TextInput
                     style={styles.textInput}
@@ -437,10 +453,37 @@ const CropsScreen = () => {
                     accessible={true}
                     accessibilityLabel={
                       String(userRole).toLowerCase() === 'farmer'
-                        ? 'Quantity sold in kilograms'
-                        : 'Quantity bought in kilograms'
+                        ? 'Quantity sold'
+                        : 'Quantity bought'
                     }
                   />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t.crops.selectUnit || 'Select Unit *'}</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={form.unit}
+                      onValueChange={(itemValue) =>
+                        setForm((f) => ({ ...f, unit: itemValue }))
+                      }
+                      style={styles.picker}
+                      dropdownIconColor="#000000"
+                      mode="dropdown"
+                      accessible={true}
+                      accessibilityLabel="Select unit"
+                    >
+                      {UNIT_OPTIONS.map((item) => (
+                        <Picker.Item
+                          key={item.value}
+                          label={t.crops[item.labelKey as keyof typeof t.crops] || item.label}
+                          value={item.value}
+                          color="#000"
+                          style={{ backgroundColor: "#fff" }}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
                 </View>
 
                 {ADD_IMAGE_ENABLED && (
@@ -575,7 +618,7 @@ const CropsScreen = () => {
                           ? (t.crops.sellingPricePerKg?.replace("*", "") || "Selling Price")
                           : (t.crops.buyingPricePerKg?.replace("*", "") || "Buying Price")}
                       </Text>
-                      <Text style={successModalStyles.detailValue}>₹{successData.price}/kg</Text>
+                      <Text style={successModalStyles.detailValue}>₹{successData.price}/{successData.unit}</Text>
                     </View>
                   </View>
 
@@ -591,7 +634,7 @@ const CropsScreen = () => {
                           ? (t.crops.quantitySold?.replace("*", "") || "Quantity Sold")
                           : (t.crops.quantityBought?.replace("*", "") || "Quantity Bought")}
                       </Text>
-                      <Text style={successModalStyles.detailValue}>{successData.quantity} kg</Text>
+                      <Text style={successModalStyles.detailValue}>{successData.quantity} {successData.unit}</Text>
                     </View>
                   </View>
                 </View>

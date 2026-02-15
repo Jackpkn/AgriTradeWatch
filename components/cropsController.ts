@@ -10,6 +10,7 @@ interface AddCropPayload {
   longitude: number;
   date?: string;
   variety?: string;
+  unit?: string;
   userRole: "farmer" | "consumer";
 }
 
@@ -51,6 +52,11 @@ export const addCrop = async (
     } else if (cropData.userRole === "consumer") {
       payload.buyingprice = cropData.price;
       payload.quantitybought = cropData.quantity;
+    }
+
+    // Add unit if provided
+    if (cropData.unit) {
+      payload.unit = cropData.unit;
     }
 
     if (cropData.date) {
