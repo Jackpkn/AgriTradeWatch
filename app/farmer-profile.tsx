@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -356,15 +357,21 @@ const FarmerProfile: React.FC = () => {
               />
               <Text style={styles.detailText}>{profile.email}</Text>
             </View>
-            <View style={styles.detailRow}>
+            <TouchableOpacity
+              style={styles.detailRow}
+              onPress={() => {
+                const phoneNumber = profile.mobile.replace(/[^0-9]/g, "");
+                Linking.openURL(`https://wa.me/${phoneNumber}`);
+              }}
+            >
               <Ionicons
-                name="call-outline"
+                name="logo-whatsapp"
                 size={20}
-                color="#9C27B0"
+                color="#25D366"
                 style={styles.detailIcon}
               />
               <Text style={styles.detailText}>{profile.mobile}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
