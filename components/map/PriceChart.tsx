@@ -85,13 +85,19 @@ const PriceChart = ({
     return padding.top + plotHeight - ((value - yMin) / (yMax - yMin)) * plotHeight;
   };
 
-  // Y-axis labels
+  // Y-axis labels - filter out duplicates caused by rounding
   const numYLabels = 5;
-  const yAxisLabels = [];
+  const yAxisLabelsRaw = [];
   for (let i = 0; i <= numYLabels; i++) {
     const value = yMin + (yMax - yMin) * (i / numYLabels);
-    yAxisLabels.push({ value: Math.round(value), y: yScale(value) });
+    yAxisLabelsRaw.push({ value: Math.round(value), y: yScale(value) });
   }
+  const seenValues = new Set<number>();
+  const yAxisLabels = yAxisLabelsRaw.filter(label => {
+    if (seenValues.has(label.value)) return false;
+    seenValues.add(label.value);
+    return true;
+  });
 
 
 

@@ -385,13 +385,20 @@ const Stats: React.FC = () => {
         return padding.top + plotHeight - ((value - adjustedMinValue) / range) * plotHeight;
       };
 
-      // Y-axis labels
-      const yAxisLabels = [];
+      // Y-axis labels - filter out duplicates caused by rounding
+      const yAxisLabelsRaw = [];
       const numYLabels = 5;
       for (let i = 0; i <= numYLabels; i++) {
         const value = adjustedMinValue + (chartMaxValue - adjustedMinValue) * (i / numYLabels);
-        yAxisLabels.push({ value: Math.round(value), y: yScale(value) });
+        yAxisLabelsRaw.push({ value: Math.round(value), y: yScale(value) });
       }
+      // Remove duplicate values while keeping proper spacing
+      const seenValues = new Set<number>();
+      const yAxisLabels = yAxisLabelsRaw.filter(label => {
+        if (seenValues.has(label.value)) return false;
+        seenValues.add(label.value);
+        return true;
+      });
 
       return (
         <View style={[styles.chartWrapper, { overflow: 'visible' }]}>
