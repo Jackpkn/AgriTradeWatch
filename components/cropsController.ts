@@ -11,7 +11,7 @@ interface AddCropPayload {
   date?: string;
   variety?: string;
   unit?: string;
-  userRole: "farmer" | "consumer";
+  reportingAs: "buyer" | "seller";
 }
 
 interface CropApiResponse {
@@ -30,10 +30,12 @@ interface CropApiResponse {
 export const addCrop = async (
   cropData: AddCropPayload
 ): Promise<CropApiResponse> => {
+  // Use the smart /api/crops/add/ endpoint which routes internally
+  // based on field names (sellingprice -> farmers, buyingprice -> consumers)
   const API_URL = "https://mandigo.in/api/crops/add/";
 
   try {
-    console.log("Preparing Axios request");
+    console.log("Preparing Axios request for:", cropData.reportingAs);
 
     const token = await getStoredToken();
     if (!token) throw new Error("Authentication token not found.");
@@ -45,11 +47,14 @@ export const addCrop = async (
       longitude: cropData.longitude,
     };
 
-    // Map field names based on user role
-    if (cropData.userRole === "farmer") {
+    // Map field names based on reporting role
+    // The /api/crops/add/ endpoint routes to correct table based on these fields:
+    // - sellingprice/quantitysold -> farmers table
+    // - buyingprice/quantitybought -> consumers table
+    if (cropData.reportingAs === "seller") {
       payload.sellingprice = cropData.price;
       payload.quantitysold = cropData.quantity;
-    } else if (cropData.userRole === "consumer") {
+    } else {
       payload.buyingprice = cropData.price;
       payload.quantitybought = cropData.quantity;
     }
@@ -68,6 +73,7 @@ export const addCrop = async (
     }
 
     console.log("Payload:", JSON.stringify(payload, null, 2));
+    console.log(`Reporting as: ${cropData.reportingAs} -> Sending to: ${API_URL}`);
 
     // --- Axios config ---
     const config = {
@@ -77,8 +83,6 @@ export const addCrop = async (
       },
       timeout: 30000,
     };
-
-    console.log(`Sending POST to: ${API_URL}`);
 
     // --- API Call ---
     const response = await axios.post(API_URL, payload, config);

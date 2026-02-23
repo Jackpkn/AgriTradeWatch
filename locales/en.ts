@@ -355,6 +355,18 @@ export const en = {
     submissionSuccess: "Crop data submitted successfully! ID: {{id}}...",
     submissionError: "Submission Error",
 
+    // Reporting Role
+    reportingAs: "Reporting as *",
+    reportingAsSeller: "Seller",
+    reportingAsBuyer: "Buyer",
+    sellingPricePerKg: "Selling Price Per Kg *",
+    buyingPricePerKg: "Buying Price Per Kg *",
+    enterSellingPrice: "Enter selling price",
+    enterBuyingPrice: "Enter buying price",
+    quantitySold: "Quantity Sold *",
+    enterQuantitySold: "Enter quantity sold",
+    enterQuantityBought: "Enter quantity bought",
+
     // Crop Names - Vegetables
     cropAmbatChukka: "Ambat Chukka (Sorrel Leaves)",
     cropGinger: "Ginger",

@@ -335,6 +335,19 @@ export const mr: TranslationKeys = {
     enterPricePerKg: "प्रति किलो किंमत भरा",
     quantityBought: "खरेदी केलेली मात्रा (किलो) *",
     enterQuantity: "किलोमध्ये मात्रा भरा",
+
+    // Reporting Role
+    reportingAs: "म्हणून नोंदवत आहे *",
+    reportingAsSeller: "विक्रेता",
+    reportingAsBuyer: "खरेदीदार",
+    sellingPricePerKg: "प्रति किलो विक्री किंमत *",
+    buyingPricePerKg: "प्रति किलो खरेदी किंमत *",
+    enterSellingPrice: "विक्री किंमत भरा",
+    enterBuyingPrice: "खरेदी किंमत भरा",
+    quantitySold: "विक्री केलेली मात्रा *",
+    enterQuantitySold: "विक्री केलेली मात्रा भरा",
+    enterQuantityBought: "खरेदी केलेली मात्रा भरा",
+
     addPhoto: "छायाचित्र जोडा (ऐच्छिक)",
     addPhotoMessage: "फोटो जोडल्याने तुमचा पिक डेटा सत्यापित करण्यात मदत होते...",
     takePhoto: "फोटो काढा",

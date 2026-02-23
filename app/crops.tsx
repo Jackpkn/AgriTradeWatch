@@ -37,7 +37,14 @@ interface CropFormState {
   pricePerUnit: string;
   quantity: string;
   unit: string;
+  reportingAs: "buyer" | "seller";
 }
+
+// Reporting role options for the dropdown
+const REPORTING_OPTIONS = [
+  { value: "seller", labelKey: "reportingAsSeller", label: "Seller" },
+  { value: "buyer", labelKey: "reportingAsBuyer", label: "Buyer" },
+];
 
 // Unit options for the dropdown
 const UNIT_OPTIONS = [
@@ -67,7 +74,7 @@ interface AddCropPayload {
   date?: string;
   variety?: string;
   unit?: string;
-  userRole: "farmer" | "consumer";
+  reportingAs: "buyer" | "seller";
 }
 
 // Helper function to generate filename for images
@@ -122,12 +129,22 @@ const CropsScreen = () => {
     console.log("Current userRole:", userRole, "Type:", typeof userRole);
   }, [userRole]);
 
+  // Determine default reporting role based on user's job
+  const defaultReportingAs = String(userRole).toLowerCase() === 'farmer' ? 'seller' : 'buyer';
+
   const [form, setForm] = useState<CropFormState>({
     name: "",
     pricePerUnit: "",
     quantity: "",
     unit: "Kg",
+    reportingAs: defaultReportingAs as "buyer" | "seller",
   });
+
+  // Update reportingAs when userRole changes (e.g., on login)
+  useEffect(() => {
+    const newDefault = String(userRole).toLowerCase() === 'farmer' ? 'seller' : 'buyer';
+    setForm(f => ({ ...f, reportingAs: newDefault as "buyer" | "seller" }));
+  }, [userRole]);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [photo, setPhoto] = useState<PhotoState | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -137,6 +154,7 @@ const CropsScreen = () => {
     price: string;
     quantity: string;
     unit: string;
+    reportingAs: "buyer" | "seller";
   } | null>(null);
   const cameraRef = React.useRef<CameraView>(null);
 
@@ -272,6 +290,9 @@ const CropsScreen = () => {
     setIsLoading(true);
     try {
       // Create the payload with the exact structure required by the API
+      // reportingAs determines which fields to send:
+      // - "seller" -> sellingprice, quantitysold (saves to farmers table)
+      // - "buyer" -> buyingprice, quantitybought (saves to consumers table)
       const payload: AddCropPayload = {
         commodity: form.name,
         quantity: quantity,
@@ -280,7 +301,7 @@ const CropsScreen = () => {
         longitude: currentLocation.longitude,
         date: new Date().toISOString().split("T")[0], // Format: YYYY-MM-DD
         unit: form.unit,
-        userRole: userRole as "farmer" | "consumer",
+        reportingAs: form.reportingAs,
       };
 
       const response = await addCrop(payload);
@@ -298,6 +319,7 @@ const CropsScreen = () => {
         price: form.pricePerUnit,
         quantity: form.quantity,
         unit: form.unit,
+        reportingAs: form.reportingAs,
       });
       setShowSuccessModal(true);
     } catch (error: any) {
@@ -315,9 +337,11 @@ const CropsScreen = () => {
   const handleSuccessModalClose = useCallback(() => {
     setShowSuccessModal(false);
     setSuccessData(null);
-    setForm({ name: "", pricePerUnit: "", quantity: "", unit: "Kg" });
+    // Reset form but keep the default reportingAs based on user's job
+    const newDefault = String(userRole).toLowerCase() === 'farmer' ? 'seller' : 'buyer';
+    setForm({ name: "", pricePerUnit: "", quantity: "", unit: "Kg", reportingAs: newDefault as "buyer" | "seller" });
     setPhoto(null);
-  }, []);
+  }, [userRole]);
 
   // --- Render Logic ---
 
@@ -369,6 +393,34 @@ const CropsScreen = () => {
               <View style={styles.formCard}>
                 <Text style={styles.formTitle}>{t.crops.cropInformation}</Text>
 
+                {/* Reporting As Dropdown */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t.crops.reportingAs || 'Reporting as *'}</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={form.reportingAs}
+                      onValueChange={(itemValue) =>
+                        setForm((f) => ({ ...f, reportingAs: itemValue as "buyer" | "seller" }))
+                      }
+                      style={styles.picker}
+                      dropdownIconColor="#000000"
+                      mode="dropdown"
+                      accessible={true}
+                      accessibilityLabel="Select reporting role"
+                    >
+                      {REPORTING_OPTIONS.map((item) => (
+                        <Picker.Item
+                          key={item.value}
+                          label={t.crops[item.labelKey as keyof typeof t.crops] || item.label}
+                          value={item.value}
+                          color="#000"
+                          style={{ backgroundColor: "#fff" }}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>{t.crops.selectCropCommodity}</Text>
                   <View style={styles.pickerContainer}>
@@ -405,7 +457,7 @@ const CropsScreen = () => {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>
-                    {String(userRole).toLowerCase() === 'farmer'
+                    {form.reportingAs === 'seller'
                       ? (t.crops.sellingPricePerKg || 'Selling Price Per Kg *')
                       : (t.crops.buyingPricePerKg || 'Buying Price Per Kg *')}
                   </Text>
@@ -418,13 +470,13 @@ const CropsScreen = () => {
                     }
                     keyboardType="numeric"
                     placeholder={
-                      String(userRole).toLowerCase() === 'farmer'
+                      form.reportingAs === 'seller'
                         ? (t.crops.enterSellingPrice || 'Enter selling price')
                         : (t.crops.enterBuyingPrice || 'Enter buying price')
                     }
                     accessible={true}
                     accessibilityLabel={
-                      String(userRole).toLowerCase() === 'farmer'
+                      form.reportingAs === 'seller'
                         ? 'Selling price per kilogram'
                         : 'Buying price per kilogram'
                     }
@@ -433,7 +485,7 @@ const CropsScreen = () => {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>
-                    {String(userRole).toLowerCase() === 'farmer'
+                    {form.reportingAs === 'seller'
                       ? (t.crops.quantitySold || 'Quantity Sold *')
                       : (t.crops.quantityBought || 'Quantity Bought *')}
                   </Text>
@@ -446,13 +498,13 @@ const CropsScreen = () => {
                     }
                     keyboardType="numeric"
                     placeholder={
-                      String(userRole).toLowerCase() === 'farmer'
+                      form.reportingAs === 'seller'
                         ? (t.crops.enterQuantitySold || 'Enter quantity sold')
                         : (t.crops.enterQuantityBought || 'Enter quantity bought')
                     }
                     accessible={true}
                     accessibilityLabel={
-                      String(userRole).toLowerCase() === 'farmer'
+                      form.reportingAs === 'seller'
                         ? 'Quantity sold'
                         : 'Quantity bought'
                     }
@@ -614,7 +666,7 @@ const CropsScreen = () => {
                     </View>
                     <View style={successModalStyles.detailContent}>
                       <Text style={successModalStyles.detailLabel}>
-                        {String(userRole).toLowerCase() === 'farmer'
+                        {successData.reportingAs === 'seller'
                           ? (t.crops.sellingPricePerKg?.replace("*", "") || "Selling Price")
                           : (t.crops.buyingPricePerKg?.replace("*", "") || "Buying Price")}
                       </Text>
@@ -630,7 +682,7 @@ const CropsScreen = () => {
                     </View>
                     <View style={successModalStyles.detailContent}>
                       <Text style={successModalStyles.detailLabel}>
-                        {String(userRole).toLowerCase() === 'farmer'
+                        {successData.reportingAs === 'seller'
                           ? (t.crops.quantitySold?.replace("*", "") || "Quantity Sold")
                           : (t.crops.quantityBought?.replace("*", "") || "Quantity Bought")}
                       </Text>
