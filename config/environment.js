@@ -1,13 +1,20 @@
 /**
  * Price conversion rates for different crops
+ * Simplified: 1 unit = 1 unit (no complex kg conversion)
+ * Both per-unit and per-kg show the same price for simplicity
  */
 export const PRICE_CONVERSION_RATES = {
-  DEFAULT_MULTIPLIER: 2.0,
+  DEFAULT_MULTIPLIER: 1.0,  // 1:1 conversion
   CROP_SPECIFIC: {
-    onion: 2.0,
-    tomato: 1.8,
-    drumstick: 2.5,
-    lemon: 1.5,
+    onion: 1.0,     // 1 unit = 1 unit
+    tomato: 1.0,    // 1 unit = 1 unit
+    drumstick: 1.0, // 1 unit = 1 unit
+    lemon: 1.0,     // 1 unit = 1 unit
+    wheat: 1.0,     // 1 unit = 1 unit
+    grape: 1.0,     // 1 unit = 1 unit
+    coriander: 1.0, // 1 unit = 1 unit
+    garlic: 1.0,    // 1 unit = 1 unit
+    rice: 1.0,      // 1 unit = 1 unit
   },
 };
 
@@ -24,8 +31,8 @@ const ENV_CONFIGS = {
     enableVirtualization: true,
     virtualizationThreshold: 500,
     MAP: {
-      DEFAULT_ZOOM: 13,
-      MIN_ZOOM: 8,
+      DEFAULT_ZOOM: 10,
+      MIN_ZOOM: 5,
       MAX_ZOOM: 20,
       DEBOUNCE_MS: 150,
       MAX_MARKERS: 1000,
@@ -41,8 +48,8 @@ const ENV_CONFIGS = {
     enableVirtualization: true,
     virtualizationThreshold: 1000,
     MAP: {
-      DEFAULT_ZOOM: 13,
-      MIN_ZOOM: 8,
+      DEFAULT_ZOOM: 10,
+      MIN_ZOOM: 5,
       MAX_ZOOM: 19,
       DEBOUNCE_MS: 300,
       MAX_MARKERS: 2000,
@@ -58,8 +65,8 @@ const ENV_CONFIGS = {
     enableVirtualization: false,
     virtualizationThreshold: 50,
     MAP: {
-      DEFAULT_ZOOM: 13,
-      MIN_ZOOM: 8,
+      DEFAULT_ZOOM: 10,
+      MIN_ZOOM: 5,
       MAX_ZOOM: 18,
       DEBOUNCE_MS: 100,
       MAX_MARKERS: 100,

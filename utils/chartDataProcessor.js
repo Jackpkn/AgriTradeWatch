@@ -6,15 +6,39 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
     "processChartData",
     crops.length,
     () => {
-      if (!crops.length) return [];
+      console.log('  📈 [processChartData] Starting with:', {
+        inputCrops: crops.length,
+        selectedCrop: selectedCrop
+      });
+
+      if (!crops.length) {
+        console.log('  📈 [processChartData] ❌ No crops provided, returning empty');
+        return [];
+      }
 
       const cropData = crops.filter(
-        (crop) =>
-          selectedCrop &&
-          crop.name?.toLowerCase() === selectedCrop.toLowerCase()
+        (crop) => {
+          if (!crop || !selectedCrop) return false;
+          const cropNameToCheck = crop.name || crop.commodity;
+          return cropNameToCheck && cropNameToCheck.toLowerCase() === selectedCrop.toLowerCase();
+        }
       );
 
-      if (!cropData.length) return [];
+      console.log('  📈 [processChartData] After name filter:', {
+        beforeFilter: crops.length,
+        afterFilter: cropData.length,
+        selectedCrop: selectedCrop
+      });
+
+      if (cropData.length === 0 && crops.length > 0) {
+        console.log('  📈 [processChartData] ⚠️ All crops filtered out by name!');
+        console.log('  📈 Sample crop names in input:', crops.slice(0, 3).map(c => c.name || c.commodity));
+      }
+
+      if (!cropData.length) {
+        console.log('  📈 [processChartData] ❌ No matching crops after name filter');
+        return [];
+      }
 
       // Group by date
       const pricesByDate = {};
@@ -38,42 +62,51 @@ export const processChartData = (crops, selectedCrop, priceUnit) => {
           };
         }
 
-        // Use crop-specific conversion rates
-        const conversionRate =
-          MAP_CONFIG.PRICE_CONVERSION.RATES[selectedCrop]?.perKgMultiplier || 2;
-        const price =
-          priceUnit === MAP_CONFIG.PRICE_CONVERSION.UNITS.PER_KG
-            ? (Number(crop.pricePerUnit) || 0) * conversionRate
-            : Number(crop.pricePerUnit) || 0;
+        // Simplified conversion: 1 unit = 1 unit (no kg conversion needed)
+        // Both per-unit and per-kg show the same price for simplicity
+        const rawPrice = Number(crop.pricePerUnit) || 0;
+        const price = Math.round(rawPrice); // Round immediately to prevent decimals
+
+        console.log(`ChartDataProcessor: ${crop.name} - Raw Price: ${rawPrice}, Rounded Price: ${price}`);
 
         if (price > 0) {
           pricesByDate[dateKey].prices.push(price);
         }
       });
 
-      // Convert to chart format
+      // Convert to chart format - return all individual prices per date for scatter plot
       const chartData = Object.entries(pricesByDate)
         .filter(([_, data]) => data.prices.length > 0)
         .map(([date, data]) => {
+          // Calculate stats for the header display
           const avgPrice =
             data.prices.reduce((sum, price) => sum + price, 0) /
             data.prices.length;
-          const roundedPrice = Math.round(avgPrice);
+          const roundedAvg = Math.round(avgPrice);
           return {
             label: date,
-            value: roundedPrice,
-            dataPointText: `₹${roundedPrice}`,
+            value: roundedAvg, // Keep average for stats display
+            dataPointText: `₹${roundedAvg}`,
             timestamp: data.timestamp,
             count: data.prices.length,
+            allPrices: data.prices, // All individual prices for scatter plot
           };
         })
         .sort((a, b) => a.timestamp - b.timestamp);
 
       // Ensure we always return valid data or empty array
-      return chartData.filter(
+      const finalData = chartData.filter(
         (item) =>
           item.value > 0 && !isNaN(item.value) && typeof item.label === "string"
       );
+
+      console.log('  📈 [processChartData] Final output:', {
+        dateGroupsCount: Object.keys(pricesByDate).length,
+        chartDataBeforeFilter: chartData.length,
+        finalDataCount: finalData.length
+      });
+
+      return finalData;
     }
   );
 };
@@ -87,12 +120,19 @@ export const calculateConsumerStats = (
     "calculateConsumerStats",
     consumersInRadius.length,
     () => {
+      console.log('calculateConsumerStats: Input data:', {
+        consumersInRadius: consumersInRadius.length,
+        priceUnit,
+        selectedCrop
+      });
+      
       if (!consumersInRadius.length) {
+        console.log('calculateConsumerStats: No consumers in radius');
         return { count: 0, averagePrice: 0, averagePricePerKg: 0 };
       }
 
       const prices = consumersInRadius
-        .map((crop) => Number(crop.pricePerUnit) || 0)
+        .map((crop) => Math.round(Number(crop.pricePerUnit) || 0))
         .filter((price) => price > 0);
 
       const averagePrice =
@@ -100,16 +140,24 @@ export const calculateConsumerStats = (
           ? prices.reduce((sum, price) => sum + price, 0) / prices.length
           : 0;
 
-      // Use crop-specific conversion rate
-      const conversionRate =
-        MAP_CONFIG.PRICE_CONVERSION.RATES[selectedCrop]?.perKgMultiplier || 2;
-      const averagePricePerKg = averagePrice * conversionRate;
+      // Simplified conversion: 1 unit = 1 unit (no kg conversion needed)
+      // Both per-unit and per-kg show the same price for simplicity
+      const conversionRate = 1.0; // Always 1:1 ratio
+      const averagePricePerKg = averagePrice * conversionRate; // Same as averagePrice
 
-      return {
+      const result = {
         count: consumersInRadius.length,
         averagePrice: Math.round(averagePrice),
         averagePricePerKg: Math.round(averagePricePerKg),
       };
+      
+      console.log('calculateConsumerStats: Calculated stats:', {
+        prices: prices.length,
+        validPrices: prices,
+        result
+      });
+      
+      return result;
     }
   );
 };

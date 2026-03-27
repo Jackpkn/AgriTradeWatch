@@ -17,6 +17,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
     "moduleResolution": "node",
     "target": "ES2020",
     "lib": [
@@ -55,7 +56,7 @@
     "**/*.js",
     "**/*.jsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
   ],
   "exclude": [
     "node_modules",

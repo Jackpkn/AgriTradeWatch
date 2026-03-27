@@ -1,0 +1,53 @@
+import { View, TouchableOpacity, Text } from "react-native";
+import { MAP_CONFIG } from "@/constants/mapConfig";
+import { mapStyles } from "./mapStyles";
+import { useTranslation } from "@/hooks/useTranslation";
+
+interface PriceUnitToggleProps {
+  priceUnit: string;
+  onPriceUnitChange: (unit: string) => void;
+}
+
+const PriceUnitToggle = ({ priceUnit, onPriceUnitChange }: PriceUnitToggleProps) => {
+  const { t } = useTranslation();
+  const { PER_UNIT, PER_KG } = MAP_CONFIG.PRICE_CONVERSION.UNITS;
+
+  return (
+    <View style={mapStyles.priceUnitContainer}>
+      <TouchableOpacity
+        style={[
+          mapStyles.priceUnitButton,
+          priceUnit === PER_KG && mapStyles.priceUnitButtonActive,
+        ]}
+        onPress={() => onPriceUnitChange(PER_KG)}
+      >
+        <Text
+          style={[
+            mapStyles.priceUnitText,
+            priceUnit === PER_KG && mapStyles.priceUnitTextActive,
+          ]}
+        >
+          {t.map.pricePerKg}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          mapStyles.priceUnitButton,
+          priceUnit === PER_UNIT && mapStyles.priceUnitButtonActive,
+        ]}
+        onPress={() => onPriceUnitChange(PER_UNIT)}
+      >
+        <Text
+          style={[
+            mapStyles.priceUnitText,
+            priceUnit === PER_UNIT && mapStyles.priceUnitTextActive,
+          ]}
+        >
+          {t.map.pricePerUnit}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default PriceUnitToggle;

@@ -9,22 +9,53 @@ class NetworkManager {
   }
 
   init() {
+    // Get initial network state
+    this.refreshNetworkStatus();
+
     // Listen for network state changes
     NetInfo.addEventListener((state) => {
       const wasConnected = this.isConnected;
-      this.isConnected = state.isConnected && state.isInternetReachable;
+      const newConnectionStatus = state.isConnected && state.isInternetReachable;
 
       console.log("Network state changed:", {
-        isConnected: this.isConnected,
+        wasConnected,
+        newStatus: newConnectionStatus,
         type: state.type,
+        isConnected: state.isConnected,
         isInternetReachable: state.isInternetReachable,
       });
 
-      // Notify listeners if connection status changed
-      if (wasConnected !== this.isConnected) {
-        this.notifyListeners(this.isConnected);
-      }
+      this.isConnected = newConnectionStatus;
+
+      // Always notify listeners of network changes, even if status is the same
+      // This helps with UI updates and ensures components stay in sync
+      this.notifyListeners(this.isConnected);
     });
+  }
+
+  // Refresh network status manually
+  async refreshNetworkStatus() {
+    try {
+      const state = await NetInfo.fetch();
+      const wasConnected = this.isConnected;
+      this.isConnected = state.isConnected && state.isInternetReachable;
+
+      console.log("Network status refreshed:", {
+        wasConnected,
+        newStatus: this.isConnected,
+        type: state.type,
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+      });
+
+      // Notify listeners of the refreshed status
+      this.notifyListeners(this.isConnected);
+
+      return this.isConnected;
+    } catch (error) {
+      console.error("Error refreshing network status:", error);
+      return this.isConnected;
+    }
   }
 
   // Add listener for network changes
@@ -39,7 +70,7 @@ class NetworkManager {
 
   // Notify all listeners
   notifyListeners(isConnected) {
-    this.listeners.forEach((callback) => callback(isConnected));
+    this.listeners.forEach((callback) => callback({ isConnected }));
   }
 
   // Get current network status
@@ -219,5 +250,5 @@ export const networkManager = new NetworkManager();
 // Utility functions
 export const getNetworkStatus = () => networkManager.getNetworkStatus();
 export const isOnline = () => networkManager.isOnline();
-export const addNetworkListener = (callback) =>
-  networkManager.addListener(callback);
+export const addNetworkListener = (callback) => networkManager.addListener(callback);
+export const refreshNetworkStatus = () => networkManager.refreshNetworkStatus();

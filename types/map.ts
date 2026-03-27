@@ -109,13 +109,6 @@ export interface RadiusSliderProps {
   onRadiusChange: (value: number) => void;
 }
 
-export interface ConsumerInfoPanelProps {
-  selectedCrop: string;
-  radius: number;
-  consumerStats: ConsumerStats;
-  priceUnit: string;
-}
-
 export interface PriceUnitToggleProps {
   priceUnit: string;
   onPriceUnitChange: (unit: string) => void;
